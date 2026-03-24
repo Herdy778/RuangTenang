@@ -11,5 +11,5 @@ class Article extends Model
     protected $collection = 'articles';
 
     // Kolom apa saja yang boleh diisi/ditambahkan (Mass Assignment)
-    protected $fillable = ['judul_artikel', 'isi_konten', 'kategori_tag', 'thumbnail_url'];
+    protected $fillable = ['judul_artikel', 'isi_konten', 'kategori_tag', 'thumbnail_url', 'penulis', 'referensi'];
 }
