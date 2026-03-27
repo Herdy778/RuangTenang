@@ -1,0 +1,26 @@
+
+Warning: Module "mysqli" is already loaded in Unknown on line 0
+Memulai import data ke MongoDB...
+Mengimport data untuk collection: articles
+
+   MongoDB\Driver\Exception\BulkWriteException 
+
+  _id fields may not contain '$'-prefixed fields: $oid is not valid for storage.
+
+  at vendor\mongodb\mongodb\src\Operation\InsertMany.php:151
+    147▕         foreach ($this->documents as $i => $document) {
+    148▕             $insertedIds[$i] = $bulk->insert($document);
+    149▕         }
+    150▕ 
+  ➜ 151▕         $writeResult = $server->executeBulkWrite($this->databaseName . '.' . $this->collectionName, $bulk, $this->createExecuteOptions());
+    152▕ 
+    153▕         return new InsertManyResult($writeResult, $insertedIds);
+    154▕     }
+    155▕
+
+  1   vendor\mongodb\mongodb\src\Operation\InsertMany.php:151
+      MongoDB\Driver\Server::executeBulkWrite("ruangtenang.articles", Object(MongoDB\Driver\BulkWrite), [])
+
+  2   vendor\mongodb\mongodb\src\Collection.php:902
+      MongoDB\Operation\InsertMany::execute(Object(MongoDB\Driver\Server))
+

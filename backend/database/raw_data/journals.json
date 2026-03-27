@@ -1,0 +1,279 @@
+[
+    {
+        "_id": {
+            "$oid": "69be60538620d2e59e00d5c2"
+        },
+        "user_id": "dummy_user_123",
+        "teks_curhat": "Aku pusing banget ngerjain revisian skripsi nggak kelar-kelar, rasanya mau nyerah aja capek banget badanku.",
+        "hasil_mood": "Netral",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774084179585"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774084179585"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be6121717177a8e10d3962"
+        },
+        "user_id": "dummy_user_123",
+        "teks_curhat": "Aku pusing banget ngerjain revisian skripsi nggak kelar-kelar, rasanya mau nyerah aja capek banget badanku.",
+        "hasil_mood": "Netral",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774084385006"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774084385006"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be61401f90d2bab704e052"
+        },
+        "user_id": "dummy_user_123",
+        "teks_curhat": "Aku pusing banget ngerjain revisian skripsi nggak kelar-kelar, rasanya mau nyerah aja capek banget badanku.",
+        "hasil_mood": "Netral",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774084416434"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774084416434"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be6bda7a42b47da30184b2"
+        },
+        "user_id": "dummy_user_123",
+        "teks_curhat": "Aku pusing banget ngerjain revisian skripsi nggak kelar-kelar, rasanya mau nyerah aja capek banget badanku.",
+        "hasil_mood": "Burnout",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774087130548"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774087130548"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be6d257a42b47da30184b3"
+        },
+        "user_id": "dummy_user_123",
+        "teks_curhat": "Aku pusing banget ngerjain revisian skripsi nggak kelar-kelar, rasanya mau nyerah aja capek banget badanku.",
+        "hasil_mood": "Burnout",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774087461161"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774087461161"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfd1bb387dabc0810507fb"
+        },
+        "user_id": {
+            "$oid": "69bfa186387dabc0810507f8"
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774178747050"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774178747050"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfd426387dabc0810507fc"
+        },
+        "user_id": {
+            "$oid": "69bfa186387dabc0810507f8"
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774179366869"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774179366869"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfd8fb387dabc0810507fd"
+        },
+        "user_id": {
+            "$oid": "69bfa186387dabc0810507f8"
+        },
+        "teks_curhat": "Aku merasa cemas menghadapi ujian besok, tidak bisa tidur dan terus memikirkan hal yang buruk",
+        "hasil_mood": "Cemas",
+        "tanggal": [],
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774180603697"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774180603697"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfda7b387dabc0810507fe"
+        },
+        "user_id": {
+            "$oid": "69bfa186387dabc0810507f8"
+        },
+        "teks_curhat": "Aku merasa lelah dengan tugas kuliah yang menumpuk ini",
+        "hasil_mood": "Burnout",
+        "tanggal": {
+            "$date": {
+                "$numberLong": "1774180987593"
+            }
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774180987594"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774180987594"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bff6fc3e258fb1710ac3c4"
+        },
+        "user_id": {
+            "$oid": "69bff4683e258fb1710ac3c2"
+        },
+        "teks_curhat": "aku sebentar lagi akan seminar dan itu membuatku depresi dikarenakan aku belum menyiapkan apapun",
+        "hasil_mood": "Cemas",
+        "tanggal": {
+            "$date": {
+                "$numberLong": "1774188284230"
+            }
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774188284231"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774188284231"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bff7ab3e258fb1710ac3c5"
+        },
+        "user_id": {
+            "$oid": "69bff4683e258fb1710ac3c2"
+        },
+        "teks_curhat": "aku bingung dengan perintah dosenku yang selalu berubah rubah",
+        "hasil_mood": "Cemas",
+        "tanggal": {
+            "$date": {
+                "$numberLong": "1774188459073"
+            }
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774188459073"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774188459073"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfff883e258fb1710ac3c8"
+        },
+        "user_id": {
+            "$oid": "69bffbf23e258fb1710ac3c6"
+        },
+        "teks_curhat": "aku merasa sedih karena tugas menumpuk",
+        "hasil_mood": "Sedih",
+        "tanggal": {
+            "$date": {
+                "$numberLong": "1774190472784"
+            }
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774190472784"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774190472784"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69c3f5d5a6866d316a0f3f53"
+        },
+        "user_id": {
+            "$oid": "69bff4683e258fb1710ac3c2"
+        },
+        "teks_curhat": "Capek banget sih… bukan capek fisik doang, tapi lebih ke kepala rasanya penuh terus. Tiap hari kayak dikejar—tugas numpuk, deadline nempel, belum lagi ekspektasi dari diri sendiri yang kadang nggak masuk akal.",
+        "hasil_mood": "Burnout",
+        "tanggal": {
+            "$date": {
+                "$numberLong": "1774450133941"
+            }
+        },
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774450133941"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774450133941"
+            }
+        }
+    }
+]

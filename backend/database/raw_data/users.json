@@ -1,0 +1,695 @@
+[
+    {
+        "_id": {
+            "$oid": "69be51d65774609a589c756b"
+        },
+        "nama_lengkap": "Budi Santoso",
+        "email": "budi@mahasiswa.ac.id",
+        "password": "$2y$10$ContohPasswordHashBudi...",
+        "role": "mahasiswa",
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774080470435"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be51d65774609a589c756c"
+        },
+        "nama_lengkap": "Psikolog Amanda",
+        "email": "amanda@kampus.ac.id",
+        "password": "$2y$10$ContohPasswordHashAmanda...",
+        "role": "admin",
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774080470435"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be7101758785741d0d5c52"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi123@gmail.com",
+        "password": "$2y$12$S4gJZbUU6Ho2UC1voieNyuLqdI.3RS.QDD8Vw64F07cLg174qqiZy",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774088449222"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774088449222"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be734f758785741d0d5c53"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_baru99@gmail.com",
+        "password": "$2y$12$fisYvYPlUyx8H3iafl4FEupRK6Cdmzb3Qc4DvSaS7y5k9MnNMnGcC",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774089039914"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774089039914"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be7de3758785741d0d5c54"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_sukses_100@gmail.com",
+        "password": "$2y$12$FshuIr9IBbtLQudgzR2g5u77gqb7AVP8Vg5OQeg2EdO1spskSzkQi",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774091747551"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774091747551"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8238758785741d0d5c55"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_asik_500@gmail.com",
+        "password": "$2y$12$f2sS3GVajDH87hRoZv8U7eaS1XndIoCXGjLGJBSRI46QBv62vN9PS",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774092856499"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774092856499"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be83ff758785741d0d5c57"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_katak_900@gmail.com",
+        "password": "$2y$12$up03tspGWkSQAXyWYaKIROTGK3AjJnnbFx.nZhVClfjgH0t\/lGEpu",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093311944"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093311944"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8481758785741d0d5c58"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_katak_88@gmail.com",
+        "password": "$2y$12$lggVegHM9IQzwRyDkTRaougbm5l.iDEE2JjRGs4Y0OQB7X2CaedDm",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093441980"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093441980"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8492758785741d0d5c59"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_katak_009@gmail.com",
+        "password": "$2y$12$rzm2lel5.o8enDxwe7peLu3EYly2RH\/Yro2inHtu.IGwhIyoVAkzm",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093458265"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093458265"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8500758785741d0d5c5a"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_sukses_final@gmail.com",
+        "password": "$2y$12$y6GL47EeArjCPIvx2Hvbi.l.GAs\/M\/wpFRBSe12n0VfZpibIM0E\/q",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093568090"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093568090"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be85b3758785741d0d5c5c"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_sukses_final_banget@gmail.com",
+        "password": "$2y$12$j\/dNST\/mtExpnRk6W1MYiOtWWrWoqlSJFwKC8ad5OvhL5WAuQfqLy",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093746999"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093746999"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8772758785741d0d5c5d"
+        },
+        "nama_lengkap": "Budi Keren",
+        "email": "budi_sukses_final_sekali@gmail.com",
+        "password": "$2y$12$lqPiaqYqKM.lOcJ6VjZRFuLu3L2\/Cz3Av0PSbjsSNvWN88eHSjbTy",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774094194325"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774094194325"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be90b459c89ca2340e39e2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test@gmail.com",
+        "password": "$2y$12$qgm1Ff.f5ouEaAhReAyYme7nrQxeLTVaKr0Sh6l2BhsQXPjCnSCjO",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774096564367"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774096564367"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9526ed94d7c11e0eb1f2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test1@gmail.com",
+        "password": "$2y$12$ZyzFH\/tbABmVUN8Y1CIAce3YS2\/LSHlIvDYh6VJkt1XZATsXNWqpi",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774097702648"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774097702648"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9550ed94d7c11e0eb1f3"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test12@gmail.com",
+        "password": "$2y$12$48jALlbPB6kCUlW0y0EJOOM7n3xWVtiA6GI0.tqdgz\/schA769geS",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774097744377"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774097744377"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be966cd613cbde1a05bf52"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test99@gmail.com",
+        "password": "$2y$12$53orbDcVSBWFWVqcwJdWEeWkQreiiVlnCa6Jwi.hYl21JwGjW6Ktu",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774098028951"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774098028951"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be977871fd53314508a702"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test67@gmail.com",
+        "password": "$2y$12$TcDRoHTeE3ZWbGoqvqMwieMzzYFa4FH.fatXVoa6jGSGHAC7rq17m",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774098296728"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774098296728"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9af0454c2ecbc60f26e2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test86@gmail.com",
+        "password": "$2y$12$edCHRTT40WjKFDR.uX1SROlQE6h6.zx99kPzqj4cJnjG7fKI3URN2",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774099184687"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774099184687"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9afe454c2ecbc60f26e3"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test776@gmail.com",
+        "password": "$2y$12$X.lFaxsn.SUrPvNvUUrRI.EXELgLSqnHtAxGi6FKfJBeh0tVSZFiG",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774099198436"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774099198436"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9f74be85ce5f54012d12"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test6@gmail.com",
+        "password": "$2y$12$KwGYQjdxsNVXnONc2uu8YunYl2gBtjhvWfUudTyggqMyrWEfgiTW.",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100340667"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100340667"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9f81be85ce5f54012d13"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test54@gmail.com",
+        "password": "$2y$12$KtzKwDtKIdWZTjfFvQgR5urIzTjaONVJII9nP78OsOsHdvN71fO3i",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100353538"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100353538"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea02dd2f81337750a7a02"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test34@gmail.com",
+        "password": "$2y$12$m4FAyPmEpVV\/GkmcvGY1EeTPcUqV2Ch84oafHNw5b2V\/3krYSCkzW",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100525521"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100525521"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea0e2d2f81337750a7a03"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test14@gmail.com",
+        "password": "$2y$12$iWrxKPV0UvzhPFvcUiOHyOz87g2ARVMdWDZUEM7yApRemYvKd3ZiG",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100706773"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100706773"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea118ba263cc7780d36e2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test003@gmail.com",
+        "password": "$2y$12$tTYEuZ3ZAbasEOfzdW5ire6tUJB75TvDsQZ7rgxuITx3\/rOiGZ.vW",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100760676"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100760676"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea1c3899529c714097342"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test023@gmail.com",
+        "password": "$2y$12$nZiWA8LTEl9liGm4z9ezxOOuD8IVNP\/ZJCOJjaAi0ZbdhyxKO1HGW",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774100931876"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774100931876"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea328899529c714097343"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test029@gmail.com",
+        "password": "$2y$12$PPBtV\/gk88.8uk7kMB.62esHzYKSOz8PHrUm7fZAd0RcNfixx0\/qC",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774101288868"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774101288868"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bea42d29c1c83e2b0b89d2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test019@gmail.com",
+        "password": "$2y$12$MV0mU6tSyHgcT5hOqnmbbuqLC2sHxqUm3moTf60P7YHfQP1DT2kc2",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774101549839"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774101549839"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bf9c39387dabc0810507f2"
+        },
+        "nama_lengkap": "Test User",
+        "email": "test79@gmail.com",
+        "password": "$2y$12$1iv7v1ZnJ3A9RJqa51vQaeFvfdZ67LRQq1PORaSuZJL\/khAlqfP3K",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774165049348"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774165049348"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bf9d02387dabc0810507f3"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru1@gmail.com",
+        "password": "$2y$12$IANg3uZTief1plleCQH8G.fsjD2a7zy1UoG9egJFjqzcekymH5AWC",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774165250480"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774165250480"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bf9d75387dabc0810507f4"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru2@gmail.com",
+        "password": "$2y$12$pYVQtuuZF\/tlMhgJJPYR0eZv4TkVQnEP6uhb0.t95nBB6\/7eMKj\/e",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774165365886"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774165365886"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bf9f27387dabc0810507f5"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru3@gmail.com",
+        "password": "$2y$12$XY3EVn.5Yep\/ozsoMAaWpOfSKjtyS\/E2BdmU1d8\/kleliH2bfGZn2",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774165799409"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774165799409"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfa0c8387dabc0810507f6"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru4@gmail.com",
+        "password": "$2y$12$zMhUUyQgHoAIdUMMGAuZ1uCPP9kLBl\/uRxcKKJtceZp8Yg9zngvWy",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774166216492"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774166216492"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfa11d387dabc0810507f7"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru5@gmail.com",
+        "password": "$2y$12$POLIKWHvAcG.Jf9Cie8VSewe59K\/Ke8Y4ISErVZFc0xesi7jLPj12",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774166301358"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774166301358"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bfa186387dabc0810507f8"
+        },
+        "nama_lengkap": "Test User",
+        "email": "testbaru6@gmail.com",
+        "password": "$2y$12$H7aLKvzfpXKk5qXMq.ktZOiYYgFhp7pu2ENch2nJWkovObmQZ6yEe",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774166406758"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774166406758"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bff4683e258fb1710ac3c2"
+        },
+        "nama_lengkap": "alif",
+        "email": "jokermaniac50@gmail.com",
+        "password": "$2y$12$3KAmY9\/JyPjZQqq71SSUteqp6t.ElyGxKYEgS9r4Rbu6ZDvR\/CvAO",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774187624107"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774187624107"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69bffbf23e258fb1710ac3c6"
+        },
+        "nama_lengkap": "Andrew",
+        "email": "wallmaria2002@gmail.com",
+        "password": "$2y$12$2KdTSthiNOVmS2Up5RnJaORjjlzqUar2ys3NrWx5sYUrvV4\/ZXLmC",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774189554658"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774189554658"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69c2842a4224e39f03039772"
+        },
+        "nama_lengkap": "udin junior",
+        "email": "wallrose2002@gmail.com",
+        "password": "$2y$12$DhK8kRyPalSCTcGOXlMatuWyQzfLDbi99qTUZ1o7v0.FWxXV5QYhu",
+        "role": "mahasiswa",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774355498341"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774355498341"
+            }
+        }
+    }
+]

@@ -1,0 +1,71 @@
+[
+    {
+        "_id": {
+            "$oid": "69be8238758785741d0d5c56"
+        },
+        "name": "auth_token",
+        "token": "2dd62b5ee3ae3a8a3be38305c16e05b25f3748f17138338fc6354784d8cc7f8b",
+        "abilities": "[\"*\"]",
+        "expires_at": null,
+        "tokenable_id": {
+            "$oid": "69be8238758785741d0d5c55"
+        },
+        "tokenable_type": "App\\Models\\User",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774092856569"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774092856569"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be8500758785741d0d5c5b"
+        },
+        "name": "auth_token",
+        "token": "f88c45c7f3671359cd3e27b5a02b6d58daf31c384c6e8c81304abe83b02dd0fd",
+        "abilities": "[\"*\"]",
+        "expires_at": null,
+        "tokenable_id": {
+            "$oid": "69be8500758785741d0d5c5a"
+        },
+        "tokenable_type": "App\\Models\\User",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774093568099"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774093568099"
+            }
+        }
+    },
+    {
+        "_id": {
+            "$oid": "69be9550ed94d7c11e0eb1f4"
+        },
+        "name": "auth_token",
+        "token": "a593090e74dfa05516ab3caa2dcef8e64bf3edbbe86a2c8dcc59a5c2dceab294",
+        "abilities": "[\"*\"]",
+        "expires_at": null,
+        "tokenable_id": {
+            "$oid": "69be9550ed94d7c11e0eb1f3"
+        },
+        "tokenable_type": "App\\Models\\User",
+        "updated_at": {
+            "$date": {
+                "$numberLong": "1774097744387"
+            }
+        },
+        "created_at": {
+            "$date": {
+                "$numberLong": "1774097744387"
+            }
+        }
+    }
+]
