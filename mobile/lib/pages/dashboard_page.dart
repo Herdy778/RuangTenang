@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'chat_page.dart';
+import 'relaxation_page.dart';
+import '../services/api_service.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -41,6 +43,14 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     super.dispose();
   }
 
+  Future<void> _refreshData() async {
+    // Karena arsitektur menggunakan pemanggilan Future statis (inline) di FutureBuilder,
+    // kita sekadar melakukan setState untuk memicu re-render dan menunda penyelesaian RefreshIndicator
+    // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
+    setState(() {});
+    await Future.delayed(const Duration(milliseconds: 800));
+  }
+
   @override
   Widget build(BuildContext context) {
     int animIndex = 0; // Digunakan secara inkremental untuk animasi staggered per elemen
@@ -54,11 +64,16 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
 
           // Konten Utama
           SafeArea(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+            child: RefreshIndicator(
+              color: AppColors.primary,
+              backgroundColor: AppColors.cardBackground,
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(), // Supaya konten selalu bisa ditarik meskipun pendek
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                   _StaggeredFadeInUp(
                     index: animIndex++,
                     controller: _staggeredController,
@@ -83,7 +98,40 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   _StaggeredFadeInUp(
                     index: animIndex++,
                     controller: _staggeredController,
-                    child: const MoodBarChart(),
+                    child: FutureBuilder<List<dynamic>>(
+                      future: ApiService().fetchMoodStats(),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          );
+                        }
+                        if (snapshot.hasError) {
+                          return Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Text('Gagal memuat data mood'),
+                            ),
+                          );
+                        }
+                        if (snapshot.hasData) {
+                          final data = snapshot.data!;
+                          if (data.isEmpty) {
+                            return const Center(
+                              child: Padding(
+                                padding: EdgeInsets.all(20.0),
+                                child: Text('Belum ada data mood hari ini'),
+                              ),
+                            );
+                          }
+                          return MoodBarChart(data: data);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
                   ),
                   const SizedBox(height: 36),
                   
@@ -104,8 +152,176 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               ),
             ),
           ),
+          ), // Penutup SafeArea yang tadinya tertelan oleh RefreshIndicator
         ],
       ),
+    );
+  }
+
+  void _showAddMoodBottomSheet(BuildContext context) {
+    int selectedScore = 3; // Default Netral
+    String selectedMood = "Netral";
+    final TextEditingController noteController = TextEditingController();
+    bool isLoading = false;
+
+    final moodOptions = [
+      {"mood": "Sangat Sedih", "score": 1, "emoji": "😭", "color": Colors.grey[400]!},
+      {"mood": "Sedih", "score": 2, "emoji": "😔", "color": Colors.blueGrey[300]!},
+      {"mood": "Netral", "score": 3, "emoji": "😐", "color": Colors.deepPurple[200]!},
+      {"mood": "Senang", "score": 4, "emoji": "😊", "color": Colors.deepPurple[400]!},
+      {"mood": "Sangat Senang", "score": 5, "emoji": "😁", "color": Colors.deepPurple},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Container(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom + 24,
+                top: 24,
+                left: 24,
+                right: 24,
+              ),
+              decoration: BoxDecoration(
+                color: AppColors.background,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: Colors.grey[300],
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    "Bagaimana perasaanmu saat ini?",
+                    style: AppTextStyles.titleMD,
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: moodOptions.map((option) {
+                      final bool isSelected = selectedScore == option["score"];
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            selectedScore = option["score"] as int;
+                            selectedMood = option["mood"] as String;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: isSelected ? (option["color"] as Color).withOpacity(0.2) : Colors.transparent,
+                            border: Border.all(
+                              color: isSelected ? (option["color"] as Color) : Colors.grey[300]!,
+                              width: isSelected ? 2 : 1,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Text(
+                            option["emoji"] as String,
+                            style: TextStyle(fontSize: isSelected ? 32 : 24),
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                  const SizedBox(height: 12),
+                  Center(
+                    child: Text(
+                      selectedMood,
+                      style: AppTextStyles.bodyMD.copyWith(
+                        color: moodOptions.firstWhere((e) => e["score"] == selectedScore)["color"] as Color,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  TextField(
+                    controller: noteController,
+                    maxLines: 3,
+                    decoration: InputDecoration(
+                      hintText: "Ceritakan sedikit tentang perasaanmu...",
+                      hintStyle: TextStyle(color: AppColors.textMuted),
+                      filled: true,
+                      fillColor: Colors.grey[100],
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(16),
+                        borderSide: BorderSide.none,
+                      ),
+                      contentPadding: const EdgeInsets.all(16),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: isLoading
+                          ? null
+                          : () async {
+                              setModalState(() => isLoading = true);
+                              try {
+                                await ApiService().saveMood(
+                                  selectedMood,
+                                  selectedScore,
+                                  noteController.text,
+                                );
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Berhasil disimpan!'),
+                                      backgroundColor: Colors.green,
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                  // Refresh data (panggil setState untuk merender ulang FutureBuilder)
+                                  setState(() {});
+                                }
+                              } catch (e) {
+                                setModalState(() => isLoading = false);
+                                if (context.mounted) {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+                                  );
+                                }
+                              }
+                            },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        elevation: 0,
+                      ),
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 24,
+                              height: 24,
+                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                            )
+                          : Text("Simpan", style: AppTextStyles.titleSM.copyWith(color: Colors.white)),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
     );
   }
 
@@ -214,20 +430,62 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
   }
 
   Widget _buildStatsGrid() {
-    return Row(
-      children: [
-        _buildStatCard("Total Jurnal", "24", false),
-        const SizedBox(width: 12),
-        _buildStatCard("Mood Dominan", "Netral", true),
-        const SizedBox(width: 12),
-        _buildStatCard("Sesi Relaksasi", "12", false),
-      ],
+    return FutureBuilder<Map<String, dynamic>>(
+      future: ApiService().fetchDashboardStats(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.all(20.0),
+              child: SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+              ),
+            ),
+          );
+        }
+
+        String totalJurnal = "0";
+        String moodDominan = "Netral";
+        String sesiRelaksasi = "12";
+
+        if (snapshot.hasData && !snapshot.hasError) {
+          totalJurnal = snapshot.data!['total_jurnal'].toString();
+          moodDominan = snapshot.data!['mood_dominan'].toString();
+          sesiRelaksasi = snapshot.data!['sesi_relaksasi'].toString();
+        }
+
+        return IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildStatCard("Total Jurnal", totalJurnal, false),
+              const SizedBox(width: 12),
+              _buildStatCard("Mood Dominan", moodDominan, true),
+              const SizedBox(width: 12),
+              _buildStatCard("Sesi Relaksasi", sesiRelaksasi, false, onTap: () async {
+                final result = await Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const RelaxationPage()),
+                );
+                // Bila kembalian true artinya data berhasil disimpan
+                if (result == true) {
+                  _refreshData();
+                }
+              }),
+            ],
+          ),
+        );
+      },
     );
   }
 
-  Widget _buildStatCard(String title, String value, bool isPrimary) {
+  Widget _buildStatCard(String title, String value, bool isPrimary, {VoidCallback? onTap}) {
     return Expanded(
-      child: Container(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
         padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
         decoration: isPrimary
             ? BoxDecoration(
@@ -245,9 +503,12 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 borderRadius: BorderRadius.circular(16),
               ),
         child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontFamily: 'Georgia',
@@ -267,6 +528,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
             ),
           ],
         ),
+      ),
       ),
     );
   }
@@ -297,10 +559,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
           const SizedBox(width: 16),
           ElevatedButton(
             onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const ChatAiPage()),
-              );
+              _showAddMoodBottomSheet(context);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
@@ -446,7 +705,8 @@ class _StaggeredFadeInUp extends StatelessWidget {
 }
 
 class MoodBarChart extends StatefulWidget {
-  const MoodBarChart({super.key});
+  final List<dynamic> data;
+  const MoodBarChart({super.key, required this.data});
 
   @override
   State<MoodBarChart> createState() => _MoodBarChartState();
@@ -455,23 +715,66 @@ class MoodBarChart extends StatefulWidget {
 class _MoodBarChartState extends State<MoodBarChart> {
   int? _selectedIndex;
 
-  // Level 1-5 untuk chart tinggi
-  final List<Map<String, dynamic>> _data = [
-    {"day": "S", "level": 3, "mood": "Netral"},
-    {"day": "S", "level": 2, "mood": "Sedih"},
-    {"day": "R", "level": 4, "mood": "Cemas"},
-    {"day": "K", "level": 4, "mood": "Netral"},
-    {"day": "J", "level": 3, "mood": "Cemas"},
-    {"day": "S", "level": 5, "mood": "Netral"}, // Asumsi nilai puncak 5
-    {"day": "M", "level": 4, "mood": "Cemas"},
-  ];
+  List<Map<String, dynamic>> get _parsedData {
+    // Membalik data karena API mengembalikan data terbaru di awal list
+    var reversedData = widget.data.reversed.toList();
+    return reversedData.map((item) {
+      String dayStr = "-";
+      var dateRaw = item['tanggal'] ?? item['created_at'];
+      if (dateRaw != null) {
+        try {
+          DateTime dt = DateTime.parse(dateRaw.toString());
+          const indonesianDays = ["", "S", "S", "R", "K", "J", "S", "M"];
+          if (dt.weekday >= 1 && dt.weekday <= 7) {
+            dayStr = indonesianDays[dt.weekday];
+          }
+        } catch (e) {
+          dayStr = "?";
+        }
+      }
+
+      int level = 3;
+      if (item['score'] != null) {
+        level = int.tryParse(item['score'].toString()) ?? 3;
+      } else if (item['hasil_mood'] != null) {
+        // Fallback jika pakai model Journal
+        level = 3; 
+      }
+
+      String mood = item['mood']?.toString() ?? item['hasil_mood']?.toString() ?? "Netral";
+
+      return {
+        "day": dayStr,
+        "level": level,
+        "mood": mood,
+      };
+    }).toList();
+  }
+
+  Color _getBarColor(int level) {
+    switch (level) {
+      case 5:
+        return Colors.deepPurple;
+      case 4:
+        return Colors.deepPurple[400]!;
+      case 3:
+        return Colors.deepPurple[200]!;
+      case 2:
+        return Colors.blueGrey[300]!;
+      case 1:
+        return Colors.grey[400]!;
+      default:
+        return Colors.deepPurple[200]!;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     const double maxBarHeight = 120.0;
     
     return Container(
-      width: double.infinity,
+      // Lebar total layar dikurangi margin/padding horizontal Dashboard (20+20 = 40)
+      width: MediaQuery.of(context).size.width - 40,
       padding: const EdgeInsets.all(20),
       decoration: AppDecorations.card,
       child: Column(
@@ -504,90 +807,96 @@ class _MoodBarChartState extends State<MoodBarChart> {
                 // Grafik Batang Interaktif
                 Positioned.fill(
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
-                    children: List.generate(_data.length, (index) {
-                      final item = _data[index];
+                    children: List.generate(_parsedData.length, (index) {
+                      final item = _parsedData[index];
                       // Menyesuaikan rasio ketinggian maksimal (5 level)
-                      final double heightRatio = (item["level"] as int) / 5.0;
+                      final int level = item["level"] as int;
+                      final double heightRatio = level / 5.0;
                       final targetHeight = maxBarHeight * heightRatio;
                       final isSelected = _selectedIndex == index;
+                      final dynamicBarColor = _getBarColor(level);
                       final moodStyle = AppMoodColors.of(item["mood"] as String);
 
-                      return GestureDetector(
-                        onTap: () {
-                          // Tap memunculkan tooltip dan glow
-                          setState(() {
-                            _selectedIndex = isSelected ? null : index;
-                          });
-                        },
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          children: [
-                            // Tooltip Interaktif
-                            AnimatedOpacity(
-                              duration: const Duration(milliseconds: 200),
-                              opacity: isSelected ? 1.0 : 0.0,
-                              child: Container(
-                                margin: const EdgeInsets.only(bottom: 6),
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.textPrimary,
-                                  borderRadius: BorderRadius.circular(6),
-                                ),
-                                child: Text(
-                                  item["mood"] as String,
-                                  style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
-                                  overflow: TextOverflow.visible,
-                                ),
-                              ),
-                            ),
-                            
-                            // Bar Animasi (Elastis / Bounce dari Tween)
-                            TweenAnimationBuilder<double>(
-                              tween: Tween(begin: 0.0, end: 1.0),
-                              duration: const Duration(milliseconds: 1000),
-                              curve: Curves.elasticOut,
-                              builder: (context, value, child) {
-                                return AnimatedContainer(
-                                  duration: const Duration(milliseconds: 300),
-                                  width: 32,
-                                  height: targetHeight * value, // Tingginya membal (bounce up)
+                      return Expanded(
+                        child: GestureDetector(
+                          onTap: () {
+                            // Tap memunculkan tooltip dan glow
+                            setState(() {
+                              _selectedIndex = isSelected ? null : index;
+                            });
+                          },
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: [
+                              // Tooltip Interaktif
+                              AnimatedOpacity(
+                                duration: const Duration(milliseconds: 200),
+                                opacity: isSelected ? 1.0 : 0.0,
+                                child: Container(
+                                  margin: const EdgeInsets.only(bottom: 6),
+                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                                   decoration: BoxDecoration(
-                                    color: moodStyle.background,
-                                    borderRadius: const BorderRadius.only(
-                                      topLeft: Radius.circular(12),
-                                      topRight: Radius.circular(12),
-                                      bottomLeft: Radius.circular(4),
-                                      bottomRight: Radius.circular(4),
-                                    ),
-                                    border: Border.all(
-                                      color: isSelected ? moodStyle.textColor : moodStyle.textColor.withOpacity(0.5),
-                                      width: isSelected ? 2.0 : 1.5,
-                                    ),
-                                    boxShadow: isSelected
-                                        ? [
-                                            BoxShadow(
-                                              color: moodStyle.textColor.withOpacity(0.4),
-                                              blurRadius: 10,
-                                              offset: const Offset(0, 4),
-                                            )
-                                          ]
-                                        : [],
+                                    color: AppColors.textPrimary,
+                                    borderRadius: BorderRadius.circular(6),
                                   ),
-                                );
-                              },
-                            ),
-                            const SizedBox(height: 12),
-                            // Label Bawah (Hari)
-                            Text(
-                              item["day"] as String,
-                              style: AppTextStyles.caption.copyWith(
-                                fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                                  child: Text(
+                                    item["mood"] as String,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
                               ),
-                            ),
-                          ],
+                              
+                              // Bar Animasi (Elastis / Bounce dari Tween)
+                              TweenAnimationBuilder<double>(
+                                tween: Tween(begin: 0.0, end: 1.0),
+                                duration: const Duration(milliseconds: 1000),
+                                curve: Curves.elasticOut,
+                                builder: (context, value, child) {
+                                  return AnimatedContainer(
+                                    duration: const Duration(milliseconds: 300),
+                                    width: 20, // Lebar batang sedikit dirampingkan lagi
+                                    height: targetHeight * value, // Tingginya membal
+                                    decoration: BoxDecoration(
+                                      color: dynamicBarColor, // Warna dinamis sesuai score level
+                                      borderRadius: const BorderRadius.only(
+                                        topLeft: Radius.circular(12),
+                                        topRight: Radius.circular(12),
+                                        bottomLeft: Radius.circular(4),
+                                        bottomRight: Radius.circular(4),
+                                      ),
+                                      border: Border.all(
+                                        color: isSelected ? Colors.white : dynamicBarColor.withOpacity(0.5),
+                                        width: isSelected ? 2.0 : 1.0,
+                                      ),
+                                      boxShadow: isSelected
+                                          ? [
+                                              BoxShadow(
+                                                color: dynamicBarColor.withOpacity(0.6),
+                                                blurRadius: 10,
+                                                offset: const Offset(0, 4),
+                                              )
+                                            ]
+                                          : [],
+                                    ),
+                                  );
+                                },
+                              ),
+                              const SizedBox(height: 12),
+                              // Label Bawah (Hari)
+                              Text(
+                                item["day"] as String,
+                                style: AppTextStyles.caption.copyWith(
+                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       );
                     }),
