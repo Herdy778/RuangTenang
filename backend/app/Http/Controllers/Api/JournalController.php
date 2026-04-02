@@ -19,7 +19,7 @@ class JournalController extends Controller
 
         $curhatan = $request->teks_curhat;
 
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.key');
         if (!$apiKey || $apiKey === 'masukkan_api_key_kamu_disini') {
             return response()->json([
                 'status' => 'error',
@@ -103,7 +103,7 @@ class JournalController extends Controller
     {
         $userMessage = $request->input('message', '');
 
-        $apiKey = env('GEMINI_API_KEY');
+        $apiKey = config('services.gemini.key');
         if (!$apiKey || $apiKey === 'masukkan_api_key_kamu_disini') {
             return response()->json([
                 'reply' => 'Maaf, layanan AI sedang tidak tersedia. API Key belum dikonfigurasi.'
