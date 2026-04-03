@@ -1,3 +1,4 @@
+# force rebuild
 [phases.setup]
 nixPkgs = ["php82", "php82Extensions.mongodb"]
 
