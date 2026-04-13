@@ -40,9 +40,15 @@ class JournalController extends Controller
             ]);
 
             if ($response->failed()) {
+                $errorData = json_decode($response->body(), true);
+                if (isset($errorData['error']['code']) && $errorData['error']['code'] == 503) {
+                    $pesan = 'Gagal menghubungi Gemini: Server AI sedang penuh (High Demand). Silakan coba lagi dalam beberapa saat.';
+                } else {
+                    $pesan = 'Gagal menghubungi Gemini. Hubungi admin jika masalah berlanjut.';
+                }
                 return response()->json([
                     'status' => 'error',
-                    'pesan' => 'Gagal menghubungi Gemini: ' . $response->body()
+                    'pesan' => $pesan
                 ], 500);
             }
 
