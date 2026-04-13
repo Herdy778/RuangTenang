@@ -12,7 +12,8 @@ class Journal extends Model
         'user_id',
         'teks_curhat',
         'hasil_mood',
-        'tanggal'
+        'tanggal',
+        'status' // ✅ TAMBAHAN
     ];
 
     protected $casts = [
