@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\MoodController;
 
+Route::post('/register', [AuthController::class, 'register']);
+
 Route::get('/mood-stats', [MoodController::class, 'index']);
 Route::get('/dashboard-stats', [MoodController::class, 'dashboardStats']);
 Route::post('/relaxation-sessions', [MoodController::class, 'storeRelaxation']);
