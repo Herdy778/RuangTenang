@@ -51,6 +51,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // hanya admin bisa login
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'pesan'  => 'Akses ditolak. Hanya admin yang boleh login'
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token');
 
         return response()->json([
@@ -58,6 +66,59 @@ class AuthController extends Controller
             'pesan'  => 'Login berhasil!',
             'data'   => $user,
             'token'  => $token
+        ]);
+    }
+
+    public function users()
+    {
+        $users = User::select('_id','nama_lengkap','email','role')
+            ->orderBy('_id','desc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $users
+        ]);
+    }
+
+    // UPDATE ROLE USER
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::where('_id', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        $user->role = $request->role;
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'Role berhasil diupdate'
+        ]);
+    }
+
+    // DELETE USER
+    public function deleteUser($id)
+    {
+        $user = User::where('_id', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'User berhasil dihapus'
         ]);
     }
 
