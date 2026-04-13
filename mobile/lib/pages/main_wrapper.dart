@@ -14,20 +14,17 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = [
-    const DashboardPage(),
-    const ChatAiPage(),
-  ];
+  final List<Widget> _pages = const [DashboardPage(), ChatAiPage()];
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBody: true, // Biar elemen di bawah menelusup ke bawah navbar yang transparan
+      extendBody: true,
       body: AnimatedSwitcher(
         duration: const Duration(milliseconds: 300),
         switchInCurve: Curves.easeInCubic,
         switchOutCurve: Curves.easeOutCubic,
-        transitionBuilder: (Widget child, Animation<double> animation) {
+        transitionBuilder: (child, animation) {
           return FadeTransition(opacity: animation, child: child);
         },
         child: KeyedSubtree(
@@ -44,7 +41,7 @@ class _MainWrapperState extends State<MainWrapper> {
       decoration: const BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000), // Shadow ringan 4%
+            color: Color(0x0A000000),
             blurRadius: 20,
             offset: Offset(0, -5),
           ),
@@ -66,8 +63,13 @@ class _MainWrapperState extends State<MainWrapper> {
               elevation: 0,
               selectedItemColor: AppColors.primary,
               unselectedItemColor: AppColors.textMuted,
-              selectedLabelStyle: AppTextStyles.label.copyWith(fontSize: 12, fontWeight: FontWeight.w600),
-              unselectedLabelStyle: AppTextStyles.caption.copyWith(fontSize: 12),
+              selectedLabelStyle: AppTextStyles.label.copyWith(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+              unselectedLabelStyle: AppTextStyles.caption.copyWith(
+                fontSize: 12,
+              ),
               items: const [
                 BottomNavigationBarItem(
                   icon: Icon(Icons.grid_view_rounded),
