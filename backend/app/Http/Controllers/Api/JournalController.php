@@ -117,7 +117,7 @@ class JournalController extends Controller
 
         $prompt = $systemPersona . "\n\nPengguna berkata: \"" . $userMessage . "\"";
 
-        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . trim($apiKey);
+        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-pro:generateContent?key=' . trim($apiKey);
 
         try {
             $response = Http::timeout(30)->post($geminiUrl, [
@@ -132,7 +132,7 @@ class JournalController extends Controller
 
             if ($response->failed()) {
                 return response()->json([
-                    'reply' => 'Maaf, saya sedang mengalami gangguan koneksi. Silakan coba lagi sebentar.'
+                    'reply' => 'Gagal API Gemini: ' . $response->body()
                 ], 500);
             }
 
