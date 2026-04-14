@@ -2,8 +2,7 @@
 
 namespace App\Models;
 
-use Jenssegers\Mongodb\Eloquent\Model;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 
 class User extends Authenticatable
 {
@@ -11,10 +10,11 @@ class User extends Authenticatable
     protected $collection = 'users';
 
     protected $fillable = [
-    'name',
-    'email',
-    'password',
-];
+        'nama_lengkap',
+        'email',
+        'password',
+        'role'
+    ];
 
     protected $hidden = [
         'password'
