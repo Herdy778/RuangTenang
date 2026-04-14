@@ -24,9 +24,9 @@ class _RegisterPageState extends State<RegisterPage> {
     if (nameController.text.isEmpty ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Semua field wajib diisi")),
+      );
       setState(() => isLoading = false);
       return;
     }
@@ -34,30 +34,39 @@ class _RegisterPageState extends State<RegisterPage> {
     try {
       var response = await http.post(
         Uri.parse("http://127.0.0.1:8000/api/register"),
-        headers: {"Accept": "application/json"},
-        body: {
-          "name": nameController.text,
+        headers: {
+          "Accept": "application/json",
+          "Content-Type": "application/json",
+        },
+        body: jsonEncode({
+          "nama_lengkap": nameController.text,
           "email": emailController.text,
           "password": passwordController.text,
-        },
+        }),
       );
 
-      var data = jsonDecode(response.body);
+      var data;
+      try {
+        data = jsonDecode(response.body);
+      } catch (e) {
+        data = {};
+      }
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
 
         await prefs.setBool('isLogin', true);
-        await prefs.setString('email', data['user']?['email'] ?? '');
+        await prefs.setString('email', data['data']?['email'] ?? '');
+        await prefs.setString('token', data['token'] ?? '');
 
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Register berhasil")));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Register berhasil")),
+        );
 
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Register gagal")),
+          SnackBar(content: Text(data['pesan'] ?? "Register gagal")),
         );
       }
     } catch (e) {
@@ -75,7 +84,6 @@ class _RegisterPageState extends State<RegisterPage> {
       backgroundColor: const Color(0xFFFAFAFA),
       body: Stack(
         children: [
-          // 🔵 BLOB BACKGROUND
           Positioned(
             top: -100,
             left: -100,
@@ -100,8 +108,6 @@ class _RegisterPageState extends State<RegisterPage> {
               ),
             ),
           ),
-
-          // 🔵 CONTENT
           Center(
             child: SingleChildScrollView(
               child: Container(
@@ -137,7 +143,6 @@ class _RegisterPageState extends State<RegisterPage> {
                     ),
                     const SizedBox(height: 30),
 
-                    // NAME
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
@@ -147,16 +152,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         fillColor: const Color(0xFFFAFAFA),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE4E4E7),
-                          ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 15),
 
-                    // EMAIL
                     TextField(
                       controller: emailController,
                       decoration: InputDecoration(
@@ -166,16 +167,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         fillColor: const Color(0xFFFAFAFA),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE4E4E7),
-                          ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 15),
 
-                    // PASSWORD
                     TextField(
                       controller: passwordController,
                       obscureText: isHidden,
@@ -184,7 +181,9 @@ class _RegisterPageState extends State<RegisterPage> {
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            isHidden ? Icons.visibility_off : Icons.visibility,
+                            isHidden
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() => isHidden = !isHidden);
@@ -194,16 +193,12 @@ class _RegisterPageState extends State<RegisterPage> {
                         fillColor: const Color(0xFFFAFAFA),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                            color: Color(0xFFE4E4E7),
-                          ),
                         ),
                       ),
                     ),
 
                     const SizedBox(height: 25),
 
-                    // BUTTON
                     isLoading
                         ? const CircularProgressIndicator()
                         : SizedBox(
@@ -226,25 +221,13 @@ class _RegisterPageState extends State<RegisterPage> {
 
                     const SizedBox(height: 15),
 
-                    // LOGIN
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Text(
-                          "Sudah punya akun? ",
-                          style: TextStyle(color: Color(0xFF52525B)),
-                        ),
+                        const Text("Sudah punya akun? "),
                         TextButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                          },
-                          child: const Text(
-                            "Login",
-                            style: TextStyle(
-                              color: Color(0xFF7C3AED),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Login"),
                         ),
                       ],
                     ),

@@ -18,44 +18,61 @@ class _LoginPageState extends State<LoginPage> {
   bool isHidden = true;
 
   Future<void> login() async {
-    setState(() => isLoading = true);
+  setState(() => isLoading = true);
 
+  if (emailController.text.isEmpty || passwordController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Email & password wajib diisi")),
+    );
+    setState(() => isLoading = false);
+    return;
+  }
+
+  try {
+    var response = await http.post(
+      Uri.parse("http://127.0.0.1:8000/api/login"),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "email": emailController.text,
+        "password": passwordController.text,
+      }),
+    );
+
+    var data;
     try {
-      var response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/login"),
-        headers: {"Accept": "application/json"},
-        body: {
-          "email": emailController.text,
-          "password": passwordController.text,
-        },
-      );
-
-      var data = jsonDecode(response.body);
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool('isLogin', true);
-        await prefs.setString('email', data['user']?['email'] ?? '');
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Login berhasil")));
-
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['message'] ?? "Login gagal")),
-        );
-      }
+      data = jsonDecode(response.body);
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tidak bisa connect ke server")),
-      );
+      data = {};
     }
 
-    setState(() => isLoading = false);
+    if (response.statusCode == 200) {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.setBool('isLogin', true);
+      await prefs.setString('email', data['data']?['email'] ?? '');
+      await prefs.setString('token', data['token'] ?? '');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login berhasil")),
+      );
+
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['pesan'] ?? "Login gagal")),
+      );
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Tidak bisa connect ke server")),
+    );
   }
+
+  setState(() => isLoading = false);
+}
 
   @override
   Widget build(BuildContext context) {
