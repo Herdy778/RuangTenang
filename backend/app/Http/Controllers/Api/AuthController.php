@@ -11,53 +11,123 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function register(Request $request)
+{
+    $request->validate([
+        'nama_lengkap' => 'required|string',
+        'email'        => 'required|email',
+        'password'     => 'required|string|min:6'
+    ]);
+
+    $user = User::create([
+        'nama_lengkap' => $request->nama_lengkap,
+        'email'        => $request->email,
+        'password'     => Hash::make($request->password),
+        'role'         => 'mahasiswa'
+    ]);
+
+    $token = bin2hex(random_bytes(32));
+
+    Token::create([
+        'user_id' => $user->_id,
+        'token'   => hash('sha256', $token),
+        'name'    => 'auth_token'
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'data'   => $user,
+        'token'  => $token
+    ]);
+}
+
+    public function login(Request $request)
+{
+    $request->validate([
+        'email'    => 'required|email',
+        'password' => 'required|string'
+    ]);
+
+    $user = User::where('email', $request->email)->first();
+
+    if (!$user || !Hash::check($request->password, $user->password)) {
+        return response()->json([
+            'status' => 'error',
+            'pesan'  => 'Email atau Password salah!'
+        ], 401);
+    }
+
+    if ($user->role !== 'admin') {
+        return response()->json([
+            'status' => 'error',
+            'pesan'  => 'Akses ditolak. Hanya admin'
+        ], 403);
+    }
+
+    $token = bin2hex(random_bytes(32));
+
+    Token::create([
+        'user_id' => $user->_id,
+        'token'   => hash('sha256', $token),
+        'name'    => 'auth_token'
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'data'   => $user,
+        'token'  => $token
+    ]);
+}
+
+    public function users()
     {
-        $request->validate([
-            'nama_lengkap' => 'required|string',
-            'email'        => 'required|email|unique:users,email',
-            'password'     => 'required|string|min:6'
-        ]);
-
-        $user = User::create([
-            'nama_lengkap' => $request->nama_lengkap,
-            'email'        => $request->email,
-            'password'     => Hash::make($request->password),
-            'role'         => 'mahasiswa'
-        ]);
-
-        $token = $user->createToken('auth_token');
+        $users = User::select('_id','nama_lengkap','email','role')
+            ->orderBy('_id','desc')
+            ->get();
 
         return response()->json([
             'status' => 'success',
-            'pesan'  => 'Registrasi berhasil!',
-            'data'   => $user,
-            'token'  => $token
+            'data' => $users
         ]);
     }
 
-    public function login(Request $request)
+    // UPDATE ROLE USER
+    public function updateUser(Request $request, $id)
     {
-        $request->validate([
-            'email'    => 'required|email',
-            'password' => 'required|string'
-        ]);
+        $user = User::where('_id', $id)->first();
 
-        $user = User::where('email', $request->email)->first();
-
-        if (!$user || !Hash::check($request->password, $user->password)) {
+        if (!$user) {
             return response()->json([
                 'status' => 'error',
-                'pesan'  => 'Email atau Password salah!'
-            ], 401);
+                'pesan' => 'User tidak ditemukan'
+            ], 404);
         }
 
-        $token = $user->createToken('auth_token');
+        $user->role = $request->role;
+        $user->save();
 
         return response()->json([
             'status' => 'success',
-            'pesan'  => 'Login berhasil!',
-            'data'   => $user,
-            'token'  => $token
+            'pesan' => 'Role berhasil diupdate'
+        ]);
+    }
+
+    // DELETE USER
+    public function deleteUser($id)
+    {
+        $user = User::where('_id', $id)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'User tidak ditemukan'
+            ], 404);
+        }
+
+        $user->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'User berhasil dihapus'
         ]);
     }
 

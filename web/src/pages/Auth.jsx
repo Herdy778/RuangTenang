@@ -13,17 +13,33 @@ export default function Auth() {
   const [regForm, setRegForm] = useState({ nama_lengkap: '', email: '', password: '' });
 
   async function doLogin(e) {
-    e.preventDefault();
-    setError(''); setLoading(true);
-    try {
-      const res = await API.post('/login', loginForm);
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.data));
-      navigate('/dashboard');
-    } catch (err) {
-      setError(err.response?.data?.pesan || 'Login gagal.');
-    } finally { setLoading(false); }
+  e.preventDefault();
+  setError('');
+  setLoading(true);
+
+  try {
+    const res = await API.post('/login', loginForm);
+
+    const user = res.data.data;
+
+    // CEK ROLE ADMIN
+    if (user.role !== 'admin') {
+      setError('Akses ditolak. Hanya admin yang dapat login.');
+      setLoading(false);
+      return;
+    }
+
+    localStorage.setItem('token', res.data.token);
+    localStorage.setItem('user', JSON.stringify(user));
+
+    navigate('/dashboard');
+
+  } catch (err) {
+    setError(err.response?.data?.pesan || 'Login gagal.');
+  } finally {
+    setLoading(false);
   }
+}
 
   async function doRegister(e) {
     e.preventDefault();
