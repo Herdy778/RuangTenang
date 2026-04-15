@@ -19,11 +19,11 @@ class JournalController extends Controller
 
         $curhatan = $request->teks_curhat;
 
-        $apiKey = config('services.gemini.key');
-        if (!$apiKey || $apiKey === 'masukkan_api_key_kamu_disini') {
+        $apiKey = env('GROQ_API_KEY');
+        if (!$apiKey) {
             return response()->json([
                 'status' => 'error',
-                'pesan' => 'API Key Gemini belum diisi di file .env!'
+                'pesan' => 'API Key Groq belum diisi di file .env!'
             ], 500);
         }
 
@@ -32,19 +32,25 @@ class JournalController extends Controller
             "Burnout, Cemas, Sedih, Netral, atau Krisis. \n\n" .
             "Teks: \"" . $curhatan . "\"";
 
-        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . trim($apiKey);
-
         try {
-            $response = Http::post($geminiUrl, [
-                'contents' => [['parts' => [['text' => $prompt]]]]
+            $response = Http::timeout(30)->withHeaders([
+                'Authorization' => 'Bearer ' . trim($apiKey),
+                'Content-Type'  => 'application/json',
+            ])->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model'    => 'llama-3.3-70b-versatile',
+                'messages' => [
+                    ['role' => 'user', 'content' => $prompt]
+                ],
+                'max_tokens'  => 10,
+                'temperature' => 0,
             ]);
 
             if ($response->failed()) {
                 $errorData = json_decode($response->body(), true);
                 if (isset($errorData['error']['code']) && $errorData['error']['code'] == 503) {
-                    $pesan = 'Gagal menghubungi Gemini: Server AI sedang penuh (High Demand). Silakan coba lagi dalam beberapa saat.';
+                    $pesan = 'Gagal menghubungi Groq: Server AI sedang penuh (High Demand). Silakan coba lagi dalam beberapa saat.';
                 } else {
-                    $pesan = 'Gagal menghubungi Gemini. Hubungi admin jika masalah berlanjut.';
+                    $pesan = 'Gagal menghubungi Groq: ' . $response->body();
                 }
                 return response()->json([
                     'status' => 'error',
@@ -52,8 +58,8 @@ class JournalController extends Controller
                 ], 500);
             }
 
-            $aiResult = $response->json();
-            $hasilMood = trim($aiResult['candidates'][0]['content']['parts'][0]['text'] ?? 'Netral');
+            $aiResult  = $response->json();
+            $hasilMood = trim($aiResult['choices'][0]['message']['content'] ?? 'Netral');
             $hasilMood = preg_replace('/[^a-zA-Z]/', '', $hasilMood);
 
             $userId = DB::connection('mongodb')
@@ -62,29 +68,31 @@ class JournalController extends Controller
                 ->value('_id');
 
             $journal = Journal::create([
-                'user_id' => (string)$userId,
+                'user_id'     => (string)$userId,
                 'teks_curhat' => $curhatan,
-                'hasil_mood' => $hasilMood,
-                'tanggal' => now()
+                'hasil_mood'  => $hasilMood,
+                'tanggal'     => now(),
+                'status'      => 'normal' // ✅ DEFAULT
             ]);
 
-            $semuaArtikel = Article::where('kategori_tag', $hasilMood)->get();
-            $jumlahAmbil = min(3, $semuaArtikel->count());
-            $rekomendasiArtikel = $jumlahAmbil > 0 ? $semuaArtikel->random($jumlahAmbil)->values() : [];
+            $semuaArtikel       = Article::where('kategori_tag', $hasilMood)->get();
+            $jumlahAmbil        = min(3, $semuaArtikel->count());
+            $rekomendasiArtikel = $jumlahAmbil > 0
+                ? $semuaArtikel->random($jumlahAmbil)->values()
+                : [];
 
             return response()->json([
-                'status' => 'success',
-                'pesan' => 'Jurnal berhasil dianalisis!',
-                'mood_terdeteksi' => $hasilMood,
-                'data_jurnal' => $journal,
+                'status'              => 'success',
+                'pesan'               => 'Jurnal berhasil dianalisis!',
+                'mood_terdeteksi'     => $hasilMood,
+                'data_jurnal'         => $journal,
                 'rekomendasi_artikel' => $rekomendasiArtikel
             ]);
 
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'pesan' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'pesan'  => 'Terjadi kesalahan sistem: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -102,48 +110,115 @@ class JournalController extends Controller
 
         return response()->json([
             'status' => 'success',
+            'data'   => $journals
+        ]);
+    }
+
+    // =========================
+    // ADMIN LIHAT SEMUA JURNAL
+    // =========================
+    public function adminJournals()
+    {
+        $journals = Journal::orderBy('created_at', 'desc')->get();
+
+        return response()->json([
+            'status' => 'success',
             'data' => $journals
         ]);
     }
-    public function tesAi(\Illuminate\Http\Request $request)
+
+    // =========================
+    // ADMIN DELETE JURNAL
+    // =========================
+    public function deleteJournal($id)
+    {
+        $journal = Journal::where('_id', $id)->first();
+
+        if (!$journal) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Jurnal tidak ditemukan'
+            ], 404);
+        }
+
+        $journal->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'Jurnal berhasil dihapus'
+        ]);
+    }
+
+    // =========================
+    // ✅ UPDATE STATUS (FITUR BARU)
+    // =========================
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|in:normal,perhatian,darurat'
+        ]);
+
+        $journal = Journal::where('_id', $id)->first();
+
+        if (!$journal) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Jurnal tidak ditemukan'
+            ], 404);
+        }
+
+        $journal->status = $request->status;
+        $journal->save();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'Status berhasil diupdate',
+            'data'  => $journal
+        ]);
+    }
+
+    public function tesAi(Request $request)
     {
         $userMessage = $request->input('message', '');
 
-        $apiKey = config('services.gemini.key');
-        if (!$apiKey || $apiKey === 'masukkan_api_key_kamu_disini') {
+        $apiKey = env('GROQ_API_KEY');
+        if (!$apiKey) {
             return response()->json([
                 'reply' => 'Maaf, layanan AI sedang tidak tersedia. API Key belum dikonfigurasi.'
             ], 500);
         }
 
-        $systemPersona = "Kamu adalah asisten psikologi bernama RuangTenang. " .
-            "Kamu bersifat empatik, suportif, dan selalu berbicara dalam Bahasa Indonesia yang hangat dan penuh perhatian. " .
-            "Tugasmu adalah mendengarkan keluhan pengguna, memberikan dukungan emosional, dan menawarkan saran sederhana yang membantu. " .
-            "Jangan memberikan diagnosis medis. Selalu sarankan untuk berkonsultasi dengan profesional jika masalahnya serius.";
-
-        $prompt = $systemPersona . "\n\nPengguna berkata: \"" . $userMessage . "\"";
-
-        $geminiUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=' . trim($apiKey);
-
         try {
-            $response = Http::timeout(30)->post($geminiUrl, [
-                'contents' => [
+            $response = Http::timeout(30)->withHeaders([
+                'Authorization' => 'Bearer ' . trim($apiKey),
+                'Content-Type'  => 'application/json',
+            ])->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model'    => 'llama-3.3-70b-versatile',
+                'messages' => [
                     [
-                        'parts' => [
-                            ['text' => $prompt]
-                        ]
+                        'role'    => 'system',
+                        'content' => "Kamu adalah asisten psikologi bernama RuangTenang..."
+                    ],
+                    [
+                        'role'    => 'user',
+                        'content' => $userMessage
                     ]
-                ]
+                ],
+                'max_tokens'  => 1024,
+                'temperature' => 0.7,
             ]);
 
             if ($response->failed()) {
                 return response()->json([
-                    'reply' => 'Maaf, saya sedang mengalami gangguan koneksi. Silakan coba lagi sebentar.'
+                    'reply' => 'Maaf, saya sedang mengalami gangguan koneksi.'
                 ], 500);
             }
 
-            $aiResult = $response->json();
-            $hasilTeksAI = trim($aiResult['candidates'][0]['content']['parts'][0]['text'] ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.');
+            $aiResult    = $response->json();
+            $hasilTeksAI = trim(
+                $aiResult['choices'][0]['message']['content']
+                ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
+            );
 
             return response()->json([
                 'reply' => $hasilTeksAI
@@ -151,7 +226,7 @@ class JournalController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'reply' => 'Maaf, terjadi kesalahan pada sistem AI. Silakan coba lagi nanti.'
+                'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
             ], 500);
         }
     }

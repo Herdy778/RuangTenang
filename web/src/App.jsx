@@ -1,11 +1,9 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Auth from './pages/Auth';
 import Dashboard from './pages/Dashboard';
-import Journal from './pages/Journal';
-import Articles from './pages/Articles';
-import BibliotherapyPage from './pages/BibliotherapyPage';
-import Profile from './pages/Profile';
-import Breathing from './pages/Breathing';
+import AdminUsers from './pages/AdminUsers';
+import AdminJournals from './pages/AdminJournals';
+import AdminArticles from './pages/AdminArticles';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -17,11 +15,26 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Auth />} />
-        <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-        <Route path="/journal" element={<PrivateRoute><Journal /></PrivateRoute>} />
-        <Route path="/articles" element={<PrivateRoute><BibliotherapyPage /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/breathing" element={<PrivateRoute><Breathing /></PrivateRoute>} />
+
+        <Route
+          path="/dashboard"
+          element={<PrivateRoute><Dashboard /></PrivateRoute>}
+        />
+
+        <Route
+          path="/admin/users"
+          element={<PrivateRoute><AdminUsers /></PrivateRoute>}
+        />
+
+        <Route
+          path="/admin/journals"
+          element={<PrivateRoute><AdminJournals /></PrivateRoute>}
+        />
+
+        <Route
+          path="/admin/articles"
+          element={<PrivateRoute><AdminArticles /></PrivateRoute>}
+        />
       </Routes>
     </BrowserRouter>
   );
