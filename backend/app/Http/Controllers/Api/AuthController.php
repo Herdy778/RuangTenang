@@ -56,13 +56,6 @@ class AuthController extends Controller
         ], 401);
     }
 
-    if ($user->role !== 'admin') {
-        return response()->json([
-            'status' => 'error',
-            'pesan'  => 'Akses ditolak. Hanya admin'
-        ], 403);
-    }
-
     $token = bin2hex(random_bytes(32));
 
     Token::create([
@@ -141,6 +134,34 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'pesan'  => 'Berhasil logout'
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user(); // from TokenAuth middleware
+
+        $request->validate([
+            'nama_lengkap' => 'required|string',
+            'email'        => 'required|email',
+        ]);
+
+        $user->nama_lengkap = $request->nama_lengkap;
+        $user->email = $request->email;
+
+        if ($request->filled('password')) {
+            $user->password = Hash::make($request->password);
+        }
+
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan'  => 'Profil berhasil diperbarui',
+            'data'   => [
+                'nama_lengkap' => $user->nama_lengkap,
+                'email'        => $user->email,
+            ]
         ]);
     }
 }
