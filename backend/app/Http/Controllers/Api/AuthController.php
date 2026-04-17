@@ -11,70 +11,78 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function register(Request $request)
-{
-    $request->validate([
-        'nama_lengkap' => 'required|string',
-        'email'        => 'required|email',
-        'password'     => 'required|string|min:6'
-    ]);
+    {
+        $request->validate([
+            'nama_lengkap' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
+        ]);
 
-    $user = User::create([
-        'nama_lengkap' => $request->nama_lengkap,
-        'email'        => $request->email,
-        'password'     => Hash::make($request->password),
-        'role'         => 'mahasiswa'
-    ]);
+        $user = User::create([
+            'nama_lengkap' => $request->nama_lengkap,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'mahasiswa'
+        ]);
 
-    $token = bin2hex(random_bytes(32));
+        $token = bin2hex(random_bytes(32));
 
-    Token::create([
-        'user_id' => $user->_id,
-        'token'   => hash('sha256', $token),
-        'name'    => 'auth_token'
-    ]);
+        Token::create([
+            'user_id' => $user->_id,
+            'token' => hash('sha256', $token),
+            'name' => 'auth_token'
+        ]);
 
-    return response()->json([
-        'status' => 'success',
-        'data'   => $user,
-        'token'  => $token
-    ]);
-}
-
-    public function login(Request $request)
-{
-    $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required|string'
-    ]);
-
-    $user = User::where('email', $request->email)->first();
-
-    if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
-            'status' => 'error',
-            'pesan'  => 'Email atau Password salah!'
-        ], 401);
+            'status' => 'success',
+            'data' => $user,
+            'token' => $token
+        ]);
     }
 
-    $token = bin2hex(random_bytes(32));
+    public function login(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string'
+        ]);
 
-    Token::create([
-        'user_id' => $user->_id,
-        'token'   => hash('sha256', $token),
-        'name'    => 'auth_token'
-    ]);
+        $user = User::where('email', $request->email)->first();
 
-    return response()->json([
-        'status' => 'success',
-        'data'   => $user,
-        'token'  => $token
-    ]);
-}
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Email atau Password salah!'
+            ], 401);
+        }
+
+        if ($user->role !== 'admin') {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Akses ditolak. Hanya admin'
+            ], 403);
+        }
+
+        $token = bin2hex(random_bytes(32));
+
+        Token::create([
+            'user_id' => $user->_id,
+            'token' => hash('sha256', $token),
+            'name' => 'auth_token'
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $user,
+            'token' => $token
+        ]);
+    }
+
 
     public function users()
     {
-        $users = User::select('_id','nama_lengkap','email','role')
-            ->orderBy('_id','desc')
+        $users = User::select('_id', 'nama_lengkap', 'email', 'role')
+            ->orderBy('_id', 'desc')
             ->get();
 
         return response()->json([
@@ -133,7 +141,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'pesan'  => 'Berhasil logout'
+            'pesan' => 'Berhasil logout'
         ]);
     }
 
