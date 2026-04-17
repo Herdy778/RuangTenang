@@ -15,16 +15,20 @@ class AppColors {
   static const Color cardBorder = Color(0xFFF4F4F5);
 
   // --- Teks ---
-  static const Color textPrimary = Color(0xFF18181B);   // Heading, angka
+  static const Color textPrimary = Color(0xFF18181B); // Heading, angka
   static const Color textSecondary = Color(0xFF52525B); // Body text
-  static const Color textMuted = Color(0xFFA1A1AA);     // Subtitle, label, tanggal
+  static const Color textMuted = Color(0xFFA1A1AA); // Subtitle, label, tanggal
 
   // --- Primary (Ungu) ---
-  static const Color primaryLight = Color(0xFF8B5CF6);  // Gradient ujung terang
-  static const Color primary = Color(0xFF7C3AED);       // Warna utama / gradient gelap
-  static const Color primarySurface = Color(0xFFEDE9FE); // Background tag aktif nav
+  static const Color primaryLight = Color(0xFF8B5CF6); // Gradient ujung terang
+  static const Color primary = Color(
+    0xFF7C3AED,
+  ); // Warna utama / gradient gelap
+  static const Color primarySurface = Color(
+    0xFFEDE9FE,
+  ); // Background tag aktif nav
   static const Color primaryBorder = Color(0xFFDDD6FE); // Border elemen ungu
-  static const Color primaryFocus = Color(0xFFA78BFA);  // Focus ring input
+  static const Color primaryFocus = Color(0xFFA78BFA); // Focus ring input
 
   // --- Aksen Hijau ---
   static const Color accentGreen = Color(0xFF10B981);
@@ -227,11 +231,7 @@ class AppDecorations {
     borderRadius: BorderRadius.circular(20),
     border: Border.all(color: AppColors.cardBorder, width: 1),
     boxShadow: const [
-      BoxShadow(
-        color: Color(0x0A000000),
-        blurRadius: 12,
-        offset: Offset(0, 2),
-      ),
+      BoxShadow(color: Color(0x0A000000), blurRadius: 12, offset: Offset(0, 2)),
     ],
   );
 
@@ -383,9 +383,7 @@ class AppTheme {
             fontSize: 14,
             fontWeight: FontWeight.w500,
           ),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         ),
       ),
 
@@ -397,7 +395,10 @@ class AppTheme {
           foregroundColor: AppColors.textSecondary,
           side: const BorderSide(color: AppColors.inputBorder, width: 1.5),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          textStyle: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w500),
+          textStyle: GoogleFonts.dmSans(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -410,21 +411,39 @@ class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        labelStyle: GoogleFonts.dmSans(fontSize: 13, color: AppColors.textMuted),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        labelStyle: GoogleFonts.dmSans(
+          fontSize: 13,
+          color: AppColors.textMuted,
+        ),
         hintStyle: GoogleFonts.dmSans(fontSize: 15, color: AppColors.textMuted),
-        errorStyle: GoogleFonts.dmSans(fontSize: 12, color: AppColors.errorText),
+        errorStyle: GoogleFonts.dmSans(
+          fontSize: 12,
+          color: AppColors.errorText,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.inputBorder,
+            width: 1.5,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.inputBorder, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.inputBorder,
+            width: 1.5,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: AppColors.primaryFocus, width: 1.5),
+          borderSide: const BorderSide(
+            color: AppColors.primaryFocus,
+            width: 1.5,
+          ),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -465,13 +484,23 @@ class AppTheme {
           color: Colors.white,
           borderRadius: BorderRadius.circular(10),
           boxShadow: const [
-            BoxShadow(color: Color(0x14000000), blurRadius: 8, offset: Offset(0, 2)),
+            BoxShadow(
+              color: Color(0x14000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
+            ),
           ],
         ),
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textMuted,
-        labelStyle: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w600),
-        unselectedLabelStyle: GoogleFonts.dmSans(fontSize: 14, fontWeight: FontWeight.w400),
+        labelStyle: GoogleFonts.dmSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.dmSans(
+          fontSize: 14,
+          fontWeight: FontWeight.w400,
+        ),
         dividerColor: Colors.transparent,
       ),
 
@@ -481,7 +510,10 @@ class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.cardBorder,
         selectedColor: AppColors.primarySurface,
-        labelStyle: GoogleFonts.dmSans(fontSize: 12, fontWeight: FontWeight.w500),
+        labelStyle: GoogleFonts.dmSans(
+          fontSize: 12,
+          fontWeight: FontWeight.w500,
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
         shape: const StadiumBorder(),
         side: BorderSide.none,
@@ -548,10 +580,7 @@ class AppTheme {
           color: AppColors.textSecondary,
           height: 1.5,
         ),
-        bodySmall: GoogleFonts.dmSans(
-          fontSize: 13,
-          color: AppColors.textMuted,
-        ),
+        bodySmall: GoogleFonts.dmSans(fontSize: 13, color: AppColors.textMuted),
       ),
     );
   }
