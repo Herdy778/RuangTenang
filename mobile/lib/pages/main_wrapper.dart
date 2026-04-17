@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_page.dart';
 import 'chat_page.dart';
+import 'profile_page.dart';
 
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
@@ -14,7 +15,11 @@ class MainWrapper extends StatefulWidget {
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
 
-  final List<Widget> _pages = const [DashboardPage(), ChatAiPage()];
+  final List<Widget> _pages = const [
+    DashboardPage(),
+    ChatAiPage(),
+    ProfilePage(),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -78,6 +83,10 @@ class _MainWrapperState extends State<MainWrapper> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat_bubble_rounded),
                   label: "Curhat",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.person_rounded),
+                  label: "Profil",
                 ),
               ],
             ),
