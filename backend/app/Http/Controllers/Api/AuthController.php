@@ -161,6 +161,14 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
         }
 
+        if ($request->has('gender')) {
+            $user->gender = $request->gender;
+        }
+
+        if ($request->has('occupation')) {
+            $user->occupation = $request->occupation;
+        }
+
         $user->save();
 
         return response()->json([
@@ -169,6 +177,8 @@ class AuthController extends Controller
             'data'   => [
                 'nama_lengkap' => $user->nama_lengkap,
                 'email'        => $user->email,
+                'gender'       => $user->gender ?? 'Female',
+                'occupation'   => $user->occupation ?? 'Student',
             ]
         ]);
     }
