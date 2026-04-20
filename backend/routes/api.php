@@ -21,7 +21,6 @@ Route::get('/articles/mood/{mood}', [ArticleController::class, 'byMood']);
 
 
 Route::middleware('auth.token')->group(function () {
-
     Route::post('/logout',   [AuthController::class, 'logout']);
     Route::put('/profile',   [AuthController::class, 'updateProfile']);
 
@@ -29,7 +28,7 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/journals',  [JournalController::class, 'index']);
     Route::put('/journals/{id}/status', [JournalController::class, 'updateStatus']);
 
-    // =========================
+// =========================
 // ADMIN API
 // =========================
 Route::get('/admin/users', [AuthController::class, 'users']);
@@ -39,6 +38,11 @@ Route::delete('/admin/users/{id}', [AuthController::class, 'deleteUser']);
 Route::get('/admin/journals', [JournalController::class, 'adminJournals']);
 Route::delete('/admin/journals/{id}', [JournalController::class, 'deleteJournal']);
 
+Route::get('/admin/articles', [ArticleController::class, 'index']);
+Route::post('/admin/articles', [ArticleController::class, 'store']);
+Route::put('/admin/articles/{id}', [ArticleController::class, 'update']);
+Route::put('/admin/articles/{id}/kategori', [ArticleController::class, 'updateKategori']);
+Route::delete('/admin/articles/{id}', [ArticleController::class, 'destroy']);
 });
 
 

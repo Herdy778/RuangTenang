@@ -77,7 +77,7 @@ export default function AdminJournals() {
 
   async function fetchJournals() {
     try {
-      const res = await API.get("/journals");
+      const res = await API.get("/admin/journals");
       setJournals(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -100,7 +100,7 @@ async function handleDelete(id) {
   if (!confirmDelete) return;
 
   try {
-    await API.delete(`/journals/${id}`);
+    await API.delete(`/admin/journals/${id}`);
     fetchJournals();
   } catch (err) {
     console.error(err);
