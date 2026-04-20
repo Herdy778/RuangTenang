@@ -1,8 +1,8 @@
 import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
-import 'chat_page.dart';
 import 'relaxation_page.dart';
 import '../services/api_service.dart';
 
@@ -13,13 +13,16 @@ class DashboardPage extends StatefulWidget {
   State<DashboardPage> createState() => _DashboardPageState();
 }
 
-class _DashboardPageState extends State<DashboardPage> with TickerProviderStateMixin {
+class _DashboardPageState extends State<DashboardPage>
+    with TickerProviderStateMixin {
   late AnimationController _blobAnimController;
   late AnimationController _staggeredController;
+  String _userName = "";
 
   @override
   void initState() {
     super.initState();
+    _loadUserName();
     _blobAnimController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -29,10 +32,20 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
+
     // Mulai animasi masuk (staggered) segera setelah frame pertama di-render
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _staggeredController.forward();
+    });
+  }
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _userName = prefs.getString('nama_lengkap') ?? "Guest";
+
+      // Jika kosong, mungkin data lama (sebelum update SharedPreferences).
+      if (_userName.isEmpty) _userName = "User";
     });
   }
 
@@ -51,9 +64,18 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     await Future.delayed(const Duration(milliseconds: 800));
   }
 
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear(); // Hapus semua data sesi
+    if (mounted) {
+      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    int animIndex = 0; // Digunakan secara inkremental untuk animasi staggered per elemen
+    int animIndex =
+        0; // Digunakan secara inkremental untuk animasi staggered per elemen
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -69,89 +91,94 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               backgroundColor: AppColors.cardBackground,
               onRefresh: _refreshData,
               child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(), // Supaya konten selalu bisa ditarik meskipun pendek
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+                physics:
+                    const AlwaysScrollableScrollPhysics(), // Supaya konten selalu bisa ditarik meskipun pendek
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 24,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: _buildHeader(),
-                  ),
-                  const SizedBox(height: 36),
-                  
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: _buildStatsGrid(),
-                  ),
-                  const SizedBox(height: 36),
-                  
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: _buildCTACard(),
-                  ),
-                  const SizedBox(height: 36),
-                  
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: FutureBuilder<List<dynamic>>(
-                      future: ApiService().fetchMoodStats(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(20.0),
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-                        if (snapshot.hasError) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(20.0),
-                              child: Text('Gagal memuat data mood'),
-                            ),
-                          );
-                        }
-                        if (snapshot.hasData) {
-                          final data = snapshot.data!;
-                          if (data.isEmpty) {
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildHeader(),
+                    ),
+                    const SizedBox(height: 36),
+
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildStatsGrid(),
+                    ),
+                    const SizedBox(height: 36),
+
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildCTACard(),
+                    ),
+                    const SizedBox(height: 36),
+
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: FutureBuilder<List<dynamic>>(
+                        future: ApiService().fetchMoodStats(),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
                             return const Center(
                               child: Padding(
                                 padding: EdgeInsets.all(20.0),
-                                child: Text('Belum ada data mood hari ini'),
+                                child: CircularProgressIndicator(),
                               ),
                             );
                           }
-                          return MoodBarChart(data: data);
-                        }
-                        return const SizedBox.shrink();
-                      },
+                          if (snapshot.hasError) {
+                            return Center(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20.0),
+                                child: Text('Gagal memuat data mood'),
+                              ),
+                            );
+                          }
+                          if (snapshot.hasData) {
+                            final data = snapshot.data!;
+                            if (data.isEmpty) {
+                              return const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(20.0),
+                                  child: Text('Belum ada data mood hari ini'),
+                                ),
+                              );
+                            }
+                            return MoodBarChart(data: data);
+                          }
+                          return const SizedBox.shrink();
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 36),
-                  
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: _buildRecentEntriesTitle(),
-                  ),
-                  const SizedBox(height: 16),
-                  
-                  _StaggeredFadeInUp(
-                    index: animIndex++,
-                    controller: _staggeredController,
-                    child: _buildRecentList(),
-                  ),
-                  const SizedBox(height: 40),
-                ],
+                    const SizedBox(height: 36),
+
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildRecentEntriesTitle(),
+                    ),
+                    const SizedBox(height: 16),
+
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildRecentList(),
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
-          ),
           ), // Penutup SafeArea yang tadinya tertelan oleh RefreshIndicator
         ],
       ),
@@ -165,11 +192,36 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     bool isLoading = false;
 
     final moodOptions = [
-      {"mood": "Sangat Sedih", "score": 1, "emoji": "😭", "color": Colors.grey[400]!},
-      {"mood": "Sedih", "score": 2, "emoji": "😔", "color": Colors.blueGrey[300]!},
-      {"mood": "Netral", "score": 3, "emoji": "😐", "color": Colors.deepPurple[200]!},
-      {"mood": "Senang", "score": 4, "emoji": "😊", "color": Colors.deepPurple[400]!},
-      {"mood": "Sangat Senang", "score": 5, "emoji": "😁", "color": Colors.deepPurple},
+      {
+        "mood": "Sangat Sedih",
+        "score": 1,
+        "emoji": "😭",
+        "color": Colors.grey[400]!,
+      },
+      {
+        "mood": "Sedih",
+        "score": 2,
+        "emoji": "😔",
+        "color": Colors.blueGrey[300]!,
+      },
+      {
+        "mood": "Netral",
+        "score": 3,
+        "emoji": "😐",
+        "color": Colors.deepPurple[200]!,
+      },
+      {
+        "mood": "Senang",
+        "score": 4,
+        "emoji": "😊",
+        "color": Colors.deepPurple[400]!,
+      },
+      {
+        "mood": "Sangat Senang",
+        "score": 5,
+        "emoji": "😁",
+        "color": Colors.deepPurple,
+      },
     ];
 
     showModalBottomSheet(
@@ -188,7 +240,9 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               ),
               decoration: BoxDecoration(
                 color: AppColors.background,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -225,9 +279,13 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                           duration: const Duration(milliseconds: 200),
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: isSelected ? (option["color"] as Color).withOpacity(0.2) : Colors.transparent,
+                            color: isSelected
+                                ? (option["color"] as Color).withOpacity(0.2)
+                                : Colors.transparent,
                             border: Border.all(
-                              color: isSelected ? (option["color"] as Color) : Colors.grey[300]!,
+                              color: isSelected
+                                  ? (option["color"] as Color)
+                                  : Colors.grey[300]!,
                               width: isSelected ? 2 : 1,
                             ),
                             shape: BoxShape.circle,
@@ -245,7 +303,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                     child: Text(
                       selectedMood,
                       style: AppTextStyles.bodyMD.copyWith(
-                        color: moodOptions.firstWhere((e) => e["score"] == selectedScore)["color"] as Color,
+                        color:
+                            moodOptions.firstWhere(
+                                  (e) => e["score"] == selectedScore,
+                                )["color"]
+                                as Color,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -296,7 +358,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                                 setModalState(() => isLoading = false);
                                 if (context.mounted) {
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
+                                    SnackBar(
+                                      content: Text(e.toString()),
+                                      backgroundColor: Colors.red,
+                                    ),
                                   );
                                 }
                               }
@@ -304,16 +369,26 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppColors.primary,
                         padding: const EdgeInsets.symmetric(vertical: 16),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                         elevation: 0,
                       ),
                       child: isLoading
                           ? const SizedBox(
                               width: 24,
                               height: 24,
-                              child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
                             )
-                          : Text("Simpan", style: AppTextStyles.titleSM.copyWith(color: Colors.white)),
+                          : Text(
+                              "Simpan",
+                              style: AppTextStyles.titleSM.copyWith(
+                                color: Colors.white,
+                              ),
+                            ),
                     ),
                   ),
                 ],
@@ -329,14 +404,20 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     return AnimatedBuilder(
       animation: _blobAnimController,
       builder: (context, child) {
-        final double moveYPurple = math.sin(_blobAnimController.value * math.pi) * 30;
-        final double moveXPurple = math.cos(_blobAnimController.value * math.pi) * 30;
+        final double moveYPurple =
+            math.sin(_blobAnimController.value * math.pi) * 30;
+        final double moveXPurple =
+            math.cos(_blobAnimController.value * math.pi) * 30;
 
-        final double moveYGreen = math.cos(_blobAnimController.value * math.pi) * 30;
-        final double moveXGreen = math.sin(_blobAnimController.value * math.pi) * 30;
+        final double moveYGreen =
+            math.cos(_blobAnimController.value * math.pi) * 30;
+        final double moveXGreen =
+            math.sin(_blobAnimController.value * math.pi) * 30;
 
-        final double pulsePurple = 0.15 + (math.sin(_blobAnimController.value * math.pi) * 0.05);
-        final double pulseGreen = 0.10 + (math.cos(_blobAnimController.value * math.pi) * 0.05);
+        final double pulsePurple =
+            0.15 + (math.sin(_blobAnimController.value * math.pi) * 0.05);
+        final double pulseGreen =
+            0.10 + (math.cos(_blobAnimController.value * math.pi) * 0.05);
 
         return Stack(
           children: [
@@ -392,7 +473,11 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 shape: BoxShape.circle,
                 gradient: AppGradients.avatarGradient,
               ),
-              child: const Icon(Icons.person_rounded, color: Colors.white, size: 28),
+              child: const Icon(
+                Icons.person_rounded,
+                color: Colors.white,
+                size: 28,
+              ),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -405,7 +490,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       children: [
                         const TextSpan(text: "Selamat datang kembali,\n"),
                         TextSpan(
-                          text: "Herdy",
+                          text: _userName,
                           style: AppTextStyles.headingMD.copyWith(
                             fontStyle: FontStyle.italic,
                             color: AppColors.primary,
@@ -418,10 +503,57 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                   const SizedBox(height: 4),
                   Text(
                     "Bagaimana perasaanmu hari ini?",
-                    style: AppTextStyles.bodyMD.copyWith(color: AppColors.textMuted),
+                    style: AppTextStyles.bodyMD.copyWith(
+                      color: AppColors.textMuted,
+                    ),
                   ),
                 ],
               ),
+            ),
+            IconButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text(
+                      "Logout",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    content: const Text("Apakah yakin ingin keluar dari akun?"),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Text(
+                          "Batal",
+                          style: TextStyle(color: Colors.grey[700]),
+                        ),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _logout();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.redAccent,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          "Keluar",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
             ),
           ],
         ),
@@ -440,7 +572,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               child: SizedBox(
                 width: 24,
                 height: 24,
-                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.primary),
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
+                ),
               ),
             ),
           );
@@ -464,16 +599,23 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               const SizedBox(width: 12),
               _buildStatCard("Mood Dominan", moodDominan, true),
               const SizedBox(width: 12),
-              _buildStatCard("Sesi Relaksasi", sesiRelaksasi, false, onTap: () async {
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (context) => const RelaxationPage()),
-                );
-                // Bila kembalian true artinya data berhasil disimpan
-                if (result == true) {
-                  _refreshData();
-                }
-              }),
+              _buildStatCard(
+                "Sesi Relaksasi",
+                sesiRelaksasi,
+                false,
+                onTap: () async {
+                  final result = await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const RelaxationPage(),
+                    ),
+                  );
+                  // Bila kembalian true artinya data berhasil disimpan
+                  if (result == true) {
+                    _refreshData();
+                  }
+                },
+              ),
             ],
           ),
         );
@@ -481,54 +623,61 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
     );
   }
 
-  Widget _buildStatCard(String title, String value, bool isPrimary, {VoidCallback? onTap}) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    bool isPrimary, {
+    VoidCallback? onTap,
+  }) {
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-        decoration: isPrimary
-            ? BoxDecoration(
-                gradient: AppGradients.primaryButton,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.primary.withOpacity(0.3),
-                    offset: const Offset(0, 4),
-                    blurRadius: 10,
-                  )
-                ],
-              )
-            : AppDecorations.card.copyWith(
-                borderRadius: BorderRadius.circular(16),
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+          decoration: isPrimary
+              ? BoxDecoration(
+                  gradient: AppGradients.primaryButton,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.3),
+                      offset: const Offset(0, 4),
+                      blurRadius: 10,
+                    ),
+                  ],
+                )
+              : AppDecorations.card.copyWith(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontFamily: 'Georgia',
+                  fontWeight: FontWeight.w600,
+                  fontSize: 22,
+                  color: isPrimary ? Colors.white : AppColors.textPrimary,
+                ),
               ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontFamily: 'Georgia',
-                fontWeight: FontWeight.w600,
-                fontSize: 22,
-                color: isPrimary ? Colors.white : AppColors.textPrimary,
+              const SizedBox(height: 8),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: AppTextStyles.caption.copyWith(
+                  color: isPrimary
+                      ? Colors.white.withOpacity(0.9)
+                      : AppColors.textMuted,
+                  fontWeight: FontWeight.w500,
+                ),
               ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              title,
-              textAlign: TextAlign.center,
-              style: AppTextStyles.caption.copyWith(
-                color: isPrimary ? Colors.white.withOpacity(0.9) : AppColors.textMuted,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -546,12 +695,16 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               children: [
                 Text(
                   "Mulai Jurnal Baru",
-                  style: AppTextStyles.titleLG.copyWith(color: AppColors.primary),
+                  style: AppTextStyles.titleLG.copyWith(
+                    color: AppColors.primary,
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   "Curahkan isi hatimu hari ini agar pikiran lebih tenang.",
-                  style: AppTextStyles.bodySM.copyWith(color: AppColors.textSecondary),
+                  style: AppTextStyles.bodySM.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
               ],
             ),
@@ -565,13 +718,18 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
               elevation: 0,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: Text(
-              "Curhat\nSekarang", 
+              "Curhat\nSekarang",
               textAlign: TextAlign.center,
-              style: AppTextStyles.titleSM.copyWith(color: Colors.white, fontSize: 13),
+              style: AppTextStyles.titleSM.copyWith(
+                color: Colors.white,
+                fontSize: 13,
+              ),
             ),
           ),
         ],
@@ -585,7 +743,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text("Jurnal Terbaru", style: AppTextStyles.titleMD),
-        Text("Lihat Semua", style: AppTextStyles.label.copyWith(color: AppColors.primary)),
+        Text(
+          "Lihat Semua",
+          style: AppTextStyles.label.copyWith(color: AppColors.primary),
+        ),
       ],
     );
   }
@@ -596,19 +757,21 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
       {
         "mood": "Cemas",
         "date": "Hari ini, 09:41",
-        "text": "Saya merasa sedikit gelisah mengenai presentasi besok pagi. Saya harap semuanya berjalan lancar tanpa kendala."
+        "text":
+            "Saya merasa sedikit gelisah mengenai presentasi besok pagi. Saya harap semuanya berjalan lancar tanpa kendala.",
       },
       {
         "mood": "Netral",
         "date": "Kemarin, 20:15",
-        "text": "Hari yang cukup biasa. Pekerjaan selesai tepat waktu dan cuaca cukup cerah."
+        "text":
+            "Hari yang cukup biasa. Pekerjaan selesai tepat waktu dan cuaca cukup cerah.",
       },
     ];
 
     return Column(
       children: recentEntries.map((entry) {
         final moodStyle = AppMoodColors.of(entry["mood"]!);
-        
+
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
@@ -621,7 +784,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                 children: [
                   // Mood Badge (Pill-shaped)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: moodStyle.background,
                       borderRadius: BorderRadius.circular(20),
@@ -629,7 +795,10 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(moodStyle.emoji, style: const TextStyle(fontSize: 12)),
+                        Text(
+                          moodStyle.emoji,
+                          style: const TextStyle(fontSize: 12),
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           entry["mood"]!,
@@ -641,10 +810,7 @@ class _DashboardPageState extends State<DashboardPage> with TickerProviderStateM
                       ],
                     ),
                   ),
-                  Text(
-                    entry["date"]!,
-                    style: AppTextStyles.caption,
-                  ),
+                  Text(entry["date"]!, style: AppTextStyles.caption),
                 ],
               ),
               const SizedBox(height: 12),
@@ -679,7 +845,7 @@ class _StaggeredFadeInUp extends StatelessWidget {
     // Semakin besar index, semakin lambat delay mulainya
     final start = (index * 0.1).clamp(0.0, 1.0);
     final end = (start + 0.4).clamp(0.0, 1.0);
-    
+
     final curved = CurvedAnimation(
       parent: controller,
       curve: Interval(start, end, curve: Curves.easeOutCubic),
@@ -738,16 +904,15 @@ class _MoodBarChartState extends State<MoodBarChart> {
         level = int.tryParse(item['score'].toString()) ?? 3;
       } else if (item['hasil_mood'] != null) {
         // Fallback jika pakai model Journal
-        level = 3; 
+        level = 3;
       }
 
-      String mood = item['mood']?.toString() ?? item['hasil_mood']?.toString() ?? "Netral";
+      String mood =
+          item['mood']?.toString() ??
+          item['hasil_mood']?.toString() ??
+          "Netral";
 
-      return {
-        "day": dayStr,
-        "level": level,
-        "mood": mood,
-      };
+      return {"day": dayStr, "level": level, "mood": mood};
     }).toList();
   }
 
@@ -771,7 +936,7 @@ class _MoodBarChartState extends State<MoodBarChart> {
   @override
   Widget build(BuildContext context) {
     const double maxBarHeight = 120.0;
-    
+
     return Container(
       // Lebar total layar dikurangi margin/padding horizontal Dashboard (20+20 = 40)
       width: MediaQuery.of(context).size.width - 40,
@@ -782,9 +947,9 @@ class _MoodBarChartState extends State<MoodBarChart> {
         children: [
           Text("Tren Mood Mingguan", style: AppTextStyles.titleMD),
           const SizedBox(height: 12),
-          
+
           SizedBox(
-            height: 180, 
+            height: 180,
             child: Stack(
               children: [
                 // Grid horizontal belakang
@@ -796,14 +961,11 @@ class _MoodBarChartState extends State<MoodBarChart> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(5, (index) {
-                      return Container(
-                        height: 1,
-                        color: AppColors.cardBorder,
-                      );
+                      return Container(height: 1, color: AppColors.cardBorder);
                     }),
                   ),
                 ),
-                
+
                 // Grafik Batang Interaktif
                 Positioned.fill(
                   child: Row(
@@ -817,7 +979,9 @@ class _MoodBarChartState extends State<MoodBarChart> {
                       final targetHeight = maxBarHeight * heightRatio;
                       final isSelected = _selectedIndex == index;
                       final dynamicBarColor = _getBarColor(level);
-                      final moodStyle = AppMoodColors.of(item["mood"] as String);
+                      final moodStyle = AppMoodColors.of(
+                        item["mood"] as String,
+                      );
 
                       return Expanded(
                         child: GestureDetector(
@@ -836,7 +1000,10 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                 opacity: isSelected ? 1.0 : 0.0,
                                 child: Container(
                                   margin: const EdgeInsets.only(bottom: 6),
-                                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 4,
+                                    vertical: 4,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: AppColors.textPrimary,
                                     borderRadius: BorderRadius.circular(6),
@@ -844,13 +1011,17 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                   child: Text(
                                     item["mood"] as String,
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ),
-                              
+
                               // Bar Animasi (Elastis / Bounce dari Tween)
                               TweenAnimationBuilder<double>(
                                 tween: Tween(begin: 0.0, end: 1.0),
@@ -859,10 +1030,14 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                 builder: (context, value, child) {
                                   return AnimatedContainer(
                                     duration: const Duration(milliseconds: 300),
-                                    width: 20, // Lebar batang sedikit dirampingkan lagi
-                                    height: targetHeight * value, // Tingginya membal
+                                    width:
+                                        20, // Lebar batang sedikit dirampingkan lagi
+                                    height:
+                                        targetHeight *
+                                        value, // Tingginya membal
                                     decoration: BoxDecoration(
-                                      color: dynamicBarColor, // Warna dinamis sesuai score level
+                                      color:
+                                          dynamicBarColor, // Warna dinamis sesuai score level
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(12),
                                         topRight: Radius.circular(12),
@@ -870,16 +1045,19 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                         bottomRight: Radius.circular(4),
                                       ),
                                       border: Border.all(
-                                        color: isSelected ? Colors.white : dynamicBarColor.withOpacity(0.5),
+                                        color: isSelected
+                                            ? Colors.white
+                                            : dynamicBarColor.withOpacity(0.5),
                                         width: isSelected ? 2.0 : 1.0,
                                       ),
                                       boxShadow: isSelected
                                           ? [
                                               BoxShadow(
-                                                color: dynamicBarColor.withOpacity(0.6),
+                                                color: dynamicBarColor
+                                                    .withOpacity(0.6),
                                                 blurRadius: 10,
                                                 offset: const Offset(0, 4),
-                                              )
+                                              ),
                                             ]
                                           : [],
                                     ),
@@ -891,8 +1069,12 @@ class _MoodBarChartState extends State<MoodBarChart> {
                               Text(
                                 item["day"] as String,
                                 style: AppTextStyles.caption.copyWith(
-                                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                                  color: isSelected ? AppColors.textPrimary : AppColors.textMuted,
+                                  fontWeight: isSelected
+                                      ? FontWeight.w700
+                                      : FontWeight.w500,
+                                  color: isSelected
+                                      ? AppColors.textPrimary
+                                      : AppColors.textMuted,
                                 ),
                               ),
                             ],

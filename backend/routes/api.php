@@ -22,6 +22,8 @@ Route::get('/articles/mood/{mood}', [ArticleController::class, 'byMood']);
 
 Route::middleware('auth.token')->group(function () {
     Route::post('/logout',   [AuthController::class, 'logout']);
+    Route::put('/profile',   [AuthController::class, 'updateProfile']);
+
     Route::post('/journals', [JournalController::class, 'store']);
     Route::get('/journals',  [JournalController::class, 'index']);
     Route::put('/journals/{id}/status', [JournalController::class, 'updateStatus']);
