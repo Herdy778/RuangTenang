@@ -24,9 +24,9 @@ class _RegisterPageState extends State<RegisterPage> {
     if (nameController.text.isEmpty ||
         emailController.text.isEmpty ||
         passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua field wajib diisi")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Semua field wajib diisi")));
       setState(() => isLoading = false);
       return;
     }
@@ -57,11 +57,15 @@ class _RegisterPageState extends State<RegisterPage> {
 
         await prefs.setBool('isLogin', true);
         await prefs.setString('email', data['data']?['email'] ?? '');
+        await prefs.setString(
+          'nama_lengkap',
+          data['data']?['nama_lengkap'] ?? nameController.text,
+        );
         await prefs.setString('token', data['token'] ?? '');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Register berhasil")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Register berhasil")));
 
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
@@ -181,9 +185,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         prefixIcon: const Icon(Icons.lock),
                         suffixIcon: IconButton(
                           icon: Icon(
-                            isHidden
-                                ? Icons.visibility_off
-                                : Icons.visibility,
+                            isHidden ? Icons.visibility_off : Icons.visibility,
                           ),
                           onPressed: () {
                             setState(() => isHidden = !isHidden);

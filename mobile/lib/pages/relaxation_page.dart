@@ -11,7 +11,8 @@ class RelaxationPage extends StatefulWidget {
   State<RelaxationPage> createState() => _RelaxationPageState();
 }
 
-class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStateMixin {
+class _RelaxationPageState extends State<RelaxationPage>
+    with TickerProviderStateMixin {
   int? _playingIndex;
   bool _isSaving = false;
   late AnimationController _waveController;
@@ -46,8 +47,10 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
   void initState() {
     super.initState();
     _waveController = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1000));
-        
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
     _audioPlayer.onDurationChanged.listen((Duration d) {
       if (mounted && _playingIndex != null) {
         setState(() {
@@ -59,7 +62,10 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
 
   String _formatDuration(Duration? duration) {
     if (duration == null) return "Menghitung durasi...";
-    String twoDigitSeconds = duration.inSeconds.remainder(60).toString().padLeft(2, "0");
+    String twoDigitSeconds = duration.inSeconds
+        .remainder(60)
+        .toString()
+        .padLeft(2, "0");
     return "${duration.inMinutes}:$twoDigitSeconds mnt";
   }
 
@@ -85,10 +91,10 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
 
       // Start playing newly selected music INSTANTLY
       final String assetPath = track["source"] as String;
-      
+
       await _audioPlayer.play(AssetSource(assetPath));
       _audioPlayer.setReleaseMode(ReleaseMode.loop);
-      
+
       // FIX UI LAG: Langsung kembalikan state agar animasi hidup
       setState(() {
         _actualDuration = null; // Reset menunggu deteksi baru
@@ -103,7 +109,7 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
       if (d == null) {
         await Future.delayed(const Duration(seconds: 1));
         d = await _audioPlayer.getDuration();
-        
+
         // Jika limitasi browser membuat durasi tetap ghaib, pasang default 1 menit
         if (d == null) {
           d = const Duration(minutes: 1);
@@ -122,11 +128,13 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
   Future<void> _finishSession(int index) async {
     final track = _musicTracks[index];
     int recordedDuration = track["duration"] as int;
-    
+
     // Perbarui panjang durasi di backend jika audionya asli dan dihitung
     if (_actualDuration != null) {
       // Jika durasinya terdeteksi (meski kurang 1 menit), gunakan batas inMinutes, atau minimal 1
-      recordedDuration = _actualDuration!.inMinutes > 0 ? _actualDuration!.inMinutes : 1;
+      recordedDuration = _actualDuration!.inMinutes > 0
+          ? _actualDuration!.inMinutes
+          : 1;
     }
 
     // Matikan audio saat sedang diproses untuk ditutup
@@ -152,7 +160,10 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
           behavior: SnackBarBehavior.floating,
         ),
       );
-      Navigator.pop(context, true); // Return true untuk memicu refresh dashboard
+      Navigator.pop(
+        context,
+        true,
+      ); // Return true untuk memicu refresh dashboard
     }
   }
 
@@ -164,7 +175,10 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
         backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, color: AppColors.textPrimary),
+          icon: const Icon(
+            Icons.arrow_back_ios_new,
+            color: AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
@@ -200,27 +214,27 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
               ),
             ),
           ),
-          
+
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    "Pilih Suasana",
-                    style: AppTextStyles.headingMD,
-                  ),
+                  Text("Pilih Suasana", style: AppTextStyles.headingMD),
                   const SizedBox(height: 8),
                   Text(
                     "Dengarkan suara alam untuk menenangkan dan menjernihkan pikiranmu.",
-                    style: AppTextStyles.bodyMD.copyWith(color: AppColors.textMuted),
+                    style: AppTextStyles.bodyMD.copyWith(
+                      color: AppColors.textMuted,
+                    ),
                   ),
                   const SizedBox(height: 32),
                   Expanded(
                     child: ListView.separated(
                       itemCount: _musicTracks.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: 16),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
                       itemBuilder: (context, index) {
                         final track = _musicTracks[index];
                         final isPlaying = _playingIndex == index;
@@ -233,7 +247,7 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
               ),
             ),
           ),
-          
+
           if (_isSaving)
             Container(
               color: Colors.white.withOpacity(0.6),
@@ -246,7 +260,11 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
     );
   }
 
-  Widget _buildMusicCard(Map<String, dynamic> track, int index, bool isPlaying) {
+  Widget _buildMusicCard(
+    Map<String, dynamic> track,
+    int index,
+    bool isPlaying,
+  ) {
     final bgColor = isPlaying ? Colors.deepPurple[50] : Colors.white;
     final borderColor = isPlaying ? Colors.deepPurple[200]! : Colors.grey[200]!;
 
@@ -263,14 +281,14 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
                   color: Colors.deepPurple.withOpacity(0.1),
                   blurRadius: 15,
                   offset: const Offset(0, 5),
-                )
+                ),
               ]
             : [
                 BoxShadow(
                   color: Colors.black.withOpacity(0.02),
                   blurRadius: 10,
                   offset: const Offset(0, 2),
-                )
+                ),
               ],
       ),
       child: Column(
@@ -286,13 +304,18 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
                 border: Border.all(color: Colors.grey[100]!),
               ),
               child: Center(
-                child: Text(track["icon"] as String, style: const TextStyle(fontSize: 24)),
+                child: Text(
+                  track["icon"] as String,
+                  style: const TextStyle(fontSize: 24),
+                ),
               ),
             ),
             title: Text(
               track["title"] as String,
               style: AppTextStyles.titleMD.copyWith(
-                color: isPlaying ? Colors.deepPurple[800] : AppColors.textPrimary,
+                color: isPlaying
+                    ? Colors.deepPurple[800]
+                    : AppColors.textPrimary,
               ),
             ),
             subtitle: Text(
@@ -303,16 +326,20 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
               iconSize: 40,
               padding: EdgeInsets.zero,
               icon: CircleAvatar(
-                backgroundColor: isPlaying ? Colors.deepPurple : Colors.grey[100],
+                backgroundColor: isPlaying
+                    ? Colors.deepPurple
+                    : Colors.grey[100],
                 child: Icon(
                   isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
                   color: isPlaying ? Colors.white : Colors.grey[600],
                 ),
               ),
-              onPressed: () => _togglePlay(index), // Memanggil play langsung saat ikon bulat ditekan
+              onPressed: () => _togglePlay(
+                index,
+              ), // Memanggil play langsung saat ikon bulat ditekan
             ),
           ),
-          
+
           // Ruang Kontrol Aktif (Waveform & Simpan)
           if (isPlaying)
             Padding(
@@ -321,10 +348,12 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
                 children: [
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 50, // Fixed height agar gelombang tidak mendorong tombol di bawahnya
+                    height:
+                        50, // Fixed height agar gelombang tidak mendorong tombol di bawahnya
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center, // Pusatkan gelombang secara vertikal
+                      crossAxisAlignment: CrossAxisAlignment
+                          .center, // Pusatkan gelombang secara vertikal
                       children: [
                         _buildWaveBar(0.2),
                         _buildWaveBar(0.5),
@@ -344,14 +373,18 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
                         backgroundColor: Colors.deepPurple,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12)),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         elevation: 0,
                       ),
                       child: Text(
-                          _actualDuration == null
-                              ? "Menghitung durasi..."
-                              : "Selesai & Simpan Sesi (${_formatDuration(_actualDuration)})",
-                          style: AppTextStyles.titleSM.copyWith(color: Colors.white)),
+                        _actualDuration == null
+                            ? "Menghitung durasi..."
+                            : "Selesai & Simpan Sesi (${_formatDuration(_actualDuration)})",
+                        style: AppTextStyles.titleSM.copyWith(
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -366,8 +399,15 @@ class _RelaxationPageState extends State<RelaxationPage> with TickerProviderStat
     return AnimatedBuilder(
       animation: _waveController,
       builder: (context, child) {
-        // Simple sin wave formula mixing offset 
-        final height = 15 + (math.sin((_waveController.value * 2 * math.pi) + (offset * math.pi * 2)) * 10).abs();
+        // Simple sin wave formula mixing offset
+        final height =
+            15 +
+            (math.sin(
+                      (_waveController.value * 2 * math.pi) +
+                          (offset * math.pi * 2),
+                    ) *
+                    10)
+                .abs();
         return Container(
           margin: const EdgeInsets.symmetric(horizontal: 3),
           width: 4,
