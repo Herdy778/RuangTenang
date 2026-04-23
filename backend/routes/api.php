@@ -6,14 +6,9 @@ use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\MoodController;
 
-Route::get('/mood-stats', [MoodController::class, 'index']);
-Route::get('/dashboard-stats', [MoodController::class, 'dashboardStats']);
-Route::post('/relaxation-sessions', [MoodController::class, 'storeRelaxation']);
-Route::post('/moods', [MoodController::class, 'store']);
-
+// Route yang tidak memerlukan token
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
-
 
 // Route artikel bisa diakses tanpa login
 Route::get('/articles', [ArticleController::class, 'index']);
@@ -21,12 +16,20 @@ Route::get('/articles/mood/{mood}', [ArticleController::class, 'byMood']);
 
 
 Route::middleware('auth.token')->group(function () {
+    Route::get('/mood-stats', [MoodController::class, 'index']);
+    Route::get('/dashboard-stats', [MoodController::class, 'dashboardStats']);
+    Route::post('/relaxation-sessions', [MoodController::class, 'storeRelaxation']);
+    Route::post('/moods', [MoodController::class, 'store']);
+
     Route::post('/logout',   [AuthController::class, 'logout']);
     Route::put('/profile',   [AuthController::class, 'updateProfile']);
 
     Route::post('/journals', [JournalController::class, 'store']);
     Route::get('/journals',  [JournalController::class, 'index']);
     Route::put('/journals/{id}/status', [JournalController::class, 'updateStatus']);
+
+    // Analyze mental health via ML — butuh auth agar bisa simpan jurnal per user
+    Route::post('/journal/analyze', [JournalController::class, 'analyzeMentalHealth']);
 
 // =========================
 // ADMIN API
