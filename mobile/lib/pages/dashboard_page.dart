@@ -17,7 +17,14 @@ class _DashboardPageState extends State<DashboardPage>
     with TickerProviderStateMixin {
   late AnimationController _blobAnimController;
   late AnimationController _staggeredController;
-  String _userName = "";
+  String userName = "Pengguna";
+
+  Future<void> _loadUserName() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('nama_lengkap') ?? "Pengguna";
+    });
+  }
 
   @override
   void initState() {
@@ -39,16 +46,6 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userName = prefs.getString('nama_lengkap') ?? "Guest";
-
-      // Jika kosong, mungkin data lama (sebelum update SharedPreferences).
-      if (_userName.isEmpty) _userName = "User";
-    });
-  }
-
   @override
   void dispose() {
     _blobAnimController.dispose();
@@ -62,14 +59,6 @@ class _DashboardPageState extends State<DashboardPage>
     // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 800));
-  }
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus semua data sesi
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-    }
   }
 
   @override
@@ -490,7 +479,7 @@ class _DashboardPageState extends State<DashboardPage>
                       children: [
                         const TextSpan(text: "Selamat datang kembali,\n"),
                         TextSpan(
-                          text: _userName,
+                          text: userName,
                           style: AppTextStyles.headingMD.copyWith(
                             fontStyle: FontStyle.italic,
                             color: AppColors.primary,
@@ -509,51 +498,6 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ],
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text(
-                      "Logout",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    content: const Text("Apakah yakin ingin keluar dari akun?"),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _logout();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          "Keluar",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
             ),
           ],
         ),

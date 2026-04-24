@@ -13,6 +13,9 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String _userName = "User";
   String _userEmail = "user@example.com";
+  bool _notifPush = true;
+  bool _notifEmail = false;
+  String _selectedLanguage = "Indonesia";
 
   @override
   void initState() {
@@ -25,7 +28,169 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _userName = prefs.getString('nama_lengkap') ?? "User";
       _userEmail = prefs.getString('email') ?? "user@example.com";
+      _notifPush = prefs.getBool('notif_push') ?? true;
+      _notifEmail = prefs.getBool('notif_email') ?? false;
+      _selectedLanguage = prefs.getString('language') ?? "Indonesia";
     });
+  }
+
+  void _showNotificationSettings() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pengaturan Notifikasi', style: AppTextStyles.titleMD),
+                  const SizedBox(height: 16),
+                  SwitchListTile(
+                    title: const Text('Notifikasi Push'),
+                    value: _notifPush,
+                    onChanged: (val) async {
+                      setModalState(() => _notifPush = val);
+                      setState(() => _notifPush = val);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('notif_push', val);
+                    },
+                    activeColor: AppColors.primary,
+                  ),
+                  SwitchListTile(
+                    title: const Text('Notifikasi Email'),
+                    value: _notifEmail,
+                    onChanged: (val) async {
+                      setModalState(() => _notifEmail = val);
+                      setState(() => _notifEmail = val);
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setBool('notif_email', val);
+                    },
+                    activeColor: AppColors.primary,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showLanguageSettings() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Pilih Bahasa', style: AppTextStyles.titleMD),
+                  const SizedBox(height: 16),
+                  RadioListTile<String>(
+                    title: const Text('Indonesia'),
+                    value: 'Indonesia',
+                    groupValue: _selectedLanguage,
+                    onChanged: (val) async {
+                      if (val != null) {
+                        setModalState(() => _selectedLanguage = val);
+                        setState(() => _selectedLanguage = val);
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('language', val);
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    },
+                    activeColor: AppColors.primary,
+                  ),
+                  RadioListTile<String>(
+                    title: const Text('English'),
+                    value: 'English',
+                    groupValue: _selectedLanguage,
+                    onChanged: (val) async {
+                      if (val != null) {
+                        setModalState(() => _selectedLanguage = val);
+                        setState(() => _selectedLanguage = val);
+                        final prefs = await SharedPreferences.getInstance();
+                        await prefs.setString('language', val);
+                        if (context.mounted) Navigator.pop(context);
+                      }
+                    },
+                    activeColor: AppColors.primary,
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showPrivacySettings() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Privasi & Keamanan', style: AppTextStyles.titleMD),
+        content: const Text(
+          'Tidak ada pengaturan tambahan tingkat lanjut untuk saat ini.\nSemua data pribadi Anda tersimpan secara lokal dan aman.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showHelpCenter() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Pusat Bantuan', style: AppTextStyles.titleMD),
+        content: const Text(
+          'Butuh bantuan? Silakan hubungi administrator di:\n\n📧 support@ruangtenang.com\n📞 0812-3456-7890',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showAbout() {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Tentang Ruang Tenang', style: AppTextStyles.titleMD),
+        content: const Text(
+          'Versi 1.0.0\n\nAplikasi ini dikembangkan untuk membantu melacak mood harian Anda dan memberikan fasilitas relaksasi agar hari menjadi lebih baik.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _logout() async {
@@ -112,18 +277,18 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildSettingsTile(
             icon: Icons.notifications_outlined,
             title: 'Notifikasi',
-            onTap: () {},
+            onTap: _showNotificationSettings,
           ),
           _buildSettingsTile(
             icon: Icons.language_outlined,
             title: 'Bahasa',
-            subtitle: 'Indonesia',
-            onTap: () {},
+            subtitle: _selectedLanguage,
+            onTap: _showLanguageSettings,
           ),
           _buildSettingsTile(
             icon: Icons.security_outlined,
             title: 'Privasi & Keamanan',
-            onTap: () {},
+            onTap: _showPrivacySettings,
           ),
           const SizedBox(height: 24),
           Text('Bantuan & Info', style: AppTextStyles.titleMD),
@@ -131,12 +296,12 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildSettingsTile(
             icon: Icons.help_outline,
             title: 'Pusat Bantuan',
-            onTap: () {},
+            onTap: _showHelpCenter,
           ),
           _buildSettingsTile(
             icon: Icons.info_outline,
             title: 'Tentang Aplikasi',
-            onTap: () {},
+            onTap: _showAbout,
           ),
           const SizedBox(height: 32),
           SizedBox(
