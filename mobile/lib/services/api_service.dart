@@ -94,4 +94,23 @@ class ApiService {
       throw Exception('Gagal ambil data mood');
     }
   }
+
+  // =============================
+  // JOURNAL
+  // =============================
+  Future<List<dynamic>> fetchRecentJournals({int limit = 3}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/journals'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final List<dynamic> all = body['data'] ?? [];
+      // Ambil hanya N entry terbaru
+      return all.take(limit).toList();
+    } else {
+      throw Exception('Gagal ambil jurnal terbaru');
+    }
+  }
 }
