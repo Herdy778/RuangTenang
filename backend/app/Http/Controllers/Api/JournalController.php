@@ -35,24 +35,30 @@ class JournalController extends Controller
         try {
             $response = Http::timeout(30)->withHeaders([
                 'Authorization' => 'Bearer ' . trim($apiKey),
-                'Content-Type'  => 'application/json',
+                'Content-Type' => 'application/json',
             ])->post('https://api.groq.com/openai/v1/chat/completions', [
-                'model'    => 'llama-3.3-70b-versatile',
-                'messages' => [
-                    ['role' => 'user', 'content' => $prompt]
-                ],
-                'max_tokens'  => 10,
-                'temperature' => 0,
-            ]);
+                        'model' => 'llama-3.3-70b-versatile',
+                        'messages' => [
+                            ['role' => 'user', 'content' => $prompt]
+                        ],
+                        'max_tokens' => 10,
+                        'temperature' => 0,
+                    ]);
 
             if ($response->failed()) {
+                $errorData = json_decode($response->body(), true);
+                if (isset($errorData['error']['code']) && $errorData['error']['code'] == 503) {
+                    $pesan = 'Gagal menghubungi Groq: Server AI sedang penuh (High Demand). Silakan coba lagi dalam beberapa saat.';
+                } else {
+                    $pesan = 'Gagal menghubungi Groq: ' . $response->body();
+                }
                 return response()->json([
                     'status' => 'error',
-                    'pesan' => 'Gagal menghubungi Groq: ' . $response->body()
+                    'pesan' => $pesan
                 ], 500);
             }
 
-            $aiResult  = $response->json();
+            $aiResult = $response->json();
             $hasilMood = trim($aiResult['choices'][0]['message']['content'] ?? 'Netral');
             $hasilMood = preg_replace('/[^a-zA-Z]/', '', $hasilMood);
 
@@ -62,31 +68,31 @@ class JournalController extends Controller
                 ->value('_id');
 
             $journal = Journal::create([
-                'user_id'     => (string)$userId,
+                'user_id' => (string) $userId,
                 'teks_curhat' => $curhatan,
-                'hasil_mood'  => $hasilMood,
-                'tanggal'     => now(),
-                'status'      => 'normal' // ✅ DEFAULT
+                'hasil_mood' => $hasilMood,
+                'tanggal' => now(),
+                'status' => 'normal' // ✅ DEFAULT
             ]);
 
-            $semuaArtikel       = Article::where('kategori_tag', $hasilMood)->get();
-            $jumlahAmbil        = min(3, $semuaArtikel->count());
+            $semuaArtikel = Article::where('kategori_tag', $hasilMood)->get();
+            $jumlahAmbil = min(3, $semuaArtikel->count());
             $rekomendasiArtikel = $jumlahAmbil > 0
                 ? $semuaArtikel->random($jumlahAmbil)->values()
                 : [];
 
             return response()->json([
-                'status'              => 'success',
-                'pesan'               => 'Jurnal berhasil dianalisis!',
-                'mood_terdeteksi'     => $hasilMood,
-                'data_jurnal'         => $journal,
+                'status' => 'success',
+                'pesan' => 'Jurnal berhasil dianalisis!',
+                'mood_terdeteksi' => $hasilMood,
+                'data_jurnal' => $journal,
                 'rekomendasi_artikel' => $rekomendasiArtikel
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'pesan'  => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                'pesan' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
             ], 500);
         }
     }
@@ -98,13 +104,13 @@ class JournalController extends Controller
             ->where('email', $request->auth_user->email)
             ->value('_id');
 
-        $journals = Journal::where('user_id', (string)$userId)
+        $journals = Journal::where('user_id', (string) $userId)
             ->orderBy('created_at', 'desc')
             ->get();
 
         return response()->json([
             'status' => 'success',
-            'data'   => $journals
+            'data' => $journals
         ]);
     }
 
@@ -167,7 +173,7 @@ class JournalController extends Controller
         return response()->json([
             'status' => 'success',
             'pesan' => 'Status berhasil diupdate',
-            'data'  => $journal
+            'data' => $journal
         ]);
     }
 
@@ -185,22 +191,22 @@ class JournalController extends Controller
         try {
             $response = Http::timeout(30)->withHeaders([
                 'Authorization' => 'Bearer ' . trim($apiKey),
-                'Content-Type'  => 'application/json',
+                'Content-Type' => 'application/json',
             ])->post('https://api.groq.com/openai/v1/chat/completions', [
-                'model'    => 'llama-3.3-70b-versatile',
-                'messages' => [
-                    [
-                        'role'    => 'system',
-                        'content' => "Kamu adalah asisten psikologi bernama RuangTenang..."
-                    ],
-                    [
-                        'role'    => 'user',
-                        'content' => $userMessage
-                    ]
-                ],
-                'max_tokens'  => 1024,
-                'temperature' => 0.7,
-            ]);
+                        'model' => 'llama-3.3-70b-versatile',
+                        'messages' => [
+                            [
+                                'role' => 'system',
+                                'content' => "Kamu adalah asisten psikologi bernama RuangTenang..."
+                            ],
+                            [
+                                'role' => 'user',
+                                'content' => $userMessage
+                            ]
+                        ],
+                        'max_tokens' => 1024,
+                        'temperature' => 0.7,
+                    ]);
 
             if ($response->failed()) {
                 return response()->json([
@@ -208,7 +214,7 @@ class JournalController extends Controller
                 ], 500);
             }
 
-            $aiResult    = $response->json();
+            $aiResult = $response->json();
             $hasilTeksAI = trim(
                 $aiResult['choices'][0]['message']['content']
                 ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
@@ -221,6 +227,136 @@ class JournalController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
+            ], 500);
+        }
+    }
+
+    public function analyzeMentalHealth(Request $request)
+    {
+        // 1. Ambil semua data inputan dari user (Flutter)
+        $dataUser = $request->all();
+
+        try {
+            // 2. Kirim ke Flask ML Service
+            $response = Http::post('http://127.0.0.1:5000/predict', $dataUser);
+
+            if ($response->successful()) {
+                $hasilPrediksi = $response->json();
+
+                // 3. Simpan jurnal ke MongoDB
+                $userId = null;
+                if ($request->auth_user) {
+                    $userId = DB::connection('mongodb')
+                        ->collection('users')
+                        ->where('email', $request->auth_user->email)
+                        ->value('_id');
+                }
+
+                $kategoriML = $hasilPrediksi['prediction'] ?? 'Minimal';
+                $skorTotal = $hasilPrediksi['skor_total'] ?? 0;
+                $teksCurhat = $request->input('teks_curhat', '');
+
+                // ==========================================
+                // 🔥 DUAL-CHECK (MAX SEVERITY) LOGIC
+                // ==========================================
+                $kategoriGroq = 'Netral';
+                $apiKey = env('GROQ_API_KEY');
+
+                if (!empty(trim($teksCurhat)) && $apiKey) {
+                    $prompt = "Kamu adalah psikolog. Analisis teks berikut dan tentukan kategori emosi utamanya. " .
+                        "Balas HANYA dengan SALAH SATU kata ini tanpa tanda baca tambahan: " .
+                        "Burnout, Cemas, Sedih, Netral, atau Krisis. \n\n" .
+                        "Teks: \"" . $teksCurhat . "\"";
+
+                    try {
+                        // Timeout lebih cepat (10 detik) agar tidak memblokir user terlalu lama
+                        $groqResponse = Http::timeout(10)->withHeaders([
+                            'Authorization' => 'Bearer ' . trim($apiKey),
+                            'Content-Type' => 'application/json',
+                        ])->post('https://api.groq.com/openai/v1/chat/completions', [
+                                    'model' => 'llama-3.3-70b-versatile',
+                                    'messages' => [['role' => 'user', 'content' => $prompt]],
+                                    'max_tokens' => 10,
+                                    'temperature' => 0,
+                                ]);
+
+                        if ($groqResponse->successful()) {
+                            $aiResult = $groqResponse->json();
+                            $kategoriGroq = trim($aiResult['choices'][0]['message']['content'] ?? 'Netral');
+                            $kategoriGroq = preg_replace('/[^a-zA-Z]/', '', $kategoriGroq);
+                        }
+                    } catch (\Exception $e) {
+                        \Log::warning('Groq API fail in Dual-Check: ' . $e->getMessage());
+                    }
+                }
+
+                // 1. Skala Keparahan ML (Angka)
+                $mlSeverityMap = ['Minimal' => 1, 'Ringan' => 2, 'Sedang' => 3, 'Berat' => 4];
+                $mlSeverity = $mlSeverityMap[$kategoriML] ?? 1;
+
+                // 2. Skala Keparahan Groq (Teks)
+                $groqSeverityMap = ['Netral' => 1, 'Sedih' => 2, 'Cemas' => 3, 'Burnout' => 3, 'Krisis' => 4];
+                $groqSeverity = $groqSeverityMap[$kategoriGroq] ?? 1;
+
+                // 3. Ambil nilai yang Paling Parah (Max Severity)
+                $maxSeverity = max($mlSeverity, $groqSeverity);
+
+                // 4. Ubah kembali ke Kategori PHQ Final
+                $severityToCategory = [1 => 'Minimal', 2 => 'Ringan', 3 => 'Sedang', 4 => 'Berat'];
+                $kategoriFinal = $severityToCategory[$maxSeverity] ?? 'Minimal';
+
+                // 5. Tandai jika terjadi override oleh AI Teks
+                $isOverridden = ($maxSeverity > $mlSeverity);
+                $hasilPrediksi['prediction'] = $kategoriFinal;
+                $hasilPrediksi['override_by_text'] = $isOverridden;
+                $hasilPrediksi['groq_sentiment'] = $kategoriGroq;
+
+                if ($isOverridden) {
+                    $hasilPrediksi['message'] = 'Kondisimu memerlukan perhatian khusus. Berdasarkan ceritamu, kamu tidak harus menghadapi ini sendirian.';
+                }
+
+                // Mapping kategori ke hasil_mood (konsisten dengan jurnal teks)
+                $moodMap = [
+                    'Minimal' => 'Netral',
+                    'Ringan' => 'Cemas',
+                    'Sedang' => 'Cemas',
+                    'Berat' => 'Krisis',
+                ];
+                // ==========================================
+
+                Journal::create([
+                    'user_id' => (string) $userId,
+                    'teks_curhat' => $teksCurhat,
+                    'hasil_mood' => $moodMap[$kategoriFinal] ?? 'Netral',
+                    'kategori_phq' => $kategoriFinal,
+                    'skor_phq' => $skorTotal,
+                    'perasaan_sedih' => (int) $request->input('perasaan_sedih', 0),
+                    'minat_kegiatan' => (int) $request->input('minat_kegiatan', 0),
+                    'kualitas_tidur' => (int) $request->input('kualitas_tidur', 0),
+                    'tingkat_lelah' => (int) $request->input('tingkat_lelah', 0),
+                    'kesulitan_konsentrasi' => (int) $request->input('kesulitan_konsentrasi', 0),
+                    'tanggal' => now(),
+                    'status' => 'normal',
+                ]);
+
+                return response()->json([
+                    'status' => 'success',
+                    'message' => 'Analisis berhasil dilakukan via AI',
+                    'data' => $hasilPrediksi,
+                ], 200);
+            }
+
+            \Log::error('Flask error response: ' . $response->body());
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mendapatkan analisis dari AI'
+            ], 500);
+
+        } catch (\Exception $e) {
+            \Log::error('Error in analyzeMentalHealth: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Koneksi ke server AI terputus. Pastikan Flask menyala. Error: ' . $e->getMessage()
             ], 500);
         }
     }

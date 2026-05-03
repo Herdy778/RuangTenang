@@ -11,39 +11,39 @@ use Illuminate\Support\Facades\Hash;
 class AuthController extends Controller
 {
     public function register(Request $request)
-{
-    $request->validate([
-        'nama_lengkap' => 'required|string',
-        'email'        => 'required|email',
-        'password'     => 'required|string|min:6'
-    ]);
+    {
+        $request->validate([
+            'nama_lengkap' => 'required|string',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6'
+        ]);
 
-    $user = User::create([
-        'nama_lengkap' => $request->nama_lengkap,
-        'email'        => $request->email,
-        'password'     => Hash::make($request->password),
-        'role'         => 'mahasiswa'
-    ]);
+        $user = User::create([
+            'nama_lengkap' => $request->nama_lengkap,
+            'email' => $request->email,
+            'password' => Hash::make($request->password),
+            'role' => 'mahasiswa'
+        ]);
 
-    $token = bin2hex(random_bytes(32));
+        $token = bin2hex(random_bytes(32));
 
-    Token::create([
-        'user_id' => $user->_id,
-        'token'   => hash('sha256', $token),
-        'name'    => 'auth_token'
-    ]);
+        Token::create([
+            'user_id' => $user->_id,
+            'token' => hash('sha256', $token),
+            'name' => 'auth_token'
+        ]);
 
-    return response()->json([
-        'status' => 'success',
-        'data'   => $user,
-        'token'  => $token
-    ]);
-}
+        return response()->json([
+            'status' => 'success',
+            'data' => $user,
+            'token' => $token
+        ]);
+    }
 
     public function login(Request $request)
 {
     $request->validate([
-        'email'    => 'required|email',
+        'email' => 'required|email',
         'password' => 'required|string'
     ]);
 
@@ -52,29 +52,32 @@ class AuthController extends Controller
     if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
             'status' => 'error',
-            'pesan'  => 'Email atau Password salah!'
+            'pesan' => 'Email atau Password salah!'
         ], 401);
     }
+
+    // ❌ HAPUS VALIDASI ROLE DI SINI
 
     $token = bin2hex(random_bytes(32));
 
     Token::create([
         'user_id' => $user->_id,
-        'token'   => hash('sha256', $token),
-        'name'    => 'auth_token'
+        'token' => hash('sha256', $token),
+        'name' => 'auth_token'
     ]);
 
     return response()->json([
         'status' => 'success',
-        'data'   => $user,
-        'token'  => $token
+        'data' => $user,
+        'token' => $token
     ]);
 }
 
+
     public function users()
     {
-        $users = User::select('_id','nama_lengkap','email','role')
-            ->orderBy('_id','desc')
+        $users = User::select('_id', 'nama_lengkap', 'email', 'role')
+            ->orderBy('_id', 'desc')
             ->get();
 
         return response()->json([
@@ -133,7 +136,7 @@ class AuthController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'pesan'  => 'Berhasil logout'
+            'pesan' => 'Berhasil logout'
         ]);
     }
 
@@ -153,6 +156,14 @@ class AuthController extends Controller
             $user->password = Hash::make($request->password);
         }
 
+        if ($request->has('gender')) {
+            $user->gender = $request->gender;
+        }
+
+        if ($request->has('occupation')) {
+            $user->occupation = $request->occupation;
+        }
+
         $user->save();
 
         return response()->json([
@@ -161,6 +172,8 @@ class AuthController extends Controller
             'data'   => [
                 'nama_lengkap' => $user->nama_lengkap,
                 'email'        => $user->email,
+                'gender'       => $user->gender ?? 'Female',
+                'occupation'   => $user->occupation ?? 'Student',
             ]
         ]);
     }

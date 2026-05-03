@@ -36,14 +36,17 @@ class MoodController extends Controller
     /**
      * Mengambil statistik untuk ditampilkan di Dashboard.
      */
-    public function dashboardStats()
+    public function dashboardStats(Request $request)
     {
         try {
-            // Menghitung jumlah total jurnal
-            $totalJurnal = Journal::count();
+            $user = $request->auth_user;
+            $userId = (string) $user->_id;
+
+            // Menghitung jumlah total jurnal milik user
+            $totalJurnal = Journal::where('user_id', $userId)->count();
             
-            // Mencari mood dominan menggunakan metode Collection untuk kompatibilitas MongoDB
-            $allMoods = Mood::all();
+            // Mencari mood dominan milik user
+            $allMoods = Mood::where('user_id', $userId)->get();
             $moodDominan = 'Netral';
 
             if ($allMoods->isNotEmpty()) {
@@ -55,7 +58,7 @@ class MoodController extends Controller
                 'data' => [
                     'total_jurnal' => $totalJurnal,
                     'mood_dominan' => $moodDominan,
-                    'sesi_relaksasi' => RelaxationSession::count()
+                    'sesi_relaksasi' => RelaxationSession::where('user_id', $userId)->count()
                 ]
             ], 200);
         } catch (\Exception $e) {
@@ -79,7 +82,7 @@ class MoodController extends Controller
             ]);
 
             $mood = new Mood();
-            $mood->user_id = 'user_dummy_123'; // Menggunakan user dummy / logic auth
+            $mood->user_id = (string) $request->auth_user->_id;
             $mood->mood = $validated['mood'];
             $mood->score = $validated['score'];
             $mood->catatan = $validated['catatan'] ?? '';
@@ -111,7 +114,7 @@ class MoodController extends Controller
             ]);
 
             $session = new RelaxationSession();
-            $session->user_id = 'user_dummy_123';
+            $session->user_id = (string) $request->auth_user->_id;
             $session->jenis_relaksasi = $validated['activity_name'];
             $session->durasi_menit = $validated['duration'];
             $session->tanggal = now();
