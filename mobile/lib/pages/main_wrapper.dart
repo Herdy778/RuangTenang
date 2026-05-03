@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_page.dart';
+import 'journal_page.dart';
 import 'chat_page.dart';
 import 'profile_page.dart';
 
@@ -14,15 +15,28 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
+  String? _journalInitialNote;
 
-  final List<Widget> _pages = const [
-    DashboardPage(),
-    ChatAiPage(),
-    ProfilePage(),
-  ];
+  void _navigateToJournal([String? note]) {
+    setState(() {
+      _currentIndex = 1;
+      _journalInitialNote = note;
+    });
+    // Bersihkan setelah dipakai agar tidak tersisa saat buka Jurnal berikutnya
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) setState(() => _journalInitialNote = null);
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final List<Widget> pages = [
+      DashboardPage(onNavigateToJournal: _navigateToJournal),
+      JournalPage(initialNote: _journalInitialNote),
+      const ChatAiPage(),
+      const ProfilePage(),
+    ];
+
     return Scaffold(
       extendBody: true,
       body: AnimatedSwitcher(
@@ -34,7 +48,7 @@ class _MainWrapperState extends State<MainWrapper> {
         },
         child: KeyedSubtree(
           key: ValueKey<int>(_currentIndex),
-          child: _pages[_currentIndex],
+          child: pages[_currentIndex],
         ),
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -79,6 +93,10 @@ class _MainWrapperState extends State<MainWrapper> {
                 BottomNavigationBarItem(
                   icon: Icon(Icons.grid_view_rounded),
                   label: "Beranda",
+                ),
+                BottomNavigationBarItem(
+                  icon: Icon(Icons.book_rounded),
+                  label: "Jurnal",
                 ),
                 BottomNavigationBarItem(
                   icon: Icon(Icons.chat_bubble_rounded),

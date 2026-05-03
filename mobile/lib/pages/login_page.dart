@@ -57,7 +57,22 @@ class _LoginPageState extends State<LoginPage> {
           'nama_lengkap',
           data['data']?['nama_lengkap'] ?? 'User',
         );
+        await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
+        await prefs.setString(
+          'occupation',
+          data['data']?['occupation'] ?? 'Student',
+        );
         await prefs.setString('token', data['token'] ?? '');
+
+        // Save photo url if exists
+        final photo = data['data']?['photo'];
+        if (photo != null && photo.toString().isNotEmpty) {
+          final fullUrl =
+              "http://127.0.0.1:8000/api/storage/${photo.toString().replaceAll('\\', '/')}";
+          await prefs.setString('profile_image_url', fullUrl);
+        } else {
+          await prefs.remove('profile_image_url');
+        }
 
         ScaffoldMessenger.of(
           context,

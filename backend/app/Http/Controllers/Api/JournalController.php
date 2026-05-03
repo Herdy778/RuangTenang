@@ -46,9 +46,15 @@ class JournalController extends Controller
             ]);
 
             if ($response->failed()) {
+                $errorData = json_decode($response->body(), true);
+                if (isset($errorData['error']['code']) && $errorData['error']['code'] == 503) {
+                    $pesan = 'Gagal menghubungi Groq: Server AI sedang penuh (High Demand). Silakan coba lagi dalam beberapa saat.';
+                } else {
+                    $pesan = 'Gagal menghubungi Groq: ' . $response->body();
+                }
                 return response()->json([
                     'status' => 'error',
-                    'pesan' => 'Gagal menghubungi Groq: ' . $response->body()
+                    'pesan' => $pesan
                 ], 500);
             }
 
@@ -221,6 +227,73 @@ class JournalController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
+            ], 500);
+        }
+    }
+
+    public function analyzeMentalHealth(Request $request)
+    {
+        // 1. Ambil semua data inputan dari user (Flutter)
+        $dataUser = $request->all();
+
+        try {
+            // 2. Kirim ke Flask ML Service
+            $response = Http::post('http://127.0.0.1:5000/predict', $dataUser);
+
+            if ($response->successful()) {
+                $hasilPrediksi = $response->json();
+
+                // 3. Simpan jurnal ke MongoDB
+                $userId = null;
+                if ($request->auth_user) {
+                    $userId = DB::connection('mongodb')
+                        ->collection('users')
+                        ->where('email', $request->auth_user->email)
+                        ->value('_id');
+                }
+
+                $kategori  = $hasilPrediksi['prediction'] ?? 'Minimal'; // Minimal/Ringan/Sedang/Berat
+                $skorTotal = $hasilPrediksi['skor_total'] ?? 0;
+
+                // Mapping kategori ke hasil_mood (konsisten dengan jurnal teks)
+                $moodMap = [
+                    'Minimal' => 'Netral',
+                    'Ringan'  => 'Cemas',
+                    'Sedang'  => 'Cemas',
+                    'Berat'   => 'Krisis',
+                ];
+
+                Journal::create([
+                    'user_id'                 => (string) $userId,
+                    'teks_curhat'             => $request->input('teks_curhat', ''),
+                    'hasil_mood'              => $moodMap[$kategori] ?? 'Netral',
+                    'kategori_phq'            => $kategori,
+                    'skor_phq'                => $skorTotal,
+                    'perasaan_sedih'          => (int) $request->input('perasaan_sedih', 0),
+                    'minat_kegiatan'          => (int) $request->input('minat_kegiatan', 0),
+                    'kualitas_tidur'          => (int) $request->input('kualitas_tidur', 0),
+                    'tingkat_lelah'           => (int) $request->input('tingkat_lelah', 0),
+                    'kesulitan_konsentrasi'   => (int) $request->input('kesulitan_konsentrasi', 0),
+                    'tanggal'                 => now(),
+                    'status'                  => 'normal',
+                ]);
+
+                return response()->json([
+                    'status'  => 'success',
+                    'message' => 'Analisis berhasil dilakukan via AI',
+                    'data'    => $hasilPrediksi,
+                ], 200);
+            }
+
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal mendapatkan analisis dari AI'
+            ], 500);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Koneksi ke server AI terputus. Pastikan Flask menyala. Error: ' . $e->getMessage()
             ], 500);
         }
     }

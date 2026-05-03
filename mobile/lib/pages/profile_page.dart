@@ -13,6 +13,7 @@ class ProfilePage extends StatefulWidget {
 class _ProfilePageState extends State<ProfilePage> {
   String _userName = "User";
   String _userEmail = "user@example.com";
+  String? _profileImageUrl;
   bool _notifPush = true;
   bool _notifEmail = false;
   String _selectedLanguage = "Indonesia";
@@ -28,6 +29,7 @@ class _ProfilePageState extends State<ProfilePage> {
     setState(() {
       _userName = prefs.getString('nama_lengkap') ?? "User";
       _userEmail = prefs.getString('email') ?? "user@example.com";
+      _profileImageUrl = prefs.getString('profile_image_url');
       _notifPush = prefs.getBool('notif_push') ?? true;
       _notifEmail = prefs.getBool('notif_email') ?? false;
       _selectedLanguage = prefs.getString('language') ?? "Indonesia";
@@ -60,7 +62,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool('notif_push', val);
                     },
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   ),
                   SwitchListTile(
                     title: const Text('Notifikasi Email'),
@@ -71,7 +73,7 @@ class _ProfilePageState extends State<ProfilePage> {
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool('notif_email', val);
                     },
-                    activeColor: AppColors.primary,
+                    activeThumbColor: AppColors.primary,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -227,10 +229,16 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget _buildProfileHeader() {
     return Column(
       children: [
-        const CircleAvatar(
+        CircleAvatar(
           radius: 50,
           backgroundColor: AppColors.primaryBorder,
-          child: Icon(Icons.person, size: 50, color: AppColors.primary),
+          backgroundImage:
+              _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+              ? NetworkImage(_profileImageUrl!) as ImageProvider
+              : null,
+          child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+              ? const Icon(Icons.person, size: 50, color: AppColors.primary)
+              : null,
         ),
         const SizedBox(height: 16),
         Text(
@@ -245,12 +253,14 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 16),
         OutlinedButton(
           onPressed: () async {
-            final result = await Navigator.push(
+            await Navigator.push(
               context,
               MaterialPageRoute(builder: (context) => const EditProfilePage()),
             );
-            if (result == true) {
-              _loadProfile(); // Reload if updated
+            // Always reload data when returning from EditProfilePage
+            // Because user might upload a photo and press the hardware back button
+            if (mounted) {
+              _loadProfile();
             }
           },
           style: OutlinedButton.styleFrom(

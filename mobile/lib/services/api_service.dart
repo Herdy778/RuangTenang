@@ -44,14 +44,13 @@ class ApiService {
   // =============================
   Future<bool> recordRelaxation(String name, {int duration = 5}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/relaxation-sessions'),
-        headers: await _headers(),
-        body: jsonEncode({
-          'activity_name': name,
-          'duration': duration,
-        }),
-      ).timeout(const Duration(seconds: 3));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/relaxation-sessions'),
+            headers: await _headers(),
+            body: jsonEncode({'activity_name': name, 'duration': duration}),
+          )
+          .timeout(const Duration(seconds: 3));
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
@@ -67,11 +66,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/moods'),
       headers: await _headers(),
-      body: jsonEncode({
-        'mood': mood,
-        'score': score,
-        'catatan': catatan,
-      }),
+      body: jsonEncode({'mood': mood, 'score': score, 'catatan': catatan}),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -92,6 +87,25 @@ class ApiService {
       return body['data'];
     } else {
       throw Exception('Gagal ambil data mood');
+    }
+  }
+
+  // =============================
+  // JOURNAL
+  // =============================
+  Future<List<dynamic>> fetchRecentJournals({int limit = 3}) async {
+    final response = await http.get(
+      Uri.parse('$baseUrl/journals'),
+      headers: await _headers(),
+    );
+
+    if (response.statusCode == 200) {
+      final body = jsonDecode(response.body);
+      final List<dynamic> all = body['data'] ?? [];
+      // Ambil hanya N entry terbaru
+      return all.take(limit).toList();
+    } else {
+      throw Exception('Gagal ambil jurnal terbaru');
     }
   }
 }

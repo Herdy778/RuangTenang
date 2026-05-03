@@ -7,7 +7,8 @@ import 'relaxation_page.dart';
 import '../services/api_service.dart';
 
 class DashboardPage extends StatefulWidget {
-  const DashboardPage({super.key});
+  final Function(String?)? onNavigateToJournal;
+  const DashboardPage({super.key, this.onNavigateToJournal});
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -18,18 +19,20 @@ class _DashboardPageState extends State<DashboardPage>
   late AnimationController _blobAnimController;
   late AnimationController _staggeredController;
   String userName = "Pengguna";
+  String? _profileImageUrl;
 
-  Future<void> _loadUserName() async {
+  Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       userName = prefs.getString('nama_lengkap') ?? "Pengguna";
+      _profileImageUrl = prefs.getString('profile_image_url');
     });
   }
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    _loadProfileData();
     _blobAnimController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -57,6 +60,7 @@ class _DashboardPageState extends State<DashboardPage>
     // Karena arsitektur menggunakan pemanggilan Future statis (inline) di FutureBuilder,
     // kita sekadar melakukan setState untuk memicu re-render dan menunda penyelesaian RefreshIndicator
     // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
+    await _loadProfileData(); // Tarik ulang foto dan nama jika berubah
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 800));
   }
@@ -335,13 +339,22 @@ class _DashboardPageState extends State<DashboardPage>
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Berhasil disimpan!'),
+                                      content: Text(
+                                        'Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝',
+                                      ),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
+                                      duration: Duration(seconds: 2),
                                     ),
                                   );
-                                  // Refresh data (panggil setState untuk merender ulang FutureBuilder)
                                   setState(() {});
+                                  // Arahkan ke tab Jurnal setelah 2 detik, bawa teksnya
+                                  await Future.delayed(
+                                    const Duration(seconds: 2),
+                                  );
+                                  widget.onNavigateToJournal?.call(
+                                    noteController.text,
+                                  );
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
@@ -456,17 +469,21 @@ class _DashboardPageState extends State<DashboardPage>
         Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: AppGradients.avatarGradient,
+                color: AppColors.primaryBorder,
+                image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(_profileImageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+                  ? const Icon(Icons.person, color: AppColors.primary, size: 32)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -687,87 +704,125 @@ class _DashboardPageState extends State<DashboardPage>
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text("Jurnal Terbaru", style: AppTextStyles.titleMD),
-        Text(
-          "Lihat Semua",
-          style: AppTextStyles.label.copyWith(color: AppColors.primary),
+        GestureDetector(
+          onTap: () {
+            // Navigasi ke tab Jurnal (index 1)
+            widget.onNavigateToJournal?.call(null);
+          },
+          child: Text(
+            "Lihat Semua →",
+            style: AppTextStyles.label.copyWith(color: AppColors.primary),
+          ),
         ),
       ],
     );
   }
 
   Widget _buildRecentList() {
-    // Dummy Data
-    final recentEntries = [
-      {
-        "mood": "Cemas",
-        "date": "Hari ini, 09:41",
-        "text":
-            "Saya merasa sedikit gelisah mengenai presentasi besok pagi. Saya harap semuanya berjalan lancar tanpa kendala.",
-      },
-      {
-        "mood": "Netral",
-        "date": "Kemarin, 20:15",
-        "text":
-            "Hari yang cukup biasa. Pekerjaan selesai tepat waktu dan cuaca cukup cerah.",
-      },
-    ];
+    return FutureBuilder<List<dynamic>>(
+      future: ApiService().fetchRecentJournals(limit: 3),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(20),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
 
-    return Column(
-      children: recentEntries.map((entry) {
-        final moodStyle = AppMoodColors.of(entry["mood"]!);
+        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+          return Container(
+            padding: const EdgeInsets.all(20),
+            decoration: AppDecorations.card,
+            child: Center(
+              child: Text(
+                'Belum ada jurnal. Yuk mulai menulis! ✍️',
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: AppColors.textMuted,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: AppDecorations.card,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        final entries = snapshot.data!;
+        return Column(
+          children: entries.map((entry) {
+            final mood = entry['hasil_mood'] ?? 'Netral';
+            final teks = entry['teks_curhat'] ?? '-';
+            final tanggal = entry['tanggal'] ?? entry['created_at'] ?? '';
+            String dateLabel = tanggal;
+            try {
+              final dt = DateTime.parse(tanggal.toString()).toLocal();
+              final now = DateTime.now();
+              final diff = now.difference(dt).inDays;
+              if (diff == 0) {
+                dateLabel =
+                    'Hari ini, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+              } else if (diff == 1) {
+                dateLabel =
+                    'Kemarin, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+              } else {
+                dateLabel = '${dt.day}/${dt.month}/${dt.year}';
+              }
+            } catch (_) {}
+
+            final moodStyle = AppMoodColors.of(mood);
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: AppDecorations.card,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Mood Badge (Pill-shaped)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: moodStyle.background,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          moodStyle.emoji,
-                          style: const TextStyle(fontSize: 12),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
                         ),
-                        const SizedBox(width: 6),
-                        Text(
-                          entry["mood"]!,
-                          style: AppTextStyles.label.copyWith(
-                            color: moodStyle.textColor,
-                            fontSize: 12,
-                          ),
+                        decoration: BoxDecoration(
+                          color: moodStyle.background,
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              moodStyle.emoji,
+                              style: const TextStyle(fontSize: 12),
+                            ),
+                            const SizedBox(width: 6),
+                            Text(
+                              mood,
+                              style: AppTextStyles.label.copyWith(
+                                color: moodStyle.textColor,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Text(dateLabel, style: AppTextStyles.caption),
+                    ],
                   ),
-                  Text(entry["date"]!, style: AppTextStyles.caption),
+                  const SizedBox(height: 12),
+                  Text(
+                    teks,
+                    style: AppTextStyles.bodyMD,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                entry["text"]!,
-                style: AppTextStyles.bodyMD,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
+            );
+          }).toList(),
         );
-      }).toList(),
+      },
     );
   }
 }
