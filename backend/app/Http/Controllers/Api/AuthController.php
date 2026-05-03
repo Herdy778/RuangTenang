@@ -41,42 +41,37 @@ class AuthController extends Controller
     }
 
     public function login(Request $request)
-    {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required|string'
-        ]);
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required|string'
+    ]);
 
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'status' => 'error',
-                'pesan' => 'Email atau Password salah!'
-            ], 401);
-        }
-
-        if ($user->role !== 'admin') {
-            return response()->json([
-                'status' => 'error',
-                'pesan' => 'Akses ditolak. Hanya admin'
-            ], 403);
-        }
-
-        $token = bin2hex(random_bytes(32));
-
-        Token::create([
-            'user_id' => $user->_id,
-            'token' => hash('sha256', $token),
-            'name' => 'auth_token'
-        ]);
-
+    if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
-            'status' => 'success',
-            'data' => $user,
-            'token' => $token
-        ]);
+            'status' => 'error',
+            'pesan' => 'Email atau Password salah!'
+        ], 401);
     }
+
+    // ❌ HAPUS VALIDASI ROLE DI SINI
+
+    $token = bin2hex(random_bytes(32));
+
+    Token::create([
+        'user_id' => $user->_id,
+        'token' => hash('sha256', $token),
+        'name' => 'auth_token'
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $user,
+        'token' => $token
+    ]);
+}
 
 
     public function users()

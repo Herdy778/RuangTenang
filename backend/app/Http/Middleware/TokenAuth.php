@@ -31,19 +31,15 @@ class TokenAuth
             ], 401);
         }
 
-       $userData = DB::connection('mongodb')
-    ->collection('users')
-    ->where('_id', $token->user_id)
-    ->first();
+        // Gunakan Eloquent User model agar konversi _id otomatis dihandle
+        $user = User::where('_id', $token->user_id)->first();
 
-if (!$userData) {
-    return response()->json([
-        'status' => 'error',
-        'pesan'  => 'User tidak ditemukan'
-    ], 401);
-}
-
-$user = User::where('email', $userData['email'])->first();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan'  => 'User tidak ditemukan'
+            ], 401);
+        }
 
         $token->update(['last_used_at' => now()]);
 
