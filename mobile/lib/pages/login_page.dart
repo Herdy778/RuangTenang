@@ -97,7 +97,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           data['data']?['nama_lengkap'] ?? 'User',
         );
         await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
-        await prefs.setString('occupation', data['data']?['occupation'] ?? 'Student');
+        await prefs.setString(
+          'occupation',
+          data['data']?['occupation'] ?? 'Student',
+        );
         await prefs.setString('token', data['token'] ?? '');
 
         ScaffoldMessenger.of(context).showSnackBar(

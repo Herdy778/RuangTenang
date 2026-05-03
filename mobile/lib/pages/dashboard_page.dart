@@ -18,12 +18,21 @@ class _DashboardPageState extends State<DashboardPage>
     with TickerProviderStateMixin {
   late AnimationController _blobAnimController;
   late AnimationController _staggeredController;
-  String _userName = "";
+  String userName = "Pengguna";
+  String? _profileImageUrl;
+
+  Future<void> _loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('nama_lengkap') ?? "Pengguna";
+      _profileImageUrl = prefs.getString('profile_image_url');
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    _loadProfileData();
     _blobAnimController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -40,16 +49,6 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userName = prefs.getString('nama_lengkap') ?? "Guest";
-
-      // Jika kosong, mungkin data lama (sebelum update SharedPreferences).
-      if (_userName.isEmpty) _userName = "User";
-    });
-  }
-
   @override
   void dispose() {
     _blobAnimController.dispose();
@@ -61,16 +60,9 @@ class _DashboardPageState extends State<DashboardPage>
     // Karena arsitektur menggunakan pemanggilan Future statis (inline) di FutureBuilder,
     // kita sekadar melakukan setState untuk memicu re-render dan menunda penyelesaian RefreshIndicator
     // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
+    await _loadProfileData(); // Tarik ulang foto dan nama jika berubah
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 800));
-  }
-
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus semua data sesi
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-    }
   }
 
   @override
@@ -347,7 +339,9 @@ class _DashboardPageState extends State<DashboardPage>
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝'),
+                                      content: Text(
+                                        'Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝',
+                                      ),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
                                       duration: Duration(seconds: 2),
@@ -355,8 +349,12 @@ class _DashboardPageState extends State<DashboardPage>
                                   );
                                   setState(() {});
                                   // Arahkan ke tab Jurnal setelah 2 detik, bawa teksnya
-                                  await Future.delayed(const Duration(seconds: 2));
-                                  widget.onNavigateToJournal?.call(noteController.text);
+                                  await Future.delayed(
+                                    const Duration(seconds: 2),
+                                  );
+                                  widget.onNavigateToJournal?.call(
+                                    noteController.text,
+                                  );
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
@@ -471,17 +469,21 @@ class _DashboardPageState extends State<DashboardPage>
         Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: AppGradients.avatarGradient,
+                color: AppColors.primaryBorder,
+                image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(_profileImageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+                  ? const Icon(Icons.person, color: AppColors.primary, size: 32)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -494,7 +496,7 @@ class _DashboardPageState extends State<DashboardPage>
                       children: [
                         const TextSpan(text: "Selamat datang kembali,\n"),
                         TextSpan(
-                          text: _userName,
+                          text: userName,
                           style: AppTextStyles.headingMD.copyWith(
                             fontStyle: FontStyle.italic,
                             color: AppColors.primary,
@@ -513,51 +515,6 @@ class _DashboardPageState extends State<DashboardPage>
                   ),
                 ],
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text(
-                      "Logout",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    content: const Text("Apakah yakin ingin keluar dari akun?"),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _logout();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          "Keluar",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
             ),
           ],
         ),
@@ -781,7 +738,9 @@ class _DashboardPageState extends State<DashboardPage>
             child: Center(
               child: Text(
                 'Belum ada jurnal. Yuk mulai menulis! ✍️',
-                style: AppTextStyles.bodyMD.copyWith(color: AppColors.textMuted),
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: AppColors.textMuted,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -800,9 +759,11 @@ class _DashboardPageState extends State<DashboardPage>
               final now = DateTime.now();
               final diff = now.difference(dt).inDays;
               if (diff == 0) {
-                dateLabel = 'Hari ini, ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+                dateLabel =
+                    'Hari ini, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
               } else if (diff == 1) {
-                dateLabel = 'Kemarin, ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+                dateLabel =
+                    'Kemarin, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
               } else {
                 dateLabel = '${dt.day}/${dt.month}/${dt.year}';
               }
@@ -820,7 +781,10 @@ class _DashboardPageState extends State<DashboardPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: moodStyle.background,
                           borderRadius: BorderRadius.circular(20),
@@ -828,7 +792,10 @@ class _DashboardPageState extends State<DashboardPage>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(moodStyle.emoji, style: const TextStyle(fontSize: 12)),
+                            Text(
+                              moodStyle.emoji,
+                              style: const TextStyle(fontSize: 12),
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               mood,

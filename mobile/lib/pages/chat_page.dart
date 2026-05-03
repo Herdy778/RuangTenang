@@ -19,51 +19,164 @@ class ChatAiPage extends StatefulWidget {
 // ===========================================================================
 const Map<String, List<Map<String, String>>> _articlesByMood = {
   'stres': [
-    {'emoji': '🧘', 'title': 'Teknik Napas 4-7-8', 'sub': 'Redakan stres dalam 1 menit'},
-    {'emoji': '🌿', 'title': 'Jalan Kaki & Stres', 'sub': 'Olahraga ringan yang ampuh'},
-    {'emoji': '📓', 'title': 'Journaling untuk Stres', 'sub': 'Tulis, lepaskan, lega'},
+    {
+      'emoji': '🧘',
+      'title': 'Teknik Napas 4-7-8',
+      'sub': 'Redakan stres dalam 1 menit',
+    },
+    {
+      'emoji': '🌿',
+      'title': 'Jalan Kaki & Stres',
+      'sub': 'Olahraga ringan yang ampuh',
+    },
+    {
+      'emoji': '📓',
+      'title': 'Journaling untuk Stres',
+      'sub': 'Tulis, lepaskan, lega',
+    },
   ],
   'cemas': [
-    {'emoji': '💆', 'title': 'Mindfulness 5 Menit', 'sub': 'Hadirkan dirimu saat ini'},
-    {'emoji': '🎵', 'title': 'Musik & Kecemasan', 'sub': 'Playlist yang menenangkan jiwa'},
-    {'emoji': '🔋', 'title': 'Kelola Energi Mental', 'sub': 'Jaga batas agar tidak overwhelmed'},
+    {
+      'emoji': '💆',
+      'title': 'Mindfulness 5 Menit',
+      'sub': 'Hadirkan dirimu saat ini',
+    },
+    {
+      'emoji': '🎵',
+      'title': 'Musik & Kecemasan',
+      'sub': 'Playlist yang menenangkan jiwa',
+    },
+    {
+      'emoji': '🔋',
+      'title': 'Kelola Energi Mental',
+      'sub': 'Jaga batas agar tidak overwhelmed',
+    },
   ],
   'sedih': [
-    {'emoji': '💜', 'title': 'Validasi Perasaanmu', 'sub': 'Boleh sedih, itu manusiawi'},
-    {'emoji': '🤝', 'title': 'Cerita ke Orang Terdekat', 'sub': 'Kamu tidak harus sendiri'},
-    {'emoji': '🌅', 'title': 'Rutinitas Penyembuh', 'sub': 'Kebiasaan kecil yang membantu'},
+    {
+      'emoji': '💜',
+      'title': 'Validasi Perasaanmu',
+      'sub': 'Boleh sedih, itu manusiawi',
+    },
+    {
+      'emoji': '🤝',
+      'title': 'Cerita ke Orang Terdekat',
+      'sub': 'Kamu tidak harus sendiri',
+    },
+    {
+      'emoji': '🌅',
+      'title': 'Rutinitas Penyembuh',
+      'sub': 'Kebiasaan kecil yang membantu',
+    },
   ],
   'lelah': [
-    {'emoji': '😴', 'title': 'Pentingnya Tidur Cukup', 'sub': 'Otak butuh rehat yang berkualitas'},
-    {'emoji': '🍵', 'title': 'Istirahat Aktif', 'sub': 'Bukan rebahan, tapi recharge'},
-    {'emoji': '🚿', 'title': 'Self-Care Sederhana', 'sub': 'Me-time yang efektif'},
+    {
+      'emoji': '😴',
+      'title': 'Pentingnya Tidur Cukup',
+      'sub': 'Otak butuh rehat yang berkualitas',
+    },
+    {
+      'emoji': '🍵',
+      'title': 'Istirahat Aktif',
+      'sub': 'Bukan rebahan, tapi recharge',
+    },
+    {
+      'emoji': '🚿',
+      'title': 'Self-Care Sederhana',
+      'sub': 'Me-time yang efektif',
+    },
   ],
   'marah': [
-    {'emoji': '🥊', 'title': 'Kelola Amarah dengan Sehat', 'sub': 'Emosi valid, ekspresi bisa dipilih'},
-    {'emoji': '🌊', 'title': 'Teknik Grounding', 'sub': 'Kembali tenang dalam 5 langkah'},
-    {'emoji': '✍️', 'title': 'Ekspresikan lewat Tulisan', 'sub': 'Tuangkan ke kertas, bukan orang'},
+    {
+      'emoji': '🥊',
+      'title': 'Kelola Amarah dengan Sehat',
+      'sub': 'Emosi valid, ekspresi bisa dipilih',
+    },
+    {
+      'emoji': '🌊',
+      'title': 'Teknik Grounding',
+      'sub': 'Kembali tenang dalam 5 langkah',
+    },
+    {
+      'emoji': '✍️',
+      'title': 'Ekspresikan lewat Tulisan',
+      'sub': 'Tuangkan ke kertas, bukan orang',
+    },
   ],
   'burnout': [
-    {'emoji': '🛑', 'title': 'Kenali Tanda Burnout', 'sub': 'Sebelum terlambat, sadari sekarang'},
-    {'emoji': '📵', 'title': 'Digital Detox', 'sub': 'Istirahat dari layar secara berkala'},
-    {'emoji': '🧠', 'title': 'Cari Bantuan Profesional', 'sub': 'Psikolog bisa membantumu pulih'},
+    {
+      'emoji': '🛑',
+      'title': 'Kenali Tanda Burnout',
+      'sub': 'Sebelum terlambat, sadari sekarang',
+    },
+    {
+      'emoji': '📵',
+      'title': 'Digital Detox',
+      'sub': 'Istirahat dari layar secara berkala',
+    },
+    {
+      'emoji': '🧠',
+      'title': 'Cari Bantuan Profesional',
+      'sub': 'Psikolog bisa membantumu pulih',
+    },
   ],
   'default': [
-    {'emoji': '💙', 'title': 'Menjaga Kesehatan Mental', 'sub': 'Panduan dasar untuk setiap hari'},
-    {'emoji': '🌱', 'title': 'Tumbuh dari Tantangan', 'sub': 'Resiliensi yang bisa dipelajari'},
-    {'emoji': '☀️', 'title': 'Mulai Hari dengan Positif', 'sub': 'Rutinitas pagi yang menyehatkan'},
+    {
+      'emoji': '💙',
+      'title': 'Menjaga Kesehatan Mental',
+      'sub': 'Panduan dasar untuk setiap hari',
+    },
+    {
+      'emoji': '🌱',
+      'title': 'Tumbuh dari Tantangan',
+      'sub': 'Resiliensi yang bisa dipelajari',
+    },
+    {
+      'emoji': '☀️',
+      'title': 'Mulai Hari dengan Positif',
+      'sub': 'Rutinitas pagi yang menyehatkan',
+    },
   ],
 };
 
 /// Deteksi kategori mood dari teks yang ditulis user
 String _detectMoodCategory(String userText) {
   final lower = userText.toLowerCase();
-  if (lower.contains('stres') || lower.contains('tertekan') || lower.contains('tekanan') || lower.contains('beban')) return 'stres';
-  if (lower.contains('cemas') || lower.contains('khawatir') || lower.contains('takut') || lower.contains('galau') || lower.contains('panik')) return 'cemas';
-  if (lower.contains('sedih') || lower.contains('menangis') || lower.contains('nangis') || lower.contains('kecewa') || lower.contains('patah hati')) return 'sedih';
-  if (lower.contains('lelah') || lower.contains('capek') || lower.contains('exhausted') || lower.contains('ngantuk') || lower.contains('bosan')) return 'lelah';
-  if (lower.contains('marah') || lower.contains('kesal') || lower.contains('frustrasi') || lower.contains('emosi') || lower.contains('jengkel')) return 'marah';
-  if (lower.contains('burnout') || lower.contains('menyerah') || lower.contains('tidak sanggup') || lower.contains('ga kuat') || lower.contains('gak kuat')) return 'burnout';
+  if (lower.contains('stres') ||
+      lower.contains('tertekan') ||
+      lower.contains('tekanan') ||
+      lower.contains('beban'))
+    return 'stres';
+  if (lower.contains('cemas') ||
+      lower.contains('khawatir') ||
+      lower.contains('takut') ||
+      lower.contains('galau') ||
+      lower.contains('panik'))
+    return 'cemas';
+  if (lower.contains('sedih') ||
+      lower.contains('menangis') ||
+      lower.contains('nangis') ||
+      lower.contains('kecewa') ||
+      lower.contains('patah hati'))
+    return 'sedih';
+  if (lower.contains('lelah') ||
+      lower.contains('capek') ||
+      lower.contains('exhausted') ||
+      lower.contains('ngantuk') ||
+      lower.contains('bosan'))
+    return 'lelah';
+  if (lower.contains('marah') ||
+      lower.contains('kesal') ||
+      lower.contains('frustrasi') ||
+      lower.contains('emosi') ||
+      lower.contains('jengkel'))
+    return 'marah';
+  if (lower.contains('burnout') ||
+      lower.contains('menyerah') ||
+      lower.contains('tidak sanggup') ||
+      lower.contains('ga kuat') ||
+      lower.contains('gak kuat'))
+    return 'burnout';
   return 'default';
 }
 
@@ -756,21 +869,24 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                               PageRouteBuilder(
                                 pageBuilder: (_, animation, __) =>
                                     const JournalPage(),
-                                transitionsBuilder:
-                                    (_, animation, __, child) {
+                                transitionsBuilder: (_, animation, __, child) {
                                   return SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(1.0, 0.0),
-                                      end: Offset.zero,
-                                    ).animate(CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutCubic,
-                                    )),
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(1.0, 0.0),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        ),
                                     child: child,
                                   );
                                 },
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
+                                transitionDuration: const Duration(
+                                  milliseconds: 400,
+                                ),
                               ),
                             );
                           },
@@ -824,7 +940,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   // ===========================================================================
 
   Widget _buildArticleRecommendations(String moodCategory, int msgIndex) {
-    final articles = _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
+    final articles =
+        _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
 
     return TweenAnimationBuilder<double>(
       key: ValueKey('articles_$msgIndex'),
@@ -869,7 +986,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 
             // Daftar card artikel horizontal
             SizedBox(
-              height: 110, // <-- Diperbesar dari 100 menjadi 110 agar tidak overlap
+              height:
+                  110, // <-- Diperbesar dari 100 menjadi 110 agar tidak overlap
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: articles.length,
