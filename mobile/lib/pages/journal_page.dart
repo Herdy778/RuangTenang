@@ -219,10 +219,15 @@ class _JournalPageState extends State<JournalPage>
         final skor = (body['data']?['skor_total'] ?? _totalSkor) as int;
         if (mounted) _showResultSheet(prediction, skor);
       } else {
-        _showSnack('Terjadi kesalahan. Silakan coba lagi 🙏');
+        try {
+          final body = jsonDecode(res.body);
+          _showSnack(body['message'] ?? body['pesan'] ?? 'Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏');
+        } catch (_) {
+          _showSnack('Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏');
+        }
       }
-    } catch (_) {
-      _showSnack('Tidak dapat terhubung ke server');
+    } catch (e) {
+      _showSnack('Tidak dapat terhubung ke server: $e');
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }

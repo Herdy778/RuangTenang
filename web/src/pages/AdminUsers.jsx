@@ -1,53 +1,155 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 import API from "../utils/api";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminUsers() {
-  const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const navigate = useNavigate(); 
+  const [users, setUsers] = useState([]);         
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [allUsers, setAllUsers] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [sortConfig, setSortConfig] = useState({ key: "nama_lengkap", direction: "asc" });
+
 
   useEffect(() => {
     fetchUsers();
   }, []);
 
-  async function fetchUsers() {
+   async function fetchUsers() {
     try {
+      setLoading(true);
       const res = await API.get("/admin/users");
-      setUsers(res.data.data || []);
+      const data = res.data.data || [];
+      setAllUsers(data);
     } catch (err) {
       console.error(err);
+      toast.error("Gagal memuat data user");
     } finally {
       setLoading(false);
     }
   }
 
-  async function updateRole(id, role) {
+    const getSortedUsers = useMemo(() => {
+    let filtered = [...allUsers];
+    
+    if (searchTerm) {
+      filtered = filtered.filter(user => 
+        user.nama_lengkap?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    if (roleFilter !== "all") {
+      filtered = filtered.filter(user => user.role === roleFilter);
+    }
+    
+    const sorted = [...filtered];
+    
+    if (sortConfig.key) {
+      sorted.sort((a, b) => {
+        let aVal = a[sortConfig.key] || "";
+        let bVal = b[sortConfig.key] || "";
+        
+        if (typeof aVal === "string") aVal = aVal.toLowerCase();
+        if (typeof bVal === "string") bVal = bVal.toLowerCase();
+        
+        if (aVal < bVal) return sortConfig.direction === "asc" ? -1 : 1;
+        if (aVal > bVal) return sortConfig.direction === "asc" ? 1 : -1;
+        return 0;
+      });
+    }
+    
+    return sorted;
+  }, [allUsers, searchTerm, roleFilter, sortConfig]);
+
+    const handleSort = (key) => {
+    setSortConfig(prev => ({
+      key,
+      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc"
+    }));
+  };
+
+   const getSortIcon = (key) => {
+    if (sortConfig.key !== key) return "↕️";
+    return sortConfig.direction === "asc" ? "↑" : "↓";
+  };
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, roleFilter]);
+
+
+    async function updateRole(id, role) {
     try {
       await API.put(`/admin/users/${id}`, { role });
+      toast.success(`Role berhasil diubah menjadi ${role}`);
       fetchUsers();
     } catch (err) {
       console.error(err);
+      toast.error("Gagal mengupdate role");
     }
   }
 
-  async function deleteUser(id) {
+    async function deleteUser(id) {
     if (!confirm("Hapus user ini?")) return;
-
     try {
       await API.delete(`/admin/users/${id}`);
+      toast.success("User berhasil dihapus");
       fetchUsers();
     } catch (err) {
       console.error(err);
+      toast.error("Gagal menghapus user");
     }
   }
 
   async function doLogout() {
-    await API.post("/logout");
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    navigate("/");
+    try {
+      await API.post("/logout");
+    } catch (err) {
+      console.error("Logout error:", err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+      navigate("/");
+    }
   }
+
+      const totalUsers = getSortedUsers.length;
+      const totalAdmin = getSortedUsers.filter(u => u.role === "admin").length;
+      const totalMahasiswa = getSortedUsers.filter(u => u.role === "mahasiswa").length;
+
+      const handleExportCSV = () => {
+      const headers = ["No", "Nama Lengkap", "Email", "Role"];
+      const csvData = getSortedUsers.map((user, i) => [
+        i + 1,
+        user.nama_lengkap,
+        user.email,
+        user.role
+      ]);
+      
+      const csvContent = [
+        headers.join(","),
+        ...csvData.map(row => row.join(","))
+      ].join("\n");
+      
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `users_export_${new Date().toISOString().slice(0,19)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Data berhasil diexport");
+    };
+
+      const paginatedUsers = getSortedUsers.slice(
+          (currentPage - 1) * itemsPerPage,
+          currentPage * itemsPerPage
+        );
 
   return (
     <div style={styles.bg}>
@@ -60,38 +162,19 @@ export default function AdminUsers() {
           <span style={styles.navLogoIcon}>🌿</span>
           <span style={styles.navLogoText}>RuangTenang Admin</span>
         </div>
-
         <div style={styles.navLinks}>
-          <span
-            style={styles.navLink}
-            onClick={() => navigate("/dashboard")}
-          >
+          <span style={styles.navLink} onClick={() => navigate("/dashboard")}>
             Dashboard
           </span>
-
-          <span
-            style={{
-              ...styles.navLink,
-              ...styles.navLinkActive,
-            }}
-          >
+          <span style={{ ...styles.navLink, ...styles.navLinkActive }}>
             Data User
           </span>
-
-          <span
-            style={styles.navLink}
-            onClick={() => navigate("/admin/journals")}
-          >
+          <span style={styles.navLink} onClick={() => navigate("/admin/journals")}>
             Data Jurnal
           </span>
-
-          <span
-            style={styles.navLink}
-            onClick={() => navigate("/admin/articles")}
-          >
+          <span style={styles.navLink} onClick={() => navigate("/admin/articles")}>
             Artikel
           </span>
-
           <button style={styles.logoutBtn} onClick={doLogout}>
             Keluar
           </button>
@@ -102,10 +185,89 @@ export default function AdminUsers() {
         {/* HEADER */}
         <div style={styles.header}>
           <h1 style={styles.title}>Data Pengguna</h1>
-          <p style={styles.subtitle}>
-            Daftar semua pengguna aplikasi RuangTenang
-          </p>
+          <p style={styles.subtitle}>Daftar semua pengguna aplikasi RuangTenang</p>
         </div>
+
+<div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(3, 1fr)",
+          gap: 16,
+          marginBottom: 24,
+        }}>
+          <div style={{
+            background: "white",
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #F4F4F5",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 700 }}>{totalUsers}</div>
+            <div style={{ fontSize: 14, color: "#71717A" }}>Total User</div>
+          </div>
+          
+          <div style={{
+            background: "white",
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #F4F4F5",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: "#7C3AED" }}>{totalAdmin}</div>
+            <div style={{ fontSize: 14, color: "#71717A" }}>Admin</div>
+          </div>
+          
+          <div style={{
+            background: "white",
+            padding: 20,
+            borderRadius: 12,
+            border: "1px solid #F4F4F5",
+            textAlign: "center",
+          }}>
+            <div style={{ fontSize: 32, fontWeight: 700, color: "#166534" }}>{totalMahasiswa}</div>
+            <div style={{ fontSize: 14, color: "#71717A" }}>Mahasiswa</div>
+          </div>
+        </div>
+
+        {/* Taruh di sini, sebelum <div style={styles.card}> */}
+        {/* INI KODE BARU (search box + dropdown filter) */}
+        <div style={{ display: "flex", gap: 12, marginBottom: 20 }}>
+  <input
+    type="text"
+    placeholder="🔍 Cari user berdasarkan nama atau email..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    style={{
+      flex: 1,
+      padding: "10px 14px",
+      border: "1px solid #E4E4E7",
+      borderRadius: 8,
+      fontSize: 14,
+    }}
+  />
+  
+  <select
+    value={roleFilter}
+    onChange={(e) => setRoleFilter(e.target.value)}
+    style={{
+      padding: "10px 14px",
+      border: "1px solid #E4E4E7",
+      borderRadius: 8,
+      background: "white",
+      fontSize: 14,
+      cursor: "pointer",
+    }}
+  >
+    <option value="all">📋 Semua Role</option>
+    <option value="admin">👑 Admin</option>
+    <option value="mahasiswa">🎓 Mahasiswa</option>
+  </select>
+
+  {/* ↓↓↓ TAMBAHKAN INI ↓↓↓ */}
+  <button onClick={handleExportCSV} style={styles.exportBtn}>
+    📎 Export CSV
+  </button>
+  {/* ↑↑↑ SAMPAI SINI ↑↑↑ */}
+</div>
 
         {/* CARD */}
         <div style={styles.card}>
@@ -113,61 +275,43 @@ export default function AdminUsers() {
             <div style={styles.loading}>Memuat data...</div>
           ) : (
             <table style={styles.table}>
-              <thead>
+              
+               <thead>
                 <tr>
-                  <th style={styles.th}>No</th>
-                  <th style={styles.th}>Nama</th>
-                  <th style={styles.th}>Email</th>
-                  <th style={styles.th}>Role</th>
-                  <th style={styles.th}>Aksi</th>
+                  <th style={styles.thNo}>No</th>
+                  <th style={styles.th} onClick={() => handleSort("nama_lengkap")}>
+                    Nama {getSortIcon("nama_lengkap")}
+                  </th>
+                  <th style={styles.th} onClick={() => handleSort("email")}>
+                    Email {getSortIcon("email")}
+                  </th>
+                  <th style={styles.th} onClick={() => handleSort("role")}>
+                    Role {getSortIcon("role")}
+                  </th>
+                  <th style={styles.thAksi}>Aksi</th>
                 </tr>
               </thead>
-
-              <tbody>
-                {users.map((u, i) => (
+             <tbody>
+                {paginatedUsers.map((u, i) => (
                   <tr key={u._id} style={styles.tr}>
-                    <td style={styles.td}>{i + 1}</td>
+                    <td style={styles.tdNo}>{(currentPage - 1) * itemsPerPage + i + 1}</td>
                     <td style={styles.td}>{u.nama_lengkap}</td>
                     <td style={styles.td}>{u.email}</td>
-
                     <td style={styles.td}>
-                      <span
-                        style={{
-                          ...styles.badge,
-                          background:
-                            u.role === "admin"
-                              ? "#EDE9FE"
-                              : "#F0FDF4",
-                          color:
-                            u.role === "admin"
-                              ? "#7C3AED"
-                              : "#166534",
-                        }}
-                      >
-                        {u.role}
+                      <span style={{
+                        ...styles.badge,
+                        background: u.role === "admin" ? "#EDE9FE" : "#F0FDF4",
+                        color: u.role === "admin" ? "#7C3AED" : "#166534",
+                      }}>
+                        {u.role === "admin" ? "👑 Admin" : "🎓 Mahasiswa"}
                       </span>
                     </td>
-
-                    <td style={styles.td}>
-                      <button
-                        style={styles.actionBtn}
-                        onClick={() =>
-                          updateRole(
-                            u._id,
-                            u.role === "admin"
-                              ? "mahasiswa"
-                              : "admin"
-                          )
-                        }
-                      >
-                        Edit
+                    <td style={styles.tdAksi}>
+                      <button style={styles.actionBtn} onClick={() => updateRole(u._id, u.role === "admin" ? "mahasiswa" : "admin")}>
+                        ✏️ Edit
                       </button>
-
-                      <button
-                        style={styles.deleteBtn}
-                        onClick={() => deleteUser(u._id)}
-                      >
-                        Hapus
+                      <button style={styles.deleteBtn} onClick={() => deleteUser(u._id)}>
+                        🗑️ Hapus
                       </button>
                     </td>
                   </tr>
@@ -175,6 +319,58 @@ export default function AdminUsers() {
               </tbody>
             </table>
           )}
+                        {/* PAGINATION */}
+              <div style={styles.pagination}>
+                <div style={styles.paginationInfo}>
+                  Menampilkan {((currentPage-1)*itemsPerPage)+1} - {Math.min(currentPage*itemsPerPage, getSortedUsers.length)} dari {getSortedUsers.length} data
+                </div>
+                <div style={styles.paginationControls}>
+                  <select
+                    value={itemsPerPage}
+                    onChange={(e) => {
+                      setItemsPerPage(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    style={styles.perPageSelect}
+                  >
+                    <option value={10}>10 / halaman</option>
+                    <option value={25}>25 / halaman</option>
+                    <option value={50}>50 / halaman</option>
+                  </select>
+                  
+                  <button
+                    onClick={() => setCurrentPage(1)}
+                    disabled={currentPage === 1}
+                    style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}
+                  >
+                    «
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(prev-1, 1))}
+                    disabled={currentPage === 1}
+                    style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}
+                  >
+                    ‹
+                  </button>
+                  <span style={styles.pageInfo}>
+                    Halaman {currentPage} dari {Math.ceil(getSortedUsers.length / itemsPerPage) || 1}
+                  </span>
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(prev+1, Math.ceil(getSortedUsers.length / itemsPerPage)))}
+                    disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)}
+                    style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}
+                  >
+                    ›
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(Math.ceil(getSortedUsers.length / itemsPerPage))}
+                    disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)}
+                    style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}
+                  >
+                    »
+                  </button>
+                </div>
+              </div>
         </div>
       </div>
     </div>
@@ -187,7 +383,6 @@ const styles = {
     background: "#FAFAFA",
     fontFamily: "'DM Sans', sans-serif",
   },
-
   blob1: {
     position: "fixed",
     width: 600,
@@ -199,7 +394,6 @@ const styles = {
     top: -200,
     right: -200,
   },
-
   blob2: {
     position: "fixed",
     width: 400,
@@ -211,7 +405,6 @@ const styles = {
     bottom: -100,
     left: -100,
   },
-
   nav: {
     position: "sticky",
     top: 0,
@@ -225,30 +418,25 @@ const styles = {
     height: 64,
     zIndex: 100,
   },
-
   navLogo: {
     display: "flex",
     alignItems: "center",
     gap: 8,
   },
-
   navLogoIcon: {
     fontSize: 22,
   },
-
   navLogoText: {
     fontFamily: "Georgia, serif",
     fontSize: 18,
     fontWeight: 500,
     color: "#18181B",
   },
-
   navLinks: {
     display: "flex",
     gap: 8,
     alignItems: "center",
   },
-
   navLink: {
     padding: "8px 16px",
     borderRadius: 8,
@@ -256,13 +444,11 @@ const styles = {
     color: "#52525B",
     cursor: "pointer",
   },
-
   navLinkActive: {
     background: "#EDE9FE",
     color: "#7C3AED",
     fontWeight: 500,
   },
-
   logoutBtn: {
     marginLeft: 8,
     padding: "8px 16px",
@@ -273,28 +459,23 @@ const styles = {
     color: "#52525B",
     cursor: "pointer",
   },
-
   container: {
     maxWidth: 1000,
     margin: "0 auto",
     padding: "40px 24px",
   },
-
   header: {
     marginBottom: 24,
   },
-
   title: {
     fontSize: 28,
     fontWeight: 600,
     color: "#18181B",
   },
-
   subtitle: {
     fontSize: 14,
     color: "#A1A1AA",
   },
-
   card: {
     background: "white",
     borderRadius: 16,
@@ -302,12 +483,10 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
     overflow: "hidden",
   },
-
   table: {
     width: "100%",
     borderCollapse: "collapse",
   },
-
   th: {
     textAlign: "left",
     padding: "14px 18px",
@@ -315,25 +494,21 @@ const styles = {
     color: "#71717A",
     borderBottom: "1px solid #F4F4F5",
   },
-
   td: {
     padding: "14px 18px",
     fontSize: 14,
     color: "#18181B",
     borderBottom: "1px solid #F4F4F5",
   },
-
   tr: {
     transition: "0.2s",
   },
-
   badge: {
     padding: "4px 12px",
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 500,
   },
-
   actionBtn: {
     padding: "6px 12px",
     fontSize: 13,
@@ -343,7 +518,6 @@ const styles = {
     cursor: "pointer",
     marginRight: 8,
   },
-
   deleteBtn: {
     padding: "6px 12px",
     fontSize: 13,
@@ -353,10 +527,89 @@ const styles = {
     color: "#DC2626",
     cursor: "pointer",
   },
-
   loading: {
     padding: 30,
     textAlign: "center",
     color: "#71717A",
+  },
+
+  // ========== TAMBAHKAN SEMUA STYLE BARU DI BAWAH INI ==========
+  
+  thNo: {
+    textAlign: "center",
+    padding: "14px 18px",
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#71717A",
+    borderBottom: "1px solid #F4F4F5",
+    width: 60,
+  },
+  thAksi: {
+    textAlign: "center",
+    padding: "14px 18px",
+    fontSize: 13,
+    fontWeight: 600,
+    color: "#71717A",
+    borderBottom: "1px solid #F4F4F5",
+    width: 130,
+  },
+  tdNo: {
+    textAlign: "center",
+    padding: "14px 18px",
+    fontSize: 14,
+    color: "#71717A",
+    borderBottom: "1px solid #F4F4F5",
+  },
+  tdAksi: {
+    textAlign: "center",
+    padding: "14px 18px",
+    borderBottom: "1px solid #F4F4F5",
+  },
+  exportBtn: {
+    padding: "10px 20px",
+    background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
+    color: "white",
+    border: "none",
+    borderRadius: 10,
+    cursor: "pointer",
+    fontSize: 14,
+    fontWeight: 500,
+  },
+  pagination: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px 20px",
+    borderTop: "1px solid #F4F4F5",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  paginationInfo: {
+    fontSize: 13,
+    color: "#71717A",
+  },
+  paginationControls: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+  },
+  perPageSelect: {
+    padding: "6px 10px",
+    border: "1px solid #E4E4E7",
+    borderRadius: 8,
+    fontSize: 13,
+    cursor: "pointer",
+  },
+  pageBtn: {
+    padding: "6px 12px",
+    border: "1px solid #E4E4E7",
+    background: "white",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontSize: 13,
+  },
+  pageInfo: {
+    fontSize: 13,
+    color: "#374151",
   },
 };

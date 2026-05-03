@@ -1,19 +1,83 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import API from "../utils/api";
+import toast, { Toaster } from 'react-hot-toast';
+
 
 export default function AdminJournals() {
   const navigate = useNavigate();
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [moodFilter, setMoodFilter] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(5);
+  const [showRecommendModal, setShowRecommendModal] = useState(false);
+  const [selectedJournal, setSelectedJournal] = useState(null);
+  const [articles, setArticles] = useState([]);
 
   useEffect(() => {
     fetchJournals();
   }, []);
 
+    // Filter journals berdasarkan search dan mood
+  const getFilteredJournals = () => {
+    let filtered = [...journals];
+    
+    // Filter by search (judul/isi jurnal atau nama user)
+    if (searchTerm) {
+      filtered = filtered.filter(j => 
+        j.teks_curhat?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        j.user_nama?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // Filter by mood
+    if (moodFilter !== "all") {
+      filtered = filtered.filter(j => j.hasil_mood === moodFilter);
+    }
+    
+    return filtered;
+  };
+
+  // Pagination
+  const filteredJournals = getFilteredJournals();
+  const totalPages = Math.ceil(filteredJournals.length / itemsPerPage);
+  const paginatedJournals = filteredJournals.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  // Reset ke halaman 1 saat filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, moodFilter]);
+
+  // Ambil daftar artikel untuk rekomendasi
+  const fetchArticles = async () => {
+    try {
+      const res = await API.get("/admin/articles");
+      setArticles(res.data.data || []);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  // Kirim rekomendasi artikel
+  const sendRecommendation = async (journalId, articleId) => {
+    try {
+      await API.post(`/journals/${journalId}/recommend`, { articleId });
+      toast.success("Rekomendasi artikel berhasil dikirim!");
+      setShowRecommendModal(false);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal mengirim rekomendasi");
+    }
+  };
+
   async function fetchJournals() {
     try {
-      const res = await API.get("/journals");
+      const res = await API.get("/admin/journals");
       setJournals(res.data.data || []);
     } catch (err) {
       console.error(err);
@@ -36,7 +100,7 @@ async function handleDelete(id) {
   if (!confirmDelete) return;
 
   try {
-    await API.delete(`/journals/${id}`);
+    await API.delete(`/admin/journals/${id}`);
     fetchJournals();
   } catch (err) {
     console.error(err);
@@ -60,6 +124,7 @@ async function handleDelete(id) {
 
   return (
     <div style={styles.bg}>
+       <Toaster position="top-right" />
       <div style={styles.blob1}/>
       <div style={styles.blob2}/>
 
@@ -112,6 +177,49 @@ async function handleDelete(id) {
           </p>
         </div>
 
+        <div style={styles.statsContainer}>
+          <div style={styles.statCard}>
+            <div style={styles.statValue}>{journals.length}</div>
+            <div style={styles.statLabel}>Total Jurnal</div>
+          </div>
+          <div style={{ ...styles.statCard, borderTop: "3px solid #F59E0B" }}>
+            <div style={{ ...styles.statValue, color: "#F59E0B" }}>{journals.filter(j => j.hasil_mood === "Burnout").length}</div>
+            <div style={styles.statLabel}>😤 Burnout</div>
+          </div>
+          <div style={{ ...styles.statCard, borderTop: "3px solid #8B5CF6" }}>
+            <div style={{ ...styles.statValue, color: "#8B5CF6" }}>{journals.filter(j => j.hasil_mood === "Cemas").length}</div>
+            <div style={styles.statLabel}>😰 Cemas</div>
+          </div>
+          <div style={{ ...styles.statCard, borderTop: "3px solid #3B82F6" }}>
+            <div style={{ ...styles.statValue, color: "#3B82F6" }}>{journals.filter(j => j.hasil_mood === "Sedih").length}</div>
+            <div style={styles.statLabel}>😢 Sedih</div>
+          </div>
+        </div>
+
+                {/* SEARCH & FILTER */}
+        <div style={styles.controlBar}>
+          <input
+            type="text"
+            placeholder="🔍 Cari jurnal atau nama user..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={styles.searchInput}
+          />
+          
+          <select
+            value={moodFilter}
+            onChange={(e) => setMoodFilter(e.target.value)}
+            style={styles.filterSelect}
+          >
+            <option value="all">📋 Semua Mood</option>
+            <option value="Burnout">😤 Burnout</option>
+            <option value="Cemas">😰 Cemas</option>
+            <option value="Sedih">😢 Sedih</option>
+            <option value="Netral">😌 Netral</option>
+            <option value="Krisis">🆘 Krisis</option>
+          </select>
+        </div>
+        
         {loading ? (
           <div style={styles.emptyCard}>
             <p style={styles.emptyText}>Memuat data...</p>
@@ -119,20 +227,17 @@ async function handleDelete(id) {
         ) : journals.length === 0 ? (
           <div style={styles.emptyCard}>
             <p style={styles.emptyEmoji}>📝</p>
-            <p style={styles.emptyText}>
-              Belum ada jurnal dari user
-            </p>
+            <p style={styles.emptyText}>Belum ada jurnal dari user</p>
           </div>
         ) : (
           <div style={styles.journalList}>
-            {journals.map((j) => {
-              const mood =
-                moodColors[j.hasil_mood] || {
-                  bg: "#F4F4F5",
-                  color: "#52525B",
-                  emoji: "😐",
-                };
-                const status = j.status || "normal"; // ✅ aman
+            {paginatedJournals.map((j) => {
+              const mood = moodColors[j.hasil_mood] || {
+                bg: "#F4F4F5",
+                color: "#52525B",
+                emoji: "😐",
+              };
+              const status = j.status || "normal";
 
               return (
                 <div key={j._id} style={styles.card}>
@@ -179,6 +284,16 @@ async function handleDelete(id) {
                     <span style={styles.user}>
                       👤 {j.user_nama || "User"}
                     </span>
+                     <button 
+                      style={styles.recommendBtn}
+                      onClick={() => {
+                        setSelectedJournal(j);
+                        fetchArticles();
+                        setShowRecommendModal(true);
+                      }}
+                    >
+                      📖 Rekomendasi Artikel
+                    </button>
                   </div>
                   <div style={{ marginTop: 10 }}>
   <button onClick={() => updateStatus(j._id, "perhatian")}>
@@ -199,8 +314,69 @@ async function handleDelete(id) {
             })}
           </div>
         )}
+      {filteredJournals.length > 0 && (
+          <div style={styles.pagination}>
+            <div style={styles.paginationInfo}>
+              Menampilkan {((currentPage-1)*itemsPerPage)+1} - {Math.min(currentPage*itemsPerPage, filteredJournals.length)} dari {filteredJournals.length} jurnal
+            </div>
+            <div style={styles.paginationControls}>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={styles.perPageSelect}
+              >
+                <option value={5}>5 / halaman</option>
+                <option value={10}>10 / halaman</option>
+                <option value={20}>20 / halaman</option>
+              </select>
+              
+              <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={styles.pageBtn}>«</button>
+              <button onClick={() => setCurrentPage(prev => Math.max(prev-1, 1))} disabled={currentPage === 1} style={styles.pageBtn}>‹</button>
+              <span style={styles.pageInfo}>Halaman {currentPage} dari {totalPages || 1}</span>
+              <button onClick={() => setCurrentPage(prev => Math.min(prev+1, totalPages))} disabled={currentPage === totalPages} style={styles.pageBtn}>›</button>
+              <button onClick={() => setCurrentPage(totalPages)} disabled={currentPage === totalPages} style={styles.pageBtn}>»</button>
+            </div>
+          </div>
+        )}
       </div>
+        {showRecommendModal && selectedJournal && (
+        <div style={styles.modalOverlay} onClick={() => setShowRecommendModal(false)}>
+          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+            <div style={styles.modalHeader}>
+              <h2 style={styles.modalTitle}>Rekomendasikan Artikel</h2>
+              <button style={styles.modalClose} onClick={() => setShowRecommendModal(false)}>✕</button>
+            </div>
+            <div style={styles.modalBody}>
+              <p style={styles.modalJournalText}>
+                <strong>Isi Jurnal:</strong><br/>
+                {selectedJournal.teks_curhat?.substring(0, 150)}...
+              </p>
+              <h4>Pilih Artikel:</h4>
+              <div style={styles.articleList}>
+                {articles.map(article => (
+                  <div key={article._id} style={styles.articleItem}>
+                    <div>
+                      <strong>{article.judul}</strong>
+                      <p style={{ fontSize: 12, color: "#666" }}>{article.kategori}</p>
+                    </div>
+                    <button 
+                      style={styles.selectArticleBtn}
+                      onClick={() => sendRecommendation(selectedJournal._id, article._id)}
+                    >
+                      Pilih
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+
   );
 }
 
@@ -367,4 +543,164 @@ const styles = {
   emptyText: {
     color: "#888",
   },
+
+  // ========== TAMBAHKAN STYLE BARU INI ==========
+  
+  statsContainer: {
+    display: "grid",
+    gridTemplateColumns: "repeat(4, 1fr)",
+    gap: 16,
+    marginBottom: 24,
+  },
+  statCard: {
+    background: "white",
+    padding: "16px",
+    borderRadius: 12,
+    border: "1px solid #F4F4F5",
+    textAlign: "center",
+  },
+  statValue: {
+    fontSize: 28,
+    fontWeight: 700,
+  },
+  statLabel: {
+    fontSize: 13,
+    color: "#71717A",
+    marginTop: 4,
+  },
+  controlBar: {
+    display: "flex",
+    gap: 12,
+    marginBottom: 20,
+  },
+  searchInput: {
+    flex: 1,
+    padding: "10px 14px",
+    border: "1px solid #E4E4E7",
+    borderRadius: 10,
+    fontSize: 14,
+  },
+  filterSelect: {
+    padding: "10px 14px",
+    border: "1px solid #E4E4E7",
+    borderRadius: 10,
+    background: "white",
+  },
+  recommendBtn: {
+    padding: "6px 12px",
+    background: "#8B5CF6",
+    color: "white",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontSize: 12,
+    marginLeft: "auto",
+  },
+  pagination: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px 20px",
+    marginTop: 16,
+    background: "white",
+    borderRadius: 12,
+    border: "1px solid #F4F4F5",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  paginationInfo: {
+    fontSize: 13,
+    color: "#71717A",
+  },
+  paginationControls: {
+    display: "flex",
+    gap: 8,
+    alignItems: "center",
+  },
+  perPageSelect: {
+    padding: "6px 10px",
+    border: "1px solid #E4E4E7",
+    borderRadius: 8,
+  },
+  pageBtn: {
+    padding: "6px 12px",
+    border: "1px solid #E4E4E7",
+    background: "white",
+    borderRadius: 8,
+    cursor: "pointer",
+  },
+  pageInfo: {
+    fontSize: 13,
+    color: "#374151",
+  },
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background: "rgba(0,0,0,0.5)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 1000,
+  },
+  modal: {
+    background: "white",
+    borderRadius: 16,
+    width: "90%",
+    maxWidth: 500,
+    maxHeight: "80vh",
+    overflow: "auto",
+  },
+  modalHeader: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: "16px 20px",
+    borderBottom: "1px solid #F4F4F5",
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 600,
+  },
+  modalClose: {
+    background: "none",
+    border: "none",
+    fontSize: 20,
+    cursor: "pointer",
+  },
+  modalBody: {
+    padding: 20,
+  },
+  modalJournalText: {
+    background: "#F9FAFB",
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 16,
+    fontSize: 14,
+  },
+  articleList: {
+    display: "flex",
+    flexDirection: "column",
+    gap: 12,
+    marginTop: 12,
+  },
+  articleItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 12,
+    border: "1px solid #F4F4F5",
+    borderRadius: 8,
+  },
+  selectArticleBtn: {
+    padding: "6px 16px",
+    background: "#10B981",
+    color: "white",
+    border: "none",
+    borderRadius: 6,
+    cursor: "pointer",
+  },
 };
+
