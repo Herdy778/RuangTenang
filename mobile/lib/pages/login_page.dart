@@ -38,10 +38,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       parent: _fadeController,
       curve: Curves.easeOut,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 0.3),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic));
+    _slideAnimation =
+        Tween<Offset>(begin: const Offset(0, 0.3), end: Offset.zero).animate(
+          CurvedAnimation(parent: _slideController, curve: Curves.easeOutCubic),
+        );
 
     _fadeController.forward();
     _slideController.forward();
@@ -103,15 +103,30 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         );
         await prefs.setString('token', data['token'] ?? '');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login berhasil")),
-        );
+        final photoPath = data['data']?['photo'];
+        if (photoPath != null && photoPath.toString().isNotEmpty) {
+          final filename = photoPath
+              .toString()
+              .split('/')
+              .last
+              .split('\\')
+              .last;
+          final fullUrl = "http://127.0.0.1:8000/api/photo/$filename";
+          await prefs.setString('profile_image_url', fullUrl);
+        } else {
+          // If no photo in backend, clear the old locally cached photo
+          await prefs.remove('profile_image_url');
+        }
+
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Login berhasil")));
 
         Navigator.pushReplacementNamed(context, '/dashboard');
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['pesan'] ?? "Login gagal")),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(data['pesan'] ?? "Login gagal")));
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -122,7 +137,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     setState(() => isLoading = false);
   }
 
-  InputDecoration _fieldDecoration(String hint, IconData icon, {Widget? suffix}) {
+  InputDecoration _fieldDecoration(
+    String hint,
+    IconData icon, {
+    Widget? suffix,
+  }) {
     return InputDecoration(
       hintText: hint,
       hintStyle: const TextStyle(color: Colors.white54, fontSize: 14),
@@ -203,7 +222,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             SafeArea(
               child: Center(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
                   child: FadeTransition(
                     opacity: _fadeAnimation,
                     child: SlideTransition(
@@ -222,7 +244,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(0xFF8B5CF6).withOpacity(0.5),
+                                  color: const Color(
+                                    0xFF8B5CF6,
+                                  ).withOpacity(0.5),
                                   blurRadius: 24,
                                   spreadRadius: 4,
                                 ),
@@ -294,8 +318,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     TextField(
                                       controller: emailController,
                                       keyboardType: TextInputType.emailAddress,
-                                      style: const TextStyle(color: Colors.white),
-                                      decoration: _fieldDecoration("Email kamu", Icons.email_outlined),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
+                                      decoration: _fieldDecoration(
+                                        "Email kamu",
+                                        Icons.email_outlined,
+                                      ),
                                     ),
                                     const SizedBox(height: 16),
 
@@ -303,7 +332,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                     TextField(
                                       controller: passwordController,
                                       obscureText: isHidden,
-                                      style: const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                      ),
                                       decoration: _fieldDecoration(
                                         "Password",
                                         Icons.lock_outline_rounded,
@@ -316,7 +347,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                             size: 20,
                                           ),
                                           onPressed: () {
-                                            setState(() => isHidden = !isHidden);
+                                            setState(
+                                              () => isHidden = !isHidden,
+                                            );
                                           },
                                         ),
                                       ),
@@ -342,10 +375,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                                     Color(0xFF7C3AED),
                                                   ],
                                                 ),
-                                                borderRadius: BorderRadius.circular(14),
+                                                borderRadius:
+                                                    BorderRadius.circular(14),
                                                 boxShadow: [
                                                   BoxShadow(
-                                                    color: const Color(0xFF8B5CF6).withOpacity(0.4),
+                                                    color: const Color(
+                                                      0xFF8B5CF6,
+                                                    ).withOpacity(0.4),
                                                     blurRadius: 16,
                                                     offset: const Offset(0, 6),
                                                   ),
@@ -354,10 +390,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                               child: ElevatedButton(
                                                 onPressed: login,
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.transparent,
-                                                  shadowColor: Colors.transparent,
+                                                  backgroundColor:
+                                                      Colors.transparent,
+                                                  shadowColor:
+                                                      Colors.transparent,
                                                   shape: RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.circular(14),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          14,
+                                                        ),
                                                   ),
                                                 ),
                                                 child: const Text(

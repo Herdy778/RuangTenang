@@ -18,6 +18,17 @@ Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/articles', [ArticleController::class, 'index']);
 Route::get('/articles/mood/{mood}', [ArticleController::class, 'byMood']);
 
+// Photo access with CORS for Flutter Web
+Route::get('/photo/{path}', function($path) {
+    $fullPath = storage_path('app/public/profile-photos/' . str_replace('..', '', $path));
+    if (!file_exists($fullPath)) abort(404);
+    
+    $mime = mime_content_type($fullPath);
+    return response()->file($fullPath, [
+        'Access-Control-Allow-Origin' => '*',
+        'Content-Type' => $mime,
+    ]);
+})->where('path', '.*');
 
 /*
 |--------------------------------------------------------------------------
@@ -35,6 +46,7 @@ Route::middleware('auth.token')->group(function () {
     // Auth & Profile
     Route::post('/logout',   [AuthController::class, 'logout']);
     Route::put('/profile',   [AuthController::class, 'updateProfile']);
+    Route::post('/profile/upload-photo', [AuthController::class, 'uploadProfilePhoto']);
 
     // Journals
     Route::post('/journals', [JournalController::class, 'store']);

@@ -4,8 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
 import 'dart:typed_data'; // Added for Uint8List
-import 'dart:developer' as developer;
-import 'dart:math' show min;
 import '../theme/app_theme.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -57,67 +55,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _pickImage() async {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return SafeArea(
-          child: Wrap(
-            children: [
-              ListTile(
-                leading: const Icon(Icons.photo_library),
-                title: const Text('Pilih dari Galeri'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final picker = ImagePicker();
-                  final pickedFile = await picker.pickImage(
-                    source: ImageSource.gallery,
-                    maxHeight: 800,
-                    maxWidth: 800,
-                  );
-                  if (pickedFile != null) {
-                    setState(() {
-                      _selectedImage = pickedFile;
-                    });
-                  }
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.camera_alt),
-                title: const Text('Ambil Foto'),
-                onTap: () async {
-                  Navigator.pop(context);
-                  final picker = ImagePicker();
-                  final pickedFile = await picker.pickImage(
-                    source: ImageSource.camera,
-                    maxHeight: 800,
-                    maxWidth: 800,
-                  );
-                  if (pickedFile != null) {
-                    setState(() {
-                      _selectedImage = pickedFile;
-                    });
-                  }
-                },
-              ),
-            ],
-          ),
-        );
-      },
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxHeight: 800,
+      maxWidth: 800,
     );
+
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImage = pickedFile;
+      });
+    }
   }
 
-  Future<void> _uploadProfileImage() async {
-    if (_selectedImage == null) return;
+  Future<bool> _uploadProfileImage() async {
+    if (_selectedImage == null) return false;
 
     setState(() => _isLoading = true);
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
-
-      developer.log(
-        'Starting photo upload. Token: ${token.isNotEmpty ? 'present' : 'missing'}',
-      );
 
       if (token.isEmpty) {
         if (mounted) {
@@ -127,7 +86,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           );
         }
-        return;
+        return false;
       }
 
       final request = http.MultipartRequest(
@@ -150,28 +109,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
         ),
       );
 
-      developer.log('Sending multipart request to server...');
       final response = await request.send().timeout(
         const Duration(seconds: 30),
         onTimeout: () => throw Exception('Request timeout'),
       );
       final responseBody = await response.stream.bytesToString();
 
-      developer.log('Response status: ${response.statusCode}');
-      developer.log('Response body: $responseBody');
-
       if (response.statusCode == 200) {
         try {
-          // Check if response is valid JSON
           if (responseBody.isEmpty) {
             throw Exception('Response body is empty');
           }
 
-          // Verify response starts with { to ensure it's JSON not HTML
           final trimmed = responseBody.trim();
           if (!trimmed.startsWith('{')) {
-            final preview = trimmed.substring(0, min(300, trimmed.length));
-            developer.log('Response is not JSON. First 300 chars: $preview');
             throw Exception('Backend returned HTML/error. Check server logs.');
           }
 
@@ -186,10 +137,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
             throw Exception('No photo path in response');
           }
 
-          // Build reliable URL to prevent network / localhost errors
-          // We route via /api/storage/ to allow Laravel CORS middleware to apply headers
-          final fullUrl =
-              "http://127.0.0.1:8000/api/storage/${photoPath.toString().replaceAll('\\', '/')}";
+          // Extract filename from photoPath (e.g., "profile-photos/filename.jpg" -> "filename.jpg")
+          final filename = photoPath
+              .toString()
+              .split('/')
+              .last
+              .split('\\')
+              .last;
+
+          // Use the API route that provides CORS headers
+          final fullUrl = "http://127.0.0.1:8000/api/photo/$filename";
 
           await prefs.setString('profile_image_url', fullUrl);
           setState(() {
@@ -202,16 +159,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
               const SnackBar(content: Text('Foto profil berhasil diupload!')),
             );
           }
+          return true;
         } catch (parseError) {
-          developer.log('JSON parse error: $parseError');
           if (mounted) {
             ScaffoldMessenger.of(
               context,
             ).showSnackBar(SnackBar(content: Text('Error: $parseError')));
           }
+          return false;
         }
       } else if (response.statusCode == 401) {
-        developer.log('Unauthorized - token may be invalid');
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -238,7 +195,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
           }
         }
       } else {
-        developer.log('Upload failed with status: ${response.statusCode}');
         try {
           final result = jsonDecode(responseBody) as Map<String, dynamic>;
           final errorMsg = result['pesan'] ?? 'Unknown error';
@@ -255,15 +211,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
           }
         }
       }
-    } catch (e, stackTrace) {
-      developer.log('Upload error: $e');
-      developer.log('Stack trace: $stackTrace');
-
+      return false; // return false for any non-200 or caught errors above
+    } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
+      return false; // return false if execution hits outer catch
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -280,6 +235,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
 
     setState(() => _isLoading = true);
+
+    // Upload image if one was selected
+    if (_selectedImage != null) {
+      bool uploadSuccess = await _uploadProfileImage() ?? false;
+      if (mounted) setState(() => _isLoading = true);
+      // If we tried to upload but it failed, we can optionally stop here or continue.
+      // We will continue to save text changes.
+    }
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
@@ -443,7 +407,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const SizedBox(height: 20),
 
             DropdownButtonFormField<String>(
-              initialValue: _gender,
+              value: _gender,
               items: _genderOptions
                   .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
                   .toList(),
@@ -459,7 +423,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const SizedBox(height: 20),
 
             DropdownButtonFormField<String>(
-              initialValue: _occupation,
+              value: _occupation,
               items: _occupationOptions
                   .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
                   .toList(),

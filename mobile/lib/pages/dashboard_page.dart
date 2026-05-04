@@ -948,7 +948,7 @@ class _MoodBarChartState extends State<MoodBarChart> {
           const SizedBox(height: 12),
 
           SizedBox(
-            height: 180,
+            height: 200,
             child: Stack(
               children: [
                 // Grid horizontal belakang
@@ -991,6 +991,8 @@ class _MoodBarChartState extends State<MoodBarChart> {
                             });
                           },
                           child: Column(
+                            // Menambahkan expanded atau membatasi ukuran bar jika lebih besar dari maxBarHeight
+                            mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               // Tooltip Interaktif
