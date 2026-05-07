@@ -240,7 +240,9 @@ class _JournalPageState extends State<JournalPage>
           msg,
           style: AppTextStyles.bodySM.copyWith(color: Colors.white),
         ),
-        backgroundColor: AppColors.textPrimary,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.cardBackgroundDark
+            : AppColors.textPrimary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -254,7 +256,7 @@ class _JournalPageState extends State<JournalPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
       body: Stack(
@@ -313,24 +315,42 @@ class _JournalPageState extends State<JournalPage>
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 10),
             decoration: AppDecorations.card.copyWith(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.cardBackgroundDark
+                  : AppColors.cardBackground,
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBorderDark
+                    : AppColors.cardBorder,
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimary,
               size: 16,
             ),
           ),
         ),
       ),
-      title: Text('Jurnal Harian', style: AppTextStyles.titleMD),
+      title: Builder(builder: (ctx) {
+        final d = Theme.of(ctx).brightness == Brightness.dark;
+        return Text('Jurnal Harian', style: AppTextStyles.titleMD.copyWith(
+          color: d ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ));
+      }),
       centerTitle: true,
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.primary.withOpacity(0.15)
+                : AppColors.primaryLight.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: const Icon(
@@ -395,6 +415,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Header ───────────────────────────────────────────────────
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
     const weekdays = [
       '',
@@ -433,7 +454,9 @@ class _JournalPageState extends State<JournalPage>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+              color: isDark
+                  ? AppColors.primary.withOpacity(0.15)
+                  : AppColors.primarySurface,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -449,7 +472,9 @@ class _JournalPageState extends State<JournalPage>
           // Greeting — Georgia heading seperti DashboardPage
           RichText(
             text: TextSpan(
-              style: AppTextStyles.headingMD,
+              style: AppTextStyles.headingMD.copyWith(
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
               children: const [
                 TextSpan(text: 'Bagaimana\n'),
                 TextSpan(text: 'perasaanmu hari ini?'),
@@ -461,7 +486,7 @@ class _JournalPageState extends State<JournalPage>
           Text(
             'Tidak ada jawaban yang salah. Ceritakan dengan jujur.',
             style: AppTextStyles.bodyMD.copyWith(
-              color: AppColors.textMuted,
+              color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               height: 1.55,
             ),
           ),
@@ -473,6 +498,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Curhat Card ──────────────────────────────────────────────
   Widget _buildCurhatCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedContainer(
@@ -480,6 +506,9 @@ class _JournalPageState extends State<JournalPage>
         // Pakai AppDecorations.card; override border saat fokus
         decoration: _textFocused
             ? AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 border: Border.all(
                   color: AppColors.primary.withOpacity(0.35),
                   width: 1.5,
@@ -492,7 +521,17 @@ class _JournalPageState extends State<JournalPage>
                   ),
                 ],
               )
-            : AppDecorations.card,
+            : AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -504,27 +543,35 @@ class _JournalPageState extends State<JournalPage>
                   width: 36,
                   height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
+                    color: isDark
+                        ? AppColors.primary.withOpacity(0.15)
+                        : AppColors.primarySurface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
                   child: const Text('✍️', style: TextStyle(fontSize: 17)),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Tulis Perasaanmu', style: AppTextStyles.titleSM),
-                    Text(
-                      'Ceritakan apa saja yang ada di pikiranmu',
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tulis Perasaanmu', style: AppTextStyles.titleSM.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      )),
+                      Text(
+                        'Ceritakan apa saja yang ada di pikiranmu',
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Divider(height: 1, color: AppColors.cardBorder),
+            Divider(height: 1, color: isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
             const SizedBox(height: 16),
             // TextField
             TextField(
@@ -532,11 +579,14 @@ class _JournalPageState extends State<JournalPage>
               focusNode: _textFocus,
               maxLines: 5,
               minLines: 3,
-              style: AppTextStyles.bodyMD.copyWith(height: 1.65),
+              style: AppTextStyles.bodyMD.copyWith(
+                height: 1.65,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textSecondary,
+              ),
               decoration: InputDecoration(
                 hintText: 'Hari ini aku merasa...',
                 hintStyle: AppTextStyles.bodyMD.copyWith(
-                  color: AppColors.textMuted.withOpacity(0.55),
+                  color: (isDark ? AppColors.textMutedDark : AppColors.textMuted).withOpacity(0.55),
                 ),
                 border: InputBorder.none,
                 isDense: true,
@@ -553,6 +603,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Section Label ────────────────────────────────────────────
   Widget _buildSectionLabel() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
       child: Column(
@@ -569,7 +620,9 @@ class _JournalPageState extends State<JournalPage>
           const SizedBox(height: 4),
           Text(
             'Pilih seberapa sering kamu merasakan hal-hal\nberikut dalam 2 minggu terakhir.',
-            style: AppTextStyles.bodySM,
+            style: AppTextStyles.bodySM.copyWith(
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -578,6 +631,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Question Card ────────────────────────────────────────────
   Widget _buildQuestionCard(int index) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final q = _questions[index];
     final value = _getValue(index);
     final active = value > 0;
@@ -589,6 +643,9 @@ class _JournalPageState extends State<JournalPage>
         curve: Curves.easeOutCubic,
         decoration: active
             ? AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 border: Border.all(
                   color: AppColors.primary.withOpacity(0.28),
                   width: 1.5,
@@ -601,7 +658,17 @@ class _JournalPageState extends State<JournalPage>
                   ),
                 ],
               )
-            : AppDecorations.card,
+            : AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -627,11 +694,16 @@ class _JournalPageState extends State<JournalPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(q.title, style: AppTextStyles.titleSM),
+                      Text(q.title, style: AppTextStyles.titleSM.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      )),
                       const SizedBox(height: 2),
                       Text(
                         q.subtitle,
-                        style: AppTextStyles.caption.copyWith(height: 1.45),
+                        style: AppTextStyles.caption.copyWith(
+                          height: 1.45,
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
                       ),
                     ],
                   ),
@@ -671,7 +743,7 @@ class _JournalPageState extends State<JournalPage>
                 child: Text(
                   _scaleLabels[value],
                   style: AppTextStyles.caption.copyWith(
-                    color: active ? AppColors.primary : AppColors.textMuted,
+                    color: active ? AppColors.primary : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
                     fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
@@ -685,10 +757,21 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Score Row ────────────────────────────────────────────────
   Widget _buildScoreRow() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: Container(
-        decoration: AppDecorations.card,
+        decoration: AppDecorations.card.copyWith(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.cardBackgroundDark
+              : AppColors.cardBackground,
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.cardBorderDark
+                : AppColors.cardBorder,
+            width: 1,
+          ),
+        ),
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
@@ -710,7 +793,9 @@ class _JournalPageState extends State<JournalPage>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total Skor PHQ-9', style: AppTextStyles.caption),
+                Text('Total Skor PHQ-9', style: AppTextStyles.caption.copyWith(
+                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                )),
                 RichText(
                   text: TextSpan(
                     children: [
@@ -724,7 +809,7 @@ class _JournalPageState extends State<JournalPage>
                       TextSpan(
                         text: ' / 15',
                         style: AppTextStyles.bodyMD.copyWith(
-                          color: AppColors.textMuted,
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -746,7 +831,7 @@ class _JournalPageState extends State<JournalPage>
                     shape: BoxShape.circle,
                     color: i < _totalSkor
                         ? AppColors.primary.withOpacity(0.7)
-                        : AppColors.cardBorder,
+                        : (isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
                   ),
                 );
               }),
@@ -867,9 +952,15 @@ class _StepChip extends StatelessWidget {
                 ],
               )
             : BoxDecoration(
-                color: AppColors.background,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                ),
               ),
         alignment: Alignment.center,
         child: Text(
@@ -878,7 +969,11 @@ class _StepChip extends StatelessWidget {
             fontFamily: 'Georgia',
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : AppColors.textMuted,
+            color: isSelected
+                ? Colors.white
+                : (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textMutedDark
+                    : AppColors.textMuted),
           ),
         ),
       ),
@@ -901,7 +996,11 @@ class _ScoreBadge extends StatelessWidget {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: active ? AppColors.primaryLight : AppColors.cardBorder,
+        color: active
+            ? AppColors.primaryLight
+            : (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.cardBorderDark
+                : AppColors.cardBorder),
         borderRadius: BorderRadius.circular(9),
       ),
       alignment: Alignment.center,
@@ -914,7 +1013,11 @@ class _ScoreBadge extends StatelessWidget {
             fontFamily: 'Georgia',
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: active ? AppColors.primary : AppColors.textMuted,
+            color: active
+                ? AppColors.primary
+                : (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textMutedDark
+                    : AppColors.textMuted),
           ),
         ),
       ),
@@ -977,12 +1080,12 @@ class _ResultSheetState extends State<_ResultSheet>
     String desc,
     String cta,
   })
-  get _meta {
+  _getMeta(bool isDark) {
     switch (widget.prediction.toLowerCase()) {
       case 'minimal':
         return (
-          color: const Color(0xFF059669),
-          bgLight: const Color(0xFFD1FAE5),
+          color: const Color(0xFF10B981),
+          bgLight: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
           emoji: '🌿',
           title: 'Kondisi Minimal',
           desc:
@@ -991,8 +1094,8 @@ class _ResultSheetState extends State<_ResultSheet>
         );
       case 'ringan':
         return (
-          color: const Color(0xFFD97706),
-          bgLight: const Color(0xFFFEF3C7),
+          color: const Color(0xFFF59E0B),
+          bgLight: isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7),
           emoji: '🌤️',
           title: 'Gejala Ringan',
           desc:
@@ -1001,8 +1104,8 @@ class _ResultSheetState extends State<_ResultSheet>
         );
       case 'sedang':
         return (
-          color: const Color(0xFFEA580C),
-          bgLight: const Color(0xFFFFEDD5),
+          color: const Color(0xFFF97316),
+          bgLight: isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5),
           emoji: '🌧️',
           title: 'Gejala Sedang',
           desc:
@@ -1012,8 +1115,8 @@ class _ResultSheetState extends State<_ResultSheet>
       case 'berat':
       default:
         return (
-          color: const Color(0xFFDC2626),
-          bgLight: const Color(0xFFFEE2E2),
+          color: const Color(0xFFEF4444),
+          bgLight: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
           emoji: '🆘',
           title: 'Gejala Berat',
           desc:
@@ -1025,12 +1128,14 @@ class _ResultSheetState extends State<_ResultSheet>
 
   @override
   Widget build(BuildContext context) {
-    final m = _meta;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final m = _getMeta(isDark);
 
     return Container(
       decoration: BoxDecoration(
-        // Background putih/light sama persis dengan AppColors.background
-        color: AppColors.background,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.cardBackgroundDark
+            : AppColors.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: const [
           BoxShadow(
@@ -1049,7 +1154,9 @@ class _ResultSheetState extends State<_ResultSheet>
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: AppColors.cardBorder,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.cardBorderDark
+                  : AppColors.cardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -1089,7 +1196,14 @@ class _ResultSheetState extends State<_ResultSheet>
             ),
           ),
           const SizedBox(height: 6),
-          Text('Skor ${widget.skorTotal} / 15', style: AppTextStyles.caption),
+          Text(
+            'Skor ${widget.skorTotal} / 15',
+            style: AppTextStyles.caption.copyWith(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textMutedDark
+                  : AppColors.textMuted,
+            ),
+          ),
           const SizedBox(height: 20),
 
           // Deskripsi — pakai AppDecorations.card
@@ -1098,12 +1212,24 @@ class _ResultSheetState extends State<_ResultSheet>
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
-              decoration: AppDecorations.card,
+              decoration: AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.backgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
               child: Text(
                 m.desc,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMD.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
                   height: 1.65,
                 ),
               ),
@@ -1140,6 +1266,9 @@ class _ResultSheetState extends State<_ResultSheet>
                 'Tutup',
                 style: AppTextStyles.caption.copyWith(
                   decoration: TextDecoration.underline,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textMutedDark
+                      : AppColors.textMuted,
                 ),
               ),
             ),

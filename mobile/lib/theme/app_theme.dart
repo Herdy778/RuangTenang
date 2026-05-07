@@ -46,6 +46,20 @@ class AppColors {
   // --- Input ---
   static const Color inputBorder = Color(0xFFE4E4E7);
   static const Color inputFill = Color(0xFFF3F4F6);
+
+  // ===========================================================================
+  // DARK MODE COLORS
+  // ===========================================================================
+  static const Color backgroundDark = Color(0xFF09090B);
+  static const Color cardBackgroundDark = Color(0xFF18181B);
+  static const Color cardBorderDark = Color(0xFF27272A);
+
+  static const Color textPrimaryDark = Color(0xFFFAFAFA);
+  static const Color textSecondaryDark = Color(0xFFD4D4D8);
+  static const Color textMutedDark = Color(0xFF71717A);
+
+  static const Color inputBorderDark = Color(0xFF3F3F46);
+  static const Color inputFillDark = Color(0xFF18181B);
 }
 
 // =============================================================================
@@ -581,6 +595,172 @@ class AppTheme {
           height: 1.5,
         ),
         bodySmall: GoogleFonts.dmSans(fontSize: 13, color: AppColors.textMuted),
+      ),
+    );
+  }
+
+  static ThemeData get darkTheme {
+    final base = ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: AppColors.primary,
+        brightness: Brightness.dark,
+        surface: AppColors.backgroundDark,
+        primary: AppColors.primary,
+        secondary: AppColors.accentGreen,
+        onPrimary: Colors.white,
+        onSurface: AppColors.textPrimaryDark,
+      ),
+      scaffoldBackgroundColor: AppColors.backgroundDark,
+      fontFamily: GoogleFonts.dmSans().fontFamily,
+    );
+
+    return base.copyWith(
+      // -----------------------------------------------------------------------
+      // AppBar
+      // -----------------------------------------------------------------------
+      appBarTheme: AppBarTheme(
+        backgroundColor: AppColors.cardBackgroundDark,
+        surfaceTintColor: AppColors.cardBackgroundDark,
+        elevation: 0,
+        centerTitle: true,
+        iconTheme: const IconThemeData(color: AppColors.textPrimaryDark),
+        titleTextStyle: GoogleFonts.dmSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: AppColors.primaryLight, // Brighter purple for dark mode
+          letterSpacing: 0.3,
+        ),
+      ),
+
+      // -----------------------------------------------------------------------
+      // Card
+      // -----------------------------------------------------------------------
+      cardTheme: CardThemeData(
+        color: AppColors.cardBackgroundDark,
+        elevation: 0,
+        margin: EdgeInsets.zero,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: const BorderSide(color: AppColors.cardBorderDark, width: 1),
+        ),
+      ),
+
+      // -----------------------------------------------------------------------
+      // ElevatedButton
+      // -----------------------------------------------------------------------
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          textStyle: GoogleFonts.dmSans(
+            fontSize: 15,
+            fontWeight: FontWeight.w600,
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+
+      // -----------------------------------------------------------------------
+      // Input Decoration
+      // -----------------------------------------------------------------------
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.inputFillDark,
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 16,
+        ),
+        labelStyle: GoogleFonts.dmSans(
+          fontSize: 13,
+          color: AppColors.textMutedDark,
+        ),
+        hintStyle:
+            GoogleFonts.dmSans(fontSize: 15, color: AppColors.textMutedDark),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.inputBorderDark,
+            width: 1.5,
+          ),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.inputBorderDark,
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(
+            color: AppColors.primaryFocus,
+            width: 1.5,
+          ),
+        ),
+      ),
+
+      // -----------------------------------------------------------------------
+      // Bottom Navigation Bar
+      // -----------------------------------------------------------------------
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: AppColors.cardBackgroundDark,
+        selectedItemColor: AppColors.primaryLight,
+        unselectedItemColor: AppColors.textMutedDark,
+        showSelectedLabels: true,
+        showUnselectedLabels: true,
+        type: BottomNavigationBarType.fixed,
+        elevation: 8,
+      ),
+
+      // -----------------------------------------------------------------------
+      // Text Theme
+      // -----------------------------------------------------------------------
+      textTheme: GoogleFonts.dmSansTextTheme(base.textTheme).copyWith(
+        displayLarge: const TextStyle(
+          fontFamily: 'Georgia',
+          fontSize: 36,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimaryDark,
+        ),
+        displayMedium: const TextStyle(
+          fontFamily: 'Georgia',
+          fontSize: 32,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimaryDark,
+        ),
+        displaySmall: const TextStyle(
+          fontFamily: 'Georgia',
+          fontSize: 26,
+          fontWeight: FontWeight.w500,
+          color: AppColors.textPrimaryDark,
+        ),
+        headlineMedium: GoogleFonts.dmSans(
+          fontSize: 20,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryDark,
+        ),
+        titleLarge: GoogleFonts.dmSans(
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimaryDark,
+        ),
+        bodyLarge: GoogleFonts.dmSans(
+          fontSize: 16,
+          color: AppColors.textSecondaryDark,
+          height: 1.6,
+        ),
+        bodyMedium: GoogleFonts.dmSans(
+          fontSize: 14,
+          color: AppColors.textSecondaryDark,
+          height: 1.5,
+        ),
+        bodySmall:
+            GoogleFonts.dmSans(fontSize: 13, color: AppColors.textMutedDark),
       ),
     );
   }
