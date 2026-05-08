@@ -178,58 +178,123 @@ class JournalController extends Controller
     }
 
     public function tesAi(Request $request)
-    {
-        $userMessage = $request->input('message', '');
+{
+    $userMessage = $request->input('message', '');
 
-        $apiKey = env('GROQ_API_KEY');
-        if (!$apiKey) {
-            return response()->json([
-                'reply' => 'Maaf, layanan AI sedang tidak tersedia. API Key belum dikonfigurasi.'
-            ], 500);
-        }
+    if (empty(trim($userMessage))) {
+        return response()->json([
+            'reply' => 'Silakan tuliskan pesan terlebih dahulu 😊'
+        ]);
+    }
 
-        try {
-            $response = Http::timeout(30)->withHeaders([
-                'Authorization' => 'Bearer ' . trim($apiKey),
-                'Content-Type' => 'application/json',
-            ])->post('https://api.groq.com/openai/v1/chat/completions', [
-                        'model' => 'llama-3.3-70b-versatile',
-                        'messages' => [
-                            [
-                                'role' => 'system',
-                                'content' => "Kamu adalah asisten psikologi bernama RuangTenang..."
-                            ],
-                            [
-                                'role' => 'user',
-                                'content' => $userMessage
-                            ]
-                        ],
-                        'max_tokens' => 1024,
-                        'temperature' => 0.7,
-                    ]);
+    // =========================
+    // 🔥 FILTER TOPIK (LAYER 1)
+    // =========================
+    $allowedKeywords = [
+        'stres', 'cemas', 'depresi', 'sedih',
+        'overthinking', 'mental', 'emosi',
+        'burnout', 'trauma', 'hubungan',
+        'capek', 'lelah', 'bingung', 'takut',
+        'khawatir', 'gelisah', 'kesepian'
+    ];
 
-            if ($response->failed()) {
-                return response()->json([
-                    'reply' => 'Maaf, saya sedang mengalami gangguan koneksi.'
-                ], 500);
-            }
-
-            $aiResult = $response->json();
-            $hasilTeksAI = trim(
-                $aiResult['choices'][0]['message']['content']
-                ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
-            );
-
-            return response()->json([
-                'reply' => $hasilTeksAI
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
-            ], 500);
+    $isValid = false;
+    foreach ($allowedKeywords as $keyword) {
+        if (str_contains(strtolower($userMessage), $keyword)) {
+            $isValid = true;
+            break;
         }
     }
+
+    // ❌ Kalau di luar topik → langsung tolak
+    if (!$isValid) {
+        return response()->json([
+            'reply' => 'Sepertinya itu di luar topik kesehatan mental. Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊'
+        ]);
+    }
+
+    // =========================
+    // 🔑 API KEY CHECK
+    // =========================
+    $apiKey = env('GROQ_API_KEY');
+    if (!$apiKey) {
+        return response()->json([
+            'reply' => 'Maaf, layanan AI sedang tidak tersedia. API Key belum dikonfigurasi.'
+        ], 500);
+    }
+
+    try {
+        // =========================
+        // 🧠 PROMPT AI (LAYER 2)
+        // =========================
+        $systemPrompt = "
+Kamu adalah asisten psikologi bernama RuangTenang.
+
+Tugasmu adalah:
+- Mendengarkan curhatan pengguna dengan empati
+- Memberikan respon yang menenangkan dan suportif
+- Membantu pengguna memahami perasaannya
+
+BATASAN:
+- Hanya jawab topik kesehatan mental, emosi, dan hubungan
+- Jika pengguna keluar topik (misalnya memasak, teknologi, dll),
+  tolak dengan sopan dan arahkan kembali ke perasaan mereka
+- Jangan memberikan diagnosis medis
+- Jangan menghakimi
+
+Gunakan bahasa yang hangat, santai, dan manusiawi seperti psikolog.
+";
+
+        // =========================
+        // 🚀 HIT API GROQ
+        // =========================
+        $response = Http::timeout(30)->withHeaders([
+            'Authorization' => 'Bearer ' . trim($apiKey),
+            'Content-Type' => 'application/json',
+        ])->post('https://api.groq.com/openai/v1/chat/completions', [
+            'model' => 'llama-3.3-70b-versatile',
+            'messages' => [
+                [
+                    'role' => 'system',
+                    'content' => $systemPrompt
+                ],
+                [
+                    'role' => 'user',
+                    'content' => $userMessage
+                ]
+            ],
+            'max_tokens' => 1024,
+            'temperature' => 0.7,
+        ]);
+
+        // =========================
+        // ❌ HANDLE ERROR API
+        // =========================
+        if ($response->failed()) {
+            return response()->json([
+                'reply' => 'Maaf, saya sedang mengalami gangguan koneksi. Coba lagi ya 🙏'
+            ], 500);
+        }
+
+        // =========================
+        // ✅ AMBIL HASIL AI
+        // =========================
+        $aiResult = $response->json();
+        $hasilTeksAI = trim(
+            $aiResult['choices'][0]['message']['content']
+            ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
+        );
+
+        return response()->json([
+            'reply' => $hasilTeksAI
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
+        ], 500);
+    }
+}
 
     public function analyzeMentalHealth(Request $request)
     {
