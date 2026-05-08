@@ -314,7 +314,7 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
@@ -436,9 +436,11 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
         children: [
           if (Navigator.canPop(context))
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_rounded,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
               ),
               onPressed: () => Navigator.pop(context),
             )
@@ -513,7 +515,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       color: isUser
                           ? AppColors.primarySurface
-                          : AppColors.cardBackground,
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.cardBackgroundDark
+                              : AppColors.cardBackground),
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -522,7 +526,13 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       ),
                       border: isUser
                           ? null
-                          : Border.all(color: AppColors.cardBorder, width: 1),
+                          : Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.cardBorderDark
+                                  : AppColors.cardBorder,
+                              width: 1,
+                            ),
                       boxShadow: isUser
                           ? [
                               BoxShadow(
@@ -544,7 +554,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       style: AppTextStyles.bodyMD.copyWith(
                         color: isUser
                             ? AppColors.primary
-                            : AppColors.textPrimary,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -615,14 +627,20 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                   bottomLeft: Radius.circular(4),
                   bottomRight: Radius.circular(16),
                 ),
-                border: Border.all(color: AppColors.cardBorder, width: 1),
+                border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.cardBorderDark
+                        : AppColors.cardBorder,
+                    width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -657,9 +675,16 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             bottom: 20,
           ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
-            border: const Border(
-              top: BorderSide(color: Colors.white, width: 1.5),
+            color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : Colors.white)
+                .withOpacity(0.8),
+            border: Border(
+              top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : Colors.white,
+                  width: 1.5),
             ),
           ),
           child: Row(
