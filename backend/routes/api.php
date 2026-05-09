@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\JournalController;
 use App\Http\Controllers\Api\ArticleController;
 use App\Http\Controllers\Api\MoodController;
 
+
 /*
 |--------------------------------------------------------------------------
 | PUBLIC ROUTES (Tanpa Login)
@@ -40,6 +41,7 @@ Route::middleware('auth.token')->group(function () {
     Route::post('/journals', [JournalController::class, 'store']);
     Route::get('/journals',  [JournalController::class, 'index']);
     Route::put('/journals/{id}/status', [JournalController::class, 'updateStatus']);
+    Route::get('/articles/rekomendasi', [ArticleController::class, 'rekomendasi']);
 
     // AI Analyze
     Route::post('/journal/analyze', [JournalController::class, 'analyzeMentalHealth']);
@@ -53,10 +55,11 @@ Route::middleware('auth.token')->group(function () {
 */
 Route::middleware(['auth.token', 'isAdmin'])->group(function () {
 
+   
     // User Management
-    Route::get('/admin/users', [AuthController::class, 'users']);
-    Route::put('/admin/users/{id}', [AuthController::class, 'updateUser']);
-    Route::delete('/admin/users/{id}', [AuthController::class, 'deleteUser']);
+   Route::get('/admin/users', [AuthController::class, 'users']); 
+   Route::put('/admin/users/{id}', [AuthController::class, 'updateUser']); 
+   Route::delete('/admin/users/{id}', [AuthController::class, 'deleteUser']);
 
     // Journal Management
     Route::get('/admin/journals', [JournalController::class, 'adminJournals']);

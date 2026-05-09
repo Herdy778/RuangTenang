@@ -54,27 +54,39 @@ export default function AdminJournals() {
   }, [searchTerm, moodFilter]);
 
   // Ambil daftar artikel untuk rekomendasi
-  const fetchArticles = async () => {
-    try {
-      const res = await API.get("/admin/articles");
-      setArticles(res.data.data || []);
-    } catch (err) {
-      console.error(err);
-    }
-  };
+ const fetchArticles = async () => {
+  try {
+    // Coba salah satu endpoint ini:
+    const res = await API.get("/articles");  // ← tanpa admin
+    // atau
+    // const res = await API.get("/api/articles");
+    
+    console.log("Response artikel:", res);
+    setArticles(res.data.data || []);
+  } catch (err) {
+    console.error("Error fetch articles:", err);
+    toast.error("Gagal memuat artikel");
+  }
+};
 
   // Kirim rekomendasi artikel
   const sendRecommendation = async (journalId, articleId) => {
-    try {
-      await API.post(`/journals/${journalId}/recommend`, { articleId });
-      toast.success("Rekomendasi artikel berhasil dikirim!");
-      setShowRecommendModal(false);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal mengirim rekomendasi");
-    }
-  };
-
+  try {
+    console.log("Mengirim:", { journalId, articleId });
+    
+    // Coba salah satu endpoint ini:
+    const response = await API.post(`/admin/journals/${journalId}/recommend`, { articleId });
+    // atau
+    // const response = await API.post(`/recommendations`, { journalId, articleId });
+    
+    console.log("Response:", response);
+    toast.success("Rekomendasi berhasil dikirim!");
+    setShowRecommendModal(false);
+  } catch (err) {
+    console.error("Error:", err.response || err);
+    toast.error(err.response?.data?.message || "Gagal mengirim rekomendasi");
+  }
+};
   async function fetchJournals() {
     try {
       const res = await API.get("/admin/journals");
@@ -284,30 +296,39 @@ async function handleDelete(id) {
                     <span style={styles.user}>
                       👤 {j.user_nama || "User"}
                     </span>
-                     <button 
+                    <button 
                       style={styles.recommendBtn}
-                      onClick={() => {
+                      onClick={async () => {
+                        console.log("Tombol diklik, journal:", j);
                         setSelectedJournal(j);
-                        fetchArticles();
+                        await fetchArticles();
                         setShowRecommendModal(true);
                       }}
                     >
                       📖 Rekomendasi Artikel
                     </button>
                   </div>
-                  <div style={{ marginTop: 10 }}>
-  <button onClick={() => updateStatus(j._id, "perhatian")}>
-    ⚠️
+                  <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
+  <button 
+    onClick={() => updateStatus(j._id, "perhatian")}
+    style={styles.statusBtn}
+  >
+    ⚠️ Perhatian
   </button>
 
-  <button onClick={() => updateStatus(j._id, "darurat")}>
-    🚨
+  <button 
+    onClick={() => updateStatus(j._id, "darurat")}
+    style={styles.statusBtnDanger}
+  >
+    🚨 Darurat
   </button>
 
   <button
-  onClick={() => handleDelete(j._id)}>
-  🗑️
-</button>
+    onClick={() => handleDelete(j._id)}
+    style={styles.deleteBtn}
+  >
+    🗑️ Hapus
+  </button>
 </div>
                 </div>
               );
@@ -342,39 +363,47 @@ async function handleDelete(id) {
           </div>
         )}
       </div>
-        {showRecommendModal && selectedJournal && (
-        <div style={styles.modalOverlay} onClick={() => setShowRecommendModal(false)}>
-          <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
-            <div style={styles.modalHeader}>
-              <h2 style={styles.modalTitle}>Rekomendasikan Artikel</h2>
-              <button style={styles.modalClose} onClick={() => setShowRecommendModal(false)}>✕</button>
-            </div>
-            <div style={styles.modalBody}>
-              <p style={styles.modalJournalText}>
-                <strong>Isi Jurnal:</strong><br/>
-                {selectedJournal.teks_curhat?.substring(0, 150)}...
-              </p>
-              <h4>Pilih Artikel:</h4>
-              <div style={styles.articleList}>
-                {articles.map(article => (
-                  <div key={article._id} style={styles.articleItem}>
-                    <div>
-                      <strong>{article.judul}</strong>
-                      <p style={{ fontSize: 12, color: "#666" }}>{article.kategori}</p>
-                    </div>
-                    <button 
-                      style={styles.selectArticleBtn}
-                      onClick={() => sendRecommendation(selectedJournal._id, article._id)}
-                    >
-                      Pilih
-                    </button>
-                  </div>
-                ))}
+             {showRecommendModal && selectedJournal && (
+  <div style={styles.modalOverlay} onClick={() => setShowRecommendModal(false)}>
+    <div style={styles.modal} onClick={(e) => e.stopPropagation()}>
+      <div style={styles.modalHeader}>
+        <h2 style={styles.modalTitle}>Rekomendasikan Artikel</h2>
+        <button style={styles.modalClose} onClick={() => setShowRecommendModal(false)}>✕</button>
+      </div>
+      <div style={styles.modalBody}>
+        <p style={styles.modalJournalText}>
+          <strong>Isi Jurnal:</strong><br/>
+          {selectedJournal.teks_curhat?.substring(0, 150)}...
+        </p>
+        <h4>Pilih Artikel:</h4>
+        {articles.length === 0 ? (
+          <p style={{ textAlign: "center", color: "#999", padding: 20 }}>
+            ⏳ Memuat daftar artikel...
+          </p>
+        ) : (
+          <div style={styles.articleList}>
+            {articles.map(article => (
+              <div key={article._id} style={styles.articleItem}>
+                <div style={{ flex: 1 }}>
+                  <strong>{article.judul}</strong>
+                  <p style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+                    {article.kategori || "Artikel"}
+                  </p>
+                </div>
+                <button 
+                  style={styles.selectArticleBtn}
+                  onClick={() => sendRecommendation(selectedJournal._id, article._id)}
+                >
+                  Kirim Rekomendasi
+                </button>
               </div>
-            </div>
+            ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
+    </div>
+  </div>
+)}
     </div>
 
   );
@@ -595,6 +624,39 @@ const styles = {
     cursor: "pointer",
     fontSize: 12,
     marginLeft: "auto",
+  },
+    statusBtn: {
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 500,
+    borderRadius: 8,
+    border: "none",
+    background: "#FEF3C7",
+    color: "#92400E",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+  statusBtnDanger: {
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 500,
+    borderRadius: 8,
+    border: "none",
+    background: "#FEE2E2",
+    color: "#991B1B",
+    cursor: "pointer",
+    transition: "all 0.2s",
+  },
+  deleteBtn: {
+    padding: "8px 16px",
+    fontSize: 13,
+    fontWeight: 500,
+    borderRadius: 8,
+    border: "none",
+    background: "#EF4444",
+    color: "white",
+    cursor: "pointer",
+    transition: "all 0.2s",
   },
   pagination: {
     display: "flex",

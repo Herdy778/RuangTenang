@@ -5,13 +5,18 @@ import MoodChart from '../components/MoodChart';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
-    if (userData) setUser(JSON.parse(userData));
+
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+
     fetchJournals();
   }, []);
 
@@ -27,18 +32,47 @@ export default function Dashboard() {
   }
 
   async function doLogout() {
-    await API.post('/logout');
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/');
+    try {
+      await API.post('/logout');
+    } catch (err) {
+      console.error(err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      navigate('/');
+    }
   }
 
   const moodColors = {
-    Burnout: { bg: '#FEF3C7', color: '#92400E', emoji: '😤' },
-    Cemas: { bg: '#EDE9FE', color: '#5B21B6', emoji: '😰' },
-    Sedih: { bg: '#DBEAFE', color: '#1E40AF', emoji: '😢' },
-    Netral: { bg: '#F0FDF4', color: '#166534', emoji: '😌' },
-    Krisis: { bg: '#FFE4E6', color: '#9F1239', emoji: '🆘' },
+    Burnout: {
+      bg: '#FEF3C7',
+      color: '#92400E',
+      emoji: '😤',
+    },
+
+    Cemas: {
+      bg: '#EDE9FE',
+      color: '#5B21B6',
+      emoji: '😰',
+    },
+
+    Sedih: {
+      bg: '#DBEAFE',
+      color: '#1E40AF',
+      emoji: '😢',
+    },
+
+    Netral: {
+      bg: '#F0FDF4',
+      color: '#166534',
+      emoji: '😌',
+    },
+
+    Krisis: {
+      bg: '#FFE4E6',
+      color: '#9F1239',
+      emoji: '🆘',
+    },
   };
 
   const moodCount = journals.reduce((acc, j) => {
@@ -47,7 +81,9 @@ export default function Dashboard() {
   }, {});
 
   const dominantMood =
-    Object.entries(moodCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+    Object.entries(moodCount).sort(
+      (a, b) => b[1] - a[1]
+    )[0]?.[0] || null;
 
   return (
     <div style={styles.bg}>
@@ -58,36 +94,68 @@ export default function Dashboard() {
       <nav style={styles.nav}>
         <div style={styles.navLogo}>
           <span style={styles.navLogoIcon}>🌿</span>
-          <span style={styles.navLogoText}>RuangTenang Admin</span>
+
+          <span style={styles.navLogoText}>
+            RuangTenang Admin
+          </span>
         </div>
 
         <div style={styles.navLinks}>
-          <span style={{ ...styles.navLink, ...styles.navLinkActive }}>
+          {/* DASHBOARD */}
+          <span
+            style={{
+              ...styles.navLink,
+              ...styles.navLinkActive,
+            }}
+          >
             Dashboard
           </span>
 
+          {/* DATA USER */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/users')}
+            onClick={() =>
+              navigate('/admin/users')
+            }
           >
             Data User
           </span>
 
+          {/* DATA JURNAL */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/journals')}
+            onClick={() =>
+              navigate('/admin/journals')
+            }
           >
             Data Jurnal
           </span>
 
+          {/* ARTIKEL */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/articles')}
+            onClick={() =>
+              navigate('/admin/articles')
+            }
           >
             Artikel
           </span>
 
-          <button style={styles.logoutBtn} onClick={doLogout}>
+          {/* MANAJEMEN ADMIN */}
+          <span
+            style={styles.navLink}
+            onClick={() =>
+              navigate('/admin/manage')
+            }
+          >
+            Manajemen Admin
+          </span>
+
+          {/* LOGOUT */}
+          <button
+            style={styles.logoutBtn}
+            onClick={doLogout}
+          >
             Keluar
           </button>
         </div>
@@ -96,100 +164,167 @@ export default function Dashboard() {
       <div style={styles.container}>
         {/* HEADER */}
         <div style={styles.header}>
-          <h1 style={styles.title}>Dashboard Admin</h1>
+          <h1 style={styles.title}>
+            Dashboard Admin
+          </h1>
+
           <p style={styles.subtitle}>
-            Monitoring data pengguna dan analisis mood
+            Monitoring data pengguna dan
+            analisis mood
           </p>
         </div>
 
-        {/* STATS */}
+        {/* STATISTIK */}
         <div style={styles.statsGrid}>
+          {/* TOTAL JURNAL */}
           <div style={styles.statCard}>
-            <div style={styles.statNum}>{journals.length}</div>
-            <div style={styles.statLabel}>Total Jurnal</div>
+            <div style={styles.statNum}>
+              {journals.length}
+            </div>
+
+            <div style={styles.statLabel}>
+              Total Jurnal
+            </div>
           </div>
 
+          {/* MOOD DOMINAN */}
           <div
             style={{
               ...styles.statCard,
-              background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-              color: 'white'
+              background:
+                'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+              color: 'white',
             }}
           >
-            <div style={{ ...styles.statNum, color: 'white' }}>
+            <div
+              style={{
+                ...styles.statNum,
+                color: 'white',
+              }}
+            >
               {dominantMood
                 ? `${moodColors[dominantMood]?.emoji} ${dominantMood}`
                 : '-'}
             </div>
-            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>
+
+            <div
+              style={{
+                ...styles.statLabel,
+                color:
+                  'rgba(255,255,255,0.8)',
+              }}
+            >
               Mood Dominan Global
             </div>
           </div>
 
+          {/* VARIASI MOOD */}
           <div style={styles.statCard}>
             <div style={styles.statNum}>
               {Object.keys(moodCount).length}
             </div>
-            <div style={styles.statLabel}>Variasi Mood</div>
+
+            <div style={styles.statLabel}>
+              Variasi Mood
+            </div>
           </div>
         </div>
 
         {/* CHART */}
         <div style={styles.section}>
-          <h2 style={styles.sectionTitle}>Grafik Mood Semua User</h2>
+          <h2 style={styles.sectionTitle}>
+            Grafik Mood Semua User
+          </h2>
+
           <MoodChart journals={journals} />
         </div>
 
-        {/* RECENT JOURNAL */}
+        {/* JURNAL TERBARU */}
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>
             Data Jurnal Terbaru User
           </h2>
 
           {loading ? (
-            <div style={styles.loading}>Memuat...</div>
+            <div style={styles.loading}>
+              Memuat...
+            </div>
           ) : journals.length === 0 ? (
             <div style={styles.emptyCard}>
-              <p style={styles.emptyEmoji}>📝</p>
+              <p style={styles.emptyEmoji}>
+                📝
+              </p>
+
               <p style={styles.emptyText}>
                 Belum ada jurnal dari user
               </p>
             </div>
           ) : (
             <div style={styles.journalList}>
-              {journals.slice(0, 5).map((j) => {
-                const mood =
-                  moodColors[j.hasil_mood] || {
-                    bg: '#F4F4F5',
-                    color: '#52525B',
-                    emoji: '😐',
-                  };
+              {journals
+                .slice(0, 5)
+                .map((j) => {
+                  const mood =
+                    moodColors[j.hasil_mood] || {
+                      bg: '#F4F4F5',
+                      color: '#52525B',
+                      emoji: '😐',
+                    };
 
-                return (
-                  <div key={j._id} style={styles.journalCard}>
-                    <div style={styles.journalHeader}>
-                      <span
-                        style={{
-                          ...styles.moodBadge,
-                          background: mood.bg,
-                          color: mood.color,
-                        }}
+                  return (
+                    <div
+                      key={j._id}
+                      style={styles.journalCard}
+                    >
+                      <div
+                        style={
+                          styles.journalHeader
+                        }
                       >
-                        {mood.emoji} {j.hasil_mood}
-                      </span>
+                        <span
+                          style={{
+                            ...styles.moodBadge,
+                            background:
+                              mood.bg,
+                            color:
+                              mood.color,
+                          }}
+                        >
+                          {mood.emoji}{' '}
+                          {j.hasil_mood}
+                        </span>
 
-                      <span style={styles.journalDate}>
-                        {new Date(j.created_at).toLocaleDateString('id-ID')}
-                      </span>
+                        <span
+                          style={
+                            styles.journalDate
+                          }
+                        >
+                          {new Date(
+                            j.created_at
+                          ).toLocaleDateString(
+                            'id-ID'
+                          )}
+                        </span>
+                      </div>
+
+                      <p
+                        style={
+                          styles.journalText
+                        }
+                      >
+                        {j.teks_curhat.substring(
+                          0,
+                          120
+                        )}
+
+                        {j.teks_curhat.length >
+                        120
+                          ? '...'
+                          : ''}
+                      </p>
                     </div>
-
-                    <p style={styles.journalText}>
-                      {j.teks_curhat.substring(0, 120)}
-                      {j.teks_curhat.length > 120 ? '...' : ''}
-                    </p>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           )}
         </div>
@@ -200,52 +335,52 @@ export default function Dashboard() {
 
 const styles = {
   bg: {
-    minHeight: "100vh",
-    background: "#FAFAFA",
+    minHeight: '100vh',
+    background: '#FAFAFA',
     fontFamily: "'DM Sans', sans-serif",
   },
 
   blob1: {
-    position: "fixed",
+    position: 'fixed',
     width: 600,
     height: 600,
-    borderRadius: "50%",
-    background: "#C4B5FD",
-    filter: "blur(100px)",
+    borderRadius: '50%',
+    background: '#C4B5FD',
+    filter: 'blur(100px)',
     opacity: 0.2,
     top: -200,
     right: -200,
   },
 
   blob2: {
-    position: "fixed",
+    position: 'fixed',
     width: 400,
     height: 400,
-    borderRadius: "50%",
-    background: "#34D399",
-    filter: "blur(80px)",
+    borderRadius: '50%',
+    background: '#34D399',
+    filter: 'blur(80px)',
     opacity: 0.15,
     bottom: -100,
     left: -100,
   },
 
   nav: {
-    position: "sticky",
+    position: 'sticky',
     top: 0,
-    background: "rgba(255,255,255,0.85)",
-    backdropFilter: "blur(20px)",
-    borderBottom: "1px solid #F4F4F5",
-    padding: "0 40px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
+    background: 'rgba(255,255,255,0.85)',
+    backdropFilter: 'blur(20px)',
+    borderBottom: '1px solid #F4F4F5',
+    padding: '0 40px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     height: 64,
     zIndex: 100,
   },
 
   navLogo: {
-    display: "flex",
-    alignItems: "center",
+    display: 'flex',
+    alignItems: 'center',
     gap: 8,
   },
 
@@ -254,47 +389,47 @@ const styles = {
   },
 
   navLogoText: {
-    fontFamily: "Georgia, serif",
+    fontFamily: 'Georgia, serif',
     fontSize: 18,
     fontWeight: 500,
-    color: "#18181B",
+    color: '#18181B',
   },
 
   navLinks: {
-    display: "flex",
+    display: 'flex',
     gap: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
 
   navLink: {
-    padding: "8px 16px",
+    padding: '8px 16px',
     borderRadius: 8,
     fontSize: 14,
-    color: "#52525B",
-    cursor: "pointer",
+    color: '#52525B',
+    cursor: 'pointer',
   },
 
   navLinkActive: {
-    background: "#EDE9FE",
-    color: "#7C3AED",
+    background: '#EDE9FE',
+    color: '#7C3AED',
     fontWeight: 500,
   },
 
   logoutBtn: {
     marginLeft: 8,
-    padding: "8px 16px",
-    background: "transparent",
-    border: "1px solid #E4E4E7",
+    padding: '8px 16px',
+    background: 'transparent',
+    border: '1px solid #E4E4E7',
     borderRadius: 8,
     fontSize: 14,
-    color: "#52525B",
-    cursor: "pointer",
+    color: '#52525B',
+    cursor: 'pointer',
   },
 
   container: {
     maxWidth: 1000,
-    margin: "0 auto",
-    padding: "40px 24px",
+    margin: '0 auto',
+    padding: '40px 24px',
   },
 
   header: {
@@ -304,27 +439,28 @@ const styles = {
   title: {
     fontSize: 28,
     fontWeight: 600,
-    color: "#18181B",
+    color: '#18181B',
   },
 
   subtitle: {
     fontSize: 14,
-    color: "#A1A1AA",
+    color: '#A1A1AA',
   },
 
   statsGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(3,1fr)",
+    display: 'grid',
+    gridTemplateColumns: 'repeat(3,1fr)',
     gap: 16,
     marginBottom: 30,
   },
 
   statCard: {
-    background: "white",
+    background: 'white',
     padding: 20,
     borderRadius: 16,
-    border: "1px solid #F4F4F5",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+    border: '1px solid #F4F4F5',
+    boxShadow:
+      '0 2px 8px rgba(0,0,0,0.04)',
   },
 
   statNum: {
@@ -334,7 +470,7 @@ const styles = {
 
   statLabel: {
     fontSize: 13,
-    color: "#71717A",
+    color: '#71717A',
   },
 
   section: {
@@ -345,31 +481,32 @@ const styles = {
     fontSize: 18,
     fontWeight: 600,
     marginBottom: 14,
-    color: "#18181B"
+    color: '#18181B',
   },
 
   journalList: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
     gap: 12,
   },
 
   journalCard: {
-    background: "white",
+    background: 'white',
     padding: 20,
     borderRadius: 16,
-    border: "1px solid #F4F4F5",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+    border: '1px solid #F4F4F5',
+    boxShadow:
+      '0 2px 8px rgba(0,0,0,0.04)',
   },
 
   journalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
+    display: 'flex',
+    justifyContent: 'space-between',
     marginBottom: 10,
   },
 
   moodBadge: {
-    padding: "4px 12px",
+    padding: '4px 12px',
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 500,
@@ -377,20 +514,20 @@ const styles = {
 
   journalDate: {
     fontSize: 12,
-    color: "#A1A1AA",
+    color: '#A1A1AA',
   },
 
   journalText: {
     fontSize: 14,
-    color: "#52525B",
+    color: '#52525B',
   },
 
   emptyCard: {
-    background: "white",
+    background: 'white',
     padding: 40,
     borderRadius: 16,
-    textAlign: "center",
-    border: "1px solid #F4F4F5",
+    textAlign: 'center',
+    border: '1px solid #F4F4F5',
   },
 
   emptyEmoji: {
@@ -398,12 +535,12 @@ const styles = {
   },
 
   emptyText: {
-    color: "#A1A1AA",
+    color: '#A1A1AA',
   },
 
-  loading:{
-    textAlign:"center",
-    padding:20,
-    color:"#71717A"
-  }
+  loading: {
+    textAlign: 'center',
+    padding: 20,
+    color: '#71717A',
+  },
 };
