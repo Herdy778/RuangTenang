@@ -11,31 +11,52 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+<<<<<<< HEAD
     const userData = localStorage.getItem('user');
 
     if (userData) {
       setUser(JSON.parse(userData));
     }
 
+=======
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
     fetchJournals();
   }, []);
 
-  async function fetchJournals() {
-    try {
-      const res = await API.get('/journals');
-      setJournals(res.data.data || []);
+ const fetchJournals = async () => {
+  try {
+    const res = await API.get("/journals");
+    
+    // 🔴 INI BAGIAN RESPONSE API
+    const rawData = res.data.data || res.data || [];
+    
+    // 🔴 MAPPING DATA DARI RESPONSE API
+    const mappedData = rawData.map((item) => ({
+      _id: item.id || item._id,
+      hasil_mood: item.mood || item.hasil_mood || "Netral",
+      teks_curhat: item.isi || item.teks_curhat || item.content || "",
+      created_at: item.created_at || item.createdAt || new Date().toISOString(),
+    }));
+      
+      setJournals(sortedData);
+      
     } catch (err) {
-      console.error(err);
+      console.error("Error ambil jurnal:", err);
+      setJournals([]);
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   async function doLogout() {
     try {
       await API.post('/logout');
     } catch (err) {
+<<<<<<< HEAD
       console.error(err);
+=======
+      console.error("Logout error:", err);
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
     } finally {
       localStorage.removeItem('token');
       localStorage.removeItem('user');
@@ -75,15 +96,21 @@ export default function Dashboard() {
     },
   };
 
+  // Hitung jumlah mood untuk statistik
   const moodCount = journals.reduce((acc, j) => {
-    acc[j.hasil_mood] = (acc[j.hasil_mood] || 0) + 1;
+    const moodName = j.hasil_mood;
+    acc[moodName] = (acc[moodName] || 0) + 1;
     return acc;
   }, {});
 
+<<<<<<< HEAD
   const dominantMood =
     Object.entries(moodCount).sort(
       (a, b) => b[1] - a[1]
     )[0]?.[0] || null;
+=======
+  const dominantMood = Object.entries(moodCount).sort((a, b) => b[1] - a[1])[0]?.[0] || null;
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
 
   return (
     <div style={styles.bg}>
@@ -141,6 +168,7 @@ export default function Dashboard() {
             Artikel
           </span>
 
+<<<<<<< HEAD
           {/* MANAJEMEN ADMIN */}
           <span
             style={styles.navLink}
@@ -156,6 +184,18 @@ export default function Dashboard() {
             style={styles.logoutBtn}
             onClick={doLogout}
           >
+=======
+
+          <span
+            style={styles.navLink}
+            onClick={() => navigate('/profile')}
+          >
+
+            Profile
+          </span>
+
+          <button style={styles.logoutBtn} onClick={doLogout}>
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
             Keluar
           </button>
         </div>
@@ -174,7 +214,11 @@ export default function Dashboard() {
           </p>
         </div>
 
+<<<<<<< HEAD
         {/* STATISTIK */}
+=======
+        {/* STATS CARDS */}
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
         <div style={styles.statsGrid}>
           {/* TOTAL JURNAL */}
           <div style={styles.statCard}>
@@ -203,7 +247,7 @@ export default function Dashboard() {
               }}
             >
               {dominantMood
-                ? `${moodColors[dominantMood]?.emoji} ${dominantMood}`
+                ? `${moodColors[dominantMood]?.emoji || '😐'} ${dominantMood}`
                 : '-'}
             </div>
 
@@ -230,8 +274,9 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* CHART */}
+        {/* CHART SECTION */}
         <div style={styles.section}>
+<<<<<<< HEAD
           <h2 style={styles.sectionTitle}>
             Grafik Mood Semua User
           </h2>
@@ -240,6 +285,16 @@ export default function Dashboard() {
         </div>
 
         {/* JURNAL TERBARU */}
+=======
+          <h2 style={styles.sectionTitle}>Grafik Mood Semua User</h2>
+          <p style={styles.chartHint}>
+            Tren Mood 7 Hari - Mulai jurnal untuk melihat tren mood aktualmu ➡️
+          </p>
+          <MoodChart journals={journals} />
+        </div>
+
+        {/* RECENT JOURNALS SECTION */}
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
         <div style={styles.section}>
           <h2 style={styles.sectionTitle}>
             Data Jurnal Terbaru User
@@ -247,7 +302,12 @@ export default function Dashboard() {
 
           {loading ? (
             <div style={styles.loading}>
+<<<<<<< HEAD
               Memuat...
+=======
+              <div style={styles.spinner}></div>
+              <p>Memuat data jurnal...</p>
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
             </div>
           ) : journals.length === 0 ? (
             <div style={styles.emptyCard}>
@@ -258,9 +318,13 @@ export default function Dashboard() {
               <p style={styles.emptyText}>
                 Belum ada jurnal dari user
               </p>
+              <p style={styles.emptySubtext}>
+                User akan muncul di sini setelah menulis jurnal pertama mereka
+              </p>
             </div>
           ) : (
             <div style={styles.journalList}>
+<<<<<<< HEAD
               {journals
                 .slice(0, 5)
                 .map((j) => {
@@ -325,6 +389,69 @@ export default function Dashboard() {
                     </div>
                   );
                 })}
+=======
+              {journals.slice(0, 5).map((j, index) => {
+                const mood = moodColors[j.hasil_mood] || {
+                  bg: '#F4F4F5',
+                  color: '#52525B',
+                  emoji: '😐',
+                };
+
+                const formattedDate = j.created_at
+                  ? new Date(j.created_at).toLocaleDateString("id-ID", {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  : "Tanggal tidak tersedia";
+
+                return (
+                  <div key={j._id || index} style={styles.journalCard}>
+                    <div style={styles.journalHeader}>
+                      <span
+                        style={{
+                          ...styles.moodBadge,
+                          background: mood.bg,
+                          color: mood.color,
+                        }}
+                      >
+                        {mood.emoji} {j.hasil_mood}
+                      </span>
+                      <span style={styles.journalDate}>
+                        {formattedDate}
+                      </span>
+                    </div>
+
+                    <p style={styles.journalText}>
+                      {j.teks_curhat && j.teks_curhat.trim() !== "" 
+                        ? (j.teks_curhat.length > 120 
+                          ? j.teks_curhat.substring(0, 120) + "..." 
+                          : j.teks_curhat)
+                        : "Tidak ada catatan jurnal"}
+                    </p>
+                    
+                    {j.teks_curhat && j.teks_curhat.length > 120 && (
+                      <button style={styles.readMoreBtn}>
+                        Baca selengkapnya
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
+            </div>
+          )}
+          
+          {journals.length > 5 && (
+            <div style={styles.viewAllContainer}>
+              <button 
+                style={styles.viewAllBtn}
+                onClick={() => navigate('/admin/journals')}
+              >
+                Lihat Semua Jurnal ({journals.length})
+              </button>
             </div>
           )}
         </div>
@@ -338,8 +465,10 @@ const styles = {
     minHeight: '100vh',
     background: '#FAFAFA',
     fontFamily: "'DM Sans', sans-serif",
+    position: "relative",
+    overflowX: "hidden",
   },
-
+  
   blob1: {
     position: 'fixed',
     width: 600,
@@ -350,8 +479,10 @@ const styles = {
     opacity: 0.2,
     top: -200,
     right: -200,
+    zIndex: 0,
+    pointerEvents: "none",
   },
-
+  
   blob2: {
     position: 'fixed',
     width: 400,
@@ -362,11 +493,14 @@ const styles = {
     opacity: 0.15,
     bottom: -100,
     left: -100,
+    zIndex: 0,
+    pointerEvents: "none",
   },
-
+  
   nav: {
     position: 'sticky',
     top: 0,
+<<<<<<< HEAD
     background: 'rgba(255,255,255,0.85)',
     backdropFilter: 'blur(20px)',
     borderBottom: '1px solid #F4F4F5',
@@ -374,47 +508,62 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+=======
+    background: "rgba(255,255,255,0.95)",
+    backdropFilter: "blur(20px)",
+    borderBottom: "1px solid #F4F4F5",
+    padding: "0 40px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
     height: 64,
     zIndex: 100,
   },
-
+  
   navLogo: {
     display: 'flex',
     alignItems: 'center',
     gap: 8,
   },
-
+  
   navLogoIcon: {
     fontSize: 22,
   },
-
+  
   navLogoText: {
     fontFamily: 'Georgia, serif',
     fontSize: 18,
     fontWeight: 500,
     color: '#18181B',
   },
-
+  
   navLinks: {
     display: 'flex',
     gap: 8,
     alignItems: 'center',
   },
-
+  
   navLink: {
     padding: '8px 16px',
     borderRadius: 8,
     fontSize: 14,
+<<<<<<< HEAD
     color: '#52525B',
     cursor: 'pointer',
+=======
+    color: "#52525B",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   navLinkActive: {
     background: '#EDE9FE',
     color: '#7C3AED',
     fontWeight: 500,
   },
-
+  
   logoutBtn: {
     marginLeft: 8,
     padding: '8px 16px',
@@ -422,125 +571,266 @@ const styles = {
     border: '1px solid #E4E4E7',
     borderRadius: 8,
     fontSize: 14,
+<<<<<<< HEAD
     color: '#52525B',
     cursor: 'pointer',
+=======
+    color: "#52525B",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   container: {
     maxWidth: 1000,
+<<<<<<< HEAD
     margin: '0 auto',
     padding: '40px 24px',
+=======
+    margin: "0 auto",
+    padding: "40px 24px",
+    position: "relative",
+    zIndex: 1,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   header: {
     marginBottom: 24,
   },
-
+  
   title: {
     fontSize: 28,
     fontWeight: 600,
+<<<<<<< HEAD
     color: '#18181B',
+=======
+    color: "#18181B",
+    marginBottom: 8,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   subtitle: {
     fontSize: 14,
     color: '#A1A1AA',
   },
-
+  
   statsGrid: {
+<<<<<<< HEAD
     display: 'grid',
     gridTemplateColumns: 'repeat(3,1fr)',
+=======
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
     gap: 16,
     marginBottom: 30,
   },
-
+  
   statCard: {
     background: 'white',
     padding: 20,
     borderRadius: 16,
+<<<<<<< HEAD
     border: '1px solid #F4F4F5',
     boxShadow:
       '0 2px 8px rgba(0,0,0,0.04)',
+=======
+    border: "1px solid #F4F4F5",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+    transition: "transform 0.2s ease",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   statNum: {
     fontSize: 26,
     fontWeight: 600,
   },
-
+  
   statLabel: {
     fontSize: 13,
+<<<<<<< HEAD
     color: '#71717A',
+=======
+    color: "#71717A",
+    marginTop: 5,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   section: {
     marginBottom: 30,
   },
-
+  
   sectionTitle: {
     fontSize: 18,
     fontWeight: 600,
     marginBottom: 14,
+<<<<<<< HEAD
     color: '#18181B',
+=======
+    color: "#18181B",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
+  chartHint: {
+    fontSize: 13,
+    color: "#A1A1AA",
+    marginBottom: 16,
+    fontStyle: "italic",
+  },
+  
   journalList: {
     display: 'flex',
     flexDirection: 'column',
     gap: 12,
   },
-
+  
   journalCard: {
     background: 'white',
     padding: 20,
     borderRadius: 16,
+<<<<<<< HEAD
     border: '1px solid #F4F4F5',
     boxShadow:
       '0 2px 8px rgba(0,0,0,0.04)',
+=======
+    border: "1px solid #F4F4F5",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+    transition: "all 0.2s ease",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   journalHeader: {
+<<<<<<< HEAD
     display: 'flex',
     justifyContent: 'space-between',
     marginBottom: 10,
+=======
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+    flexWrap: "wrap",
+    gap: 8,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
   moodBadge: {
     padding: '4px 12px',
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 500,
   },
-
+  
   journalDate: {
     fontSize: 12,
     color: '#A1A1AA',
   },
-
+  
   journalText: {
     fontSize: 14,
+<<<<<<< HEAD
     color: '#52525B',
+=======
+    color: "#52525B",
+    lineHeight: 1.5,
+    marginBottom: 8,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
   },
-
+  
+  readMoreBtn: {
+    background: "none",
+    border: "none",
+    color: "#7C3AED",
+    fontSize: 12,
+    cursor: "pointer",
+    padding: 0,
+    marginTop: 5,
+  },
+  
   emptyCard: {
+<<<<<<< HEAD
     background: 'white',
     padding: 40,
+=======
+    background: "white",
+    padding: 60,
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
     borderRadius: 16,
     textAlign: 'center',
     border: '1px solid #F4F4F5',
   },
-
+  
   emptyEmoji: {
-    fontSize: 32,
+    fontSize: 48,
+    marginBottom: 16,
   },
-
+  
   emptyText: {
+<<<<<<< HEAD
     color: '#A1A1AA',
+=======
+    fontSize: 16,
+    color: "#52525B",
+    marginBottom: 8,
   },
+  
+  emptySubtext: {
+    fontSize: 13,
+    color: "#A1A1AA",
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
+  },
+  
+  loading: {
+    textAlign: "center",
+    padding: 60,
+    color: "#71717A",
+    background: "white",
+    borderRadius: 16,
+    border: "1px solid #F4F4F5",
+  },
+  
+  spinner: {
+    width: 40,
+    height: 40,
+    border: "3px solid #F4F4F5",
+    borderTop: "3px solid #7C3AED",
+    borderRadius: "50%",
+    animation: "spin 1s linear infinite",
+    margin: "0 auto 16px",
+  },
+  
+  viewAllContainer: {
+    textAlign: "center",
+    marginTop: 20,
+  },
+  
+  viewAllBtn: {
+    background: "white",
+    border: "1px solid #E4E4E7",
+    padding: "10px 20px",
+    borderRadius: 8,
+    fontSize: 14,
+    color: "#7C3AED",
+    cursor: "pointer",
+    transition: "all 0.2s ease",
+  },
+};
 
+<<<<<<< HEAD
   loading: {
     textAlign: 'center',
     padding: 20,
     color: '#71717A',
   },
 };
+=======
+// Tambahkan CSS untuk animasi spinner
+const styleSheet = document.createElement("style");
+styleSheet.textContent = `
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`;
+document.head.appendChild(styleSheet);
+>>>>>>> e3c5cdf1af2c0b4fb4ede83269096aa85fd366be
