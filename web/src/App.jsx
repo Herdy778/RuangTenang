@@ -4,6 +4,7 @@ import Dashboard from './pages/Dashboard';
 import AdminUsers from './pages/AdminUsers';
 import AdminJournals from './pages/AdminJournals';
 import AdminArticles from './pages/AdminArticles';
+import Profile from './pages/Profile';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -34,6 +35,11 @@ function App() {
         <Route
           path="/admin/articles"
           element={<PrivateRoute><AdminArticles /></PrivateRoute>}
+        />
+
+        <Route
+          path="/profile"
+          element={<PrivateRoute><Profile/></PrivateRoute>}
         />
       </Routes>
     </BrowserRouter>
