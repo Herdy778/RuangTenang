@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Article;
+use App\Models\ArticleRecommendation;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 
 class ArticleController extends Controller
@@ -21,6 +23,47 @@ class ArticleController extends Controller
             'data'       => $articles
         ]);
     }
+
+    public function myRecommendedArticles(Request $request)
+{
+    try {
+        // Ambil user login
+        $userId = DB::connection('mongodb')
+            ->collection('users')
+            ->where('email', $request->auth_user->email)
+            ->value('_id');
+
+        // Ambil semua rekomendasi milik user
+        $recommendations = ArticleRecommendation::where(
+            'user_id',
+            (string) $userId
+        )
+        ->orderBy('created_at', 'desc')
+        ->get();
+
+        // Ambil semua article_id
+        $articleIds = $recommendations
+            ->pluck('article_id')
+            ->toArray();
+
+        // Cari artikelnya
+        $articles = Article::whereIn(
+            '_id',
+            $articleIds
+        )->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $articles
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ], 500);
+    }
+}
 
     // =========================
     // GET BY MOOD

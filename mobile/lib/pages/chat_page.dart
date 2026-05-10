@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../theme/app_theme.dart';
 import 'journal_page.dart'; // Untuk navigasi ke halaman Jurnal AI
@@ -19,57 +20,218 @@ class ChatAiPage extends StatefulWidget {
 // ===========================================================================
 const Map<String, List<Map<String, String>>> _articlesByMood = {
   'stres': [
-    {'emoji': '🧘', 'title': 'Teknik Napas 4-7-8', 'sub': 'Redakan stres dalam 1 menit'},
-    {'emoji': '🌿', 'title': 'Jalan Kaki & Stres', 'sub': 'Olahraga ringan yang ampuh'},
-    {'emoji': '📓', 'title': 'Journaling untuk Stres', 'sub': 'Tulis, lepaskan, lega'},
+    {
+      'emoji': '🧘',
+      'title': 'Teknik Napas 4-7-8',
+      'sub': 'Redakan stres dalam 1 menit',
+    },
+    {
+      'emoji': '🌿',
+      'title': 'Jalan Kaki & Stres',
+      'sub': 'Olahraga ringan yang ampuh',
+    },
+    {
+      'emoji': '📓',
+      'title': 'Journaling untuk Stres',
+      'sub': 'Tulis, lepaskan, lega',
+    },
   ],
   'cemas': [
-    {'emoji': '💆', 'title': 'Mindfulness 5 Menit', 'sub': 'Hadirkan dirimu saat ini'},
-    {'emoji': '🎵', 'title': 'Musik & Kecemasan', 'sub': 'Playlist yang menenangkan jiwa'},
-    {'emoji': '🔋', 'title': 'Kelola Energi Mental', 'sub': 'Jaga batas agar tidak overwhelmed'},
+    {
+      'emoji': '💆',
+      'title': 'Mindfulness 5 Menit',
+      'sub': 'Hadirkan dirimu saat ini',
+    },
+    {
+      'emoji': '🎵',
+      'title': 'Musik & Kecemasan',
+      'sub': 'Playlist yang menenangkan jiwa',
+    },
+    {
+      'emoji': '🔋',
+      'title': 'Kelola Energi Mental',
+      'sub': 'Jaga batas agar tidak overwhelmed',
+    },
   ],
   'sedih': [
-    {'emoji': '💜', 'title': 'Validasi Perasaanmu', 'sub': 'Boleh sedih, itu manusiawi'},
-    {'emoji': '🤝', 'title': 'Cerita ke Orang Terdekat', 'sub': 'Kamu tidak harus sendiri'},
-    {'emoji': '🌅', 'title': 'Rutinitas Penyembuh', 'sub': 'Kebiasaan kecil yang membantu'},
+    {
+      'emoji': '💜',
+      'title': 'Validasi Perasaanmu',
+      'sub': 'Boleh sedih, itu manusiawi',
+    },
+    {
+      'emoji': '🤝',
+      'title': 'Cerita ke Orang Terdekat',
+      'sub': 'Kamu tidak harus sendiri',
+    },
+    {
+      'emoji': '🌅',
+      'title': 'Rutinitas Penyembuh',
+      'sub': 'Kebiasaan kecil yang membantu',
+    },
   ],
   'lelah': [
-    {'emoji': '😴', 'title': 'Pentingnya Tidur Cukup', 'sub': 'Otak butuh rehat yang berkualitas'},
-    {'emoji': '🍵', 'title': 'Istirahat Aktif', 'sub': 'Bukan rebahan, tapi recharge'},
-    {'emoji': '🚿', 'title': 'Self-Care Sederhana', 'sub': 'Me-time yang efektif'},
+    {
+      'emoji': '😴',
+      'title': 'Pentingnya Tidur Cukup',
+      'sub': 'Otak butuh rehat yang berkualitas',
+    },
+    {
+      'emoji': '🍵',
+      'title': 'Istirahat Aktif',
+      'sub': 'Bukan rebahan, tapi recharge',
+    },
+    {
+      'emoji': '🚿',
+      'title': 'Self-Care Sederhana',
+      'sub': 'Me-time yang efektif',
+    },
   ],
   'marah': [
-    {'emoji': '🥊', 'title': 'Kelola Amarah dengan Sehat', 'sub': 'Emosi valid, ekspresi bisa dipilih'},
-    {'emoji': '🌊', 'title': 'Teknik Grounding', 'sub': 'Kembali tenang dalam 5 langkah'},
-    {'emoji': '✍️', 'title': 'Ekspresikan lewat Tulisan', 'sub': 'Tuangkan ke kertas, bukan orang'},
+    {
+      'emoji': '🥊',
+      'title': 'Kelola Amarah dengan Sehat',
+      'sub': 'Emosi valid, ekspresi bisa dipilih',
+    },
+    {
+      'emoji': '🌊',
+      'title': 'Teknik Grounding',
+      'sub': 'Kembali tenang dalam 5 langkah',
+    },
+    {
+      'emoji': '✍️',
+      'title': 'Ekspresikan lewat Tulisan',
+      'sub': 'Tuangkan ke kertas, bukan orang',
+    },
   ],
   'burnout': [
-    {'emoji': '🛑', 'title': 'Kenali Tanda Burnout', 'sub': 'Sebelum terlambat, sadari sekarang'},
-    {'emoji': '📵', 'title': 'Digital Detox', 'sub': 'Istirahat dari layar secara berkala'},
-    {'emoji': '🧠', 'title': 'Cari Bantuan Profesional', 'sub': 'Psikolog bisa membantumu pulih'},
+    {
+      'emoji': '🛑',
+      'title': 'Kenali Tanda Burnout',
+      'sub': 'Sebelum terlambat, sadari sekarang',
+    },
+    {
+      'emoji': '📵',
+      'title': 'Digital Detox',
+      'sub': 'Istirahat dari layar secara berkala',
+    },
+    {
+      'emoji': '🧠',
+      'title': 'Cari Bantuan Profesional',
+      'sub': 'Psikolog bisa membantumu pulih',
+    },
   ],
   'default': [
-    {'emoji': '💙', 'title': 'Menjaga Kesehatan Mental', 'sub': 'Panduan dasar untuk setiap hari'},
-    {'emoji': '🌱', 'title': 'Tumbuh dari Tantangan', 'sub': 'Resiliensi yang bisa dipelajari'},
-    {'emoji': '☀️', 'title': 'Mulai Hari dengan Positif', 'sub': 'Rutinitas pagi yang menyehatkan'},
+    {
+      'emoji': '💙',
+      'title': 'Menjaga Kesehatan Mental',
+      'sub': 'Panduan dasar untuk setiap hari',
+    },
+    {
+      'emoji': '🌱',
+      'title': 'Tumbuh dari Tantangan',
+      'sub': 'Resiliensi yang bisa dipelajari',
+    },
+    {
+      'emoji': '☀️',
+      'title': 'Mulai Hari dengan Positif',
+      'sub': 'Rutinitas pagi yang menyehatkan',
+    },
   ],
 };
 
 /// Deteksi kategori mood dari teks yang ditulis user
 String _detectMoodCategory(String userText) {
   final lower = userText.toLowerCase();
-  if (lower.contains('stres') || lower.contains('tertekan') || lower.contains('tekanan') || lower.contains('beban')) return 'stres';
-  if (lower.contains('cemas') || lower.contains('khawatir') || lower.contains('takut') || lower.contains('galau') || lower.contains('panik')) return 'cemas';
-  if (lower.contains('sedih') || lower.contains('menangis') || lower.contains('nangis') || lower.contains('kecewa') || lower.contains('patah hati')) return 'sedih';
-  if (lower.contains('lelah') || lower.contains('capek') || lower.contains('exhausted') || lower.contains('ngantuk') || lower.contains('bosan')) return 'lelah';
-  if (lower.contains('marah') || lower.contains('kesal') || lower.contains('frustrasi') || lower.contains('emosi') || lower.contains('jengkel')) return 'marah';
-  if (lower.contains('burnout') || lower.contains('menyerah') || lower.contains('tidak sanggup') || lower.contains('ga kuat') || lower.contains('gak kuat')) return 'burnout';
+  if (lower.contains('stres') ||
+      lower.contains('tertekan') ||
+      lower.contains('tekanan') ||
+      lower.contains('beban'))
+    return 'stres';
+  if (lower.contains('cemas') ||
+      lower.contains('khawatir') ||
+      lower.contains('takut') ||
+      lower.contains('galau') ||
+      lower.contains('panik'))
+    return 'cemas';
+  if (lower.contains('sedih') ||
+      lower.contains('menangis') ||
+      lower.contains('nangis') ||
+      lower.contains('kecewa') ||
+      lower.contains('patah hati'))
+    return 'sedih';
+  if (lower.contains('lelah') ||
+      lower.contains('capek') ||
+      lower.contains('exhausted') ||
+      lower.contains('ngantuk') ||
+      lower.contains('bosan'))
+    return 'lelah';
+  if (lower.contains('marah') ||
+      lower.contains('kesal') ||
+      lower.contains('frustrasi') ||
+      lower.contains('emosi') ||
+      lower.contains('jengkel'))
+    return 'marah';
+  if (lower.contains('burnout') ||
+      lower.contains('menyerah') ||
+      lower.contains('tidak sanggup') ||
+      lower.contains('ga kuat') ||
+      lower.contains('gak kuat'))
+    return 'burnout';
   return 'default';
 }
 
 class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
+
+  Future<void> loadChatHistory() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse(historyUrl),
+      headers: {
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final List messages = data['data'];
+
+      setState(() {
+        _messages.clear();
+
+        if (messages.isEmpty) {
+          _messages.add({
+            "role": "ai",
+            "text":
+                "Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.",
+            "moodCategory": null,
+          });
+        } else {
+          for (var msg in messages) {
+            _messages.add({
+              "role": msg['sender'],
+              "text": msg['message'],
+              "moodCategory": null,
+            });
+          }
+        }
+      });
+
+      _scrollToBottom();
+    }
+  } catch (e) {
+    print("Load history gagal: $e");
+  }
+}
 
   // Setiap pesan: role (user/ai), text, dan opsional moodCategory untuk artikel
   final List<Map<String, String?>> _messages = [
@@ -94,15 +256,19 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   // --- PERHATIAN UNTUK URL API BACKEND ---
   // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
   final String apiUrl = "http://127.0.0.1:8000/api/test-ai";
+final String historyUrl = "http://127.0.0.1:8000/api/chat-history";
 
-  @override
-  void initState() {
-    super.initState();
-    _blobAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat(reverse: true);
-  }
+@override
+void initState() {
+  super.initState();
+
+  _blobAnimController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 10),
+  )..repeat(reverse: true);
+
+  loadChatHistory();
+}
 
   @override
   void dispose() {
@@ -141,14 +307,20 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     _scrollToBottom();
 
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({"message": text}),
-      );
+      final prefs = await SharedPreferences.getInstance();
+final token = prefs.getString('token');
+
+final response = await http.post(
+  Uri.parse(apiUrl),
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Authorization": "Bearer $token",
+  },
+  body: jsonEncode({
+    "message": text,
+  }),
+);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -201,7 +373,7 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
@@ -323,9 +495,11 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
         children: [
           if (Navigator.canPop(context))
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_rounded,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
               ),
               onPressed: () => Navigator.pop(context),
             )
@@ -400,7 +574,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       color: isUser
                           ? AppColors.primarySurface
-                          : AppColors.cardBackground,
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.cardBackgroundDark
+                              : AppColors.cardBackground),
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -409,7 +585,13 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       ),
                       border: isUser
                           ? null
-                          : Border.all(color: AppColors.cardBorder, width: 1),
+                          : Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.cardBorderDark
+                                  : AppColors.cardBorder,
+                              width: 1,
+                            ),
                       boxShadow: isUser
                           ? [
                               BoxShadow(
@@ -431,7 +613,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       style: AppTextStyles.bodyMD.copyWith(
                         color: isUser
                             ? AppColors.primary
-                            : AppColors.textPrimary,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -502,14 +686,20 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                   bottomLeft: Radius.circular(4),
                   bottomRight: Radius.circular(16),
                 ),
-                border: Border.all(color: AppColors.cardBorder, width: 1),
+                border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.cardBorderDark
+                        : AppColors.cardBorder,
+                    width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -544,9 +734,16 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             bottom: 20,
           ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
-            border: const Border(
-              top: BorderSide(color: Colors.white, width: 1.5),
+            color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : Colors.white)
+                .withOpacity(0.8),
+            border: Border(
+              top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : Colors.white,
+                  width: 1.5),
             ),
           ),
           child: Row(
@@ -756,21 +953,24 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                               PageRouteBuilder(
                                 pageBuilder: (_, animation, __) =>
                                     const JournalPage(),
-                                transitionsBuilder:
-                                    (_, animation, __, child) {
+                                transitionsBuilder: (_, animation, __, child) {
                                   return SlideTransition(
-                                    position: Tween<Offset>(
-                                      begin: const Offset(1.0, 0.0),
-                                      end: Offset.zero,
-                                    ).animate(CurvedAnimation(
-                                      parent: animation,
-                                      curve: Curves.easeOutCubic,
-                                    )),
+                                    position:
+                                        Tween<Offset>(
+                                          begin: const Offset(1.0, 0.0),
+                                          end: Offset.zero,
+                                        ).animate(
+                                          CurvedAnimation(
+                                            parent: animation,
+                                            curve: Curves.easeOutCubic,
+                                          ),
+                                        ),
                                     child: child,
                                   );
                                 },
-                                transitionDuration:
-                                    const Duration(milliseconds: 400),
+                                transitionDuration: const Duration(
+                                  milliseconds: 400,
+                                ),
                               ),
                             );
                           },
@@ -824,7 +1024,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   // ===========================================================================
 
   Widget _buildArticleRecommendations(String moodCategory, int msgIndex) {
-    final articles = _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
+    final articles =
+        _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
 
     return TweenAnimationBuilder<double>(
       key: ValueKey('articles_$msgIndex'),
@@ -869,7 +1070,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 
             // Daftar card artikel horizontal
             SizedBox(
-              height: 110, // <-- Diperbesar dari 100 menjadi 110 agar tidak overlap
+              height:
+                  110, // <-- Diperbesar dari 100 menjadi 110 agar tidak overlap
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: articles.length,

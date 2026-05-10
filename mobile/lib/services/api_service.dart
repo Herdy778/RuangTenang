@@ -44,14 +44,13 @@ class ApiService {
   // =============================
   Future<bool> recordRelaxation(String name, {int duration = 5}) async {
     try {
-      final response = await http.post(
-        Uri.parse('$baseUrl/relaxation-sessions'),
-        headers: await _headers(),
-        body: jsonEncode({
-          'activity_name': name,
-          'duration': duration,
-        }),
-      ).timeout(const Duration(seconds: 3));
+      final response = await http
+          .post(
+            Uri.parse('$baseUrl/relaxation-sessions'),
+            headers: await _headers(),
+            body: jsonEncode({'activity_name': name, 'duration': duration}),
+          )
+          .timeout(const Duration(seconds: 3));
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
@@ -67,11 +66,7 @@ class ApiService {
     final response = await http.post(
       Uri.parse('$baseUrl/moods'),
       headers: await _headers(),
-      body: jsonEncode({
-        'mood': mood,
-        'score': score,
-        'catatan': catatan,
-      }),
+      body: jsonEncode({'mood': mood, 'score': score, 'catatan': catatan}),
     );
 
     if (response.statusCode == 200 || response.statusCode == 201) {
@@ -113,4 +108,25 @@ class ApiService {
       throw Exception('Gagal ambil jurnal terbaru');
     }
   }
+
+ Future<List<dynamic>> fetchRecommendedArticles() async {
+  final response = await get('/my-recommended-articles');
+
+  print("ARTICLE RESPONSE: $response");
+
+  if (response['status'] == 'success') {
+    return response['data'];
+  } else {
+    return [];
+  }
+}
+
+Future<dynamic> get(String endpoint) async {
+   final res = await http.get(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: await _headers(),
+   );
+
+   return jsonDecode(res.body);
+}
 }
