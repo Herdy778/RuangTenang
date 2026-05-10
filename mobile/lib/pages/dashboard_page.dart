@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_html/flutter_html.dart';
 import '../theme/app_theme.dart';
 import 'relaxation_page.dart';
 import '../services/api_service.dart';
@@ -9,9 +10,71 @@ import '../services/api_service.dart';
 class DashboardPage extends StatefulWidget {
   final Function(String?)? onNavigateToJournal;
   const DashboardPage({super.key, this.onNavigateToJournal});
+  
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
+}
+
+String _stripHtml(String htmlText) {
+  return htmlText
+      .replaceAll(RegExp(r'<[^>]*>'), '')
+      .replaceAll(r'\n', ' ')
+      .trim();
+}
+
+void _showArticleDetail(
+  BuildContext context,
+  String title,
+  String content,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: Colors.transparent,
+    builder: (_) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        padding: const EdgeInsets.all(24),
+        decoration: BoxDecoration(
+          color: isDark
+              ? AppColors.cardBackgroundDark
+              : Colors.white,
+          borderRadius: const BorderRadius.vertical(
+            top: Radius.circular(24),
+          ),
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: AppTextStyles.titleLG.copyWith(
+                  color: AppColors.primary,
+                ),
+              ),
+
+              const SizedBox(height: 20),
+
+              Text(
+                _stripHtml(content),
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: isDark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class _DashboardPageState extends State<DashboardPage>
@@ -154,6 +217,14 @@ class _DashboardPageState extends State<DashboardPage>
                         },
                       ),
                     ),
+                    const SizedBox(height: 36),
+
+_StaggeredFadeInUp(
+  index: animIndex++,
+  controller: _staggeredController,
+child: _buildRecommendedArticles(context),
+),
+
                     const SizedBox(height: 36),
 
                     _StaggeredFadeInUp(
@@ -876,6 +947,111 @@ class _DashboardPageState extends State<DashboardPage>
       },
     );
   }
+}
+
+Widget _buildRecommendedArticles(BuildContext context) {
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+
+  return FutureBuilder<List<dynamic>>(
+    future: ApiService().fetchRecommendedArticles(),
+    builder: (context, snapshot) {
+      if (snapshot.connectionState == ConnectionState.waiting) {
+        return const Center(
+          child: CircularProgressIndicator(),
+        );
+      }
+
+      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+        return const SizedBox.shrink();
+      }
+
+      final articles = snapshot.data!.take(3).toList();
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "📖 Artikel Rekomendasi Untukmu",
+            style: AppTextStyles.titleMD.copyWith(
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimary,
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          ...articles.map((article) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.all(16),
+              decoration: AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (article['thumbnail_url'] != null &&
+        article['thumbnail_url'].toString().isNotEmpty)
+      ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: Image.network(
+          article['thumbnail_url'],
+          height: 140,
+          width: double.infinity,
+          fit: BoxFit.cover,
+        ),
+      ),
+
+    const SizedBox(height: 12),
+                  Text(
+                    article['judul_artikel'] ?? '-',
+                    style: AppTextStyles.titleSM.copyWith(
+                      color: AppColors.primary,
+                    ),
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  Text(
+  _stripHtml(article['isi_konten'] ?? ''),
+  maxLines: 3,
+  overflow: TextOverflow.ellipsis,
+  style: AppTextStyles.bodyMD.copyWith(
+    color: isDark
+        ? AppColors.textSecondaryDark
+        : AppColors.textSecondary,
+  ),
+),
+const SizedBox(height: 8),
+
+GestureDetector(
+  onTap: () {
+    _showArticleDetail(
+      context,
+      article['judul_artikel'] ?? '',
+      article['isi_konten'] ?? '',
+    );
+  },
+  child: Text(
+    "Baca selengkapnya",
+    style: TextStyle(
+      color: AppColors.primary,
+      fontWeight: FontWeight.w600,
+      fontSize: 13,
+    ),
+  ),
+),
+                ],
+              ),
+            );
+          }).toList(),
+        ],
+      );
+    },
+  );
 }
 
 /// Widget utilitas untuk animasi berurutan (Staggered Fade-In Slide Up)

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Journal;
 use App\Models\Article;
 use App\Models\ChatMessage;
+use App\Models\ArticleRecommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
@@ -138,6 +139,71 @@ $userId = $this->getAuthenticatedUserId($request);
             'data' => $journals
         ]);
     }
+
+    // =========================
+// ADMIN AMBIL ARTIKEL REKOMENDASI
+// =========================
+public function recommendedArticles($id)
+{
+    $journal = Journal::where('_id', $id)->first();
+
+    if (!$journal) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Jurnal tidak ditemukan'
+        ], 404);
+    }
+
+    $mood = $journal->hasil_mood;
+
+    $articles = Article::where(
+        'kategori_tag',
+        $mood
+    )->limit(5)->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $articles
+    ]);
+}
+
+
+// =========================
+// ADMIN KIRIM ARTIKEL KE USER
+// =========================
+public function sendRecommendedArticle(Request $request)
+{
+    $request->validate([
+        'journal_id' => 'required',
+        'article_id' => 'required'
+    ]);
+
+    $journal = Journal::where(
+        '_id',
+        $request->journal_id
+    )->first();
+
+    if (!$journal) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Jurnal tidak ditemukan'
+        ], 404);
+    }
+
+    ArticleRecommendation::create([
+        'user_id' => $journal->user_id,
+        'journal_id' => $journal->_id,
+        'article_id' => $request->article_id,
+        'admin_id' => $request->auth_user->_id ?? null,
+        'is_read' => false,
+        'created_at' => now()
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Artikel berhasil dikirim'
+    ]);
+}
 
     // =========================
     // ADMIN DELETE JURNAL

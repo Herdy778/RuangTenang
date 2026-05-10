@@ -59,6 +59,7 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/journals', [JournalController::class, 'index']);
     Route::put('/journals/{id}/status', [JournalController::class, 'updateStatus']);
     Route::get('/articles/rekomendasi', [ArticleController::class, 'rekomendasi']);
+    Route::get('/my-recommended-articles', [ArticleController::class, 'myRecommendedArticles']);
 
     // Chatbot (WAJIB LOGIN)
     Route::post('/test-ai', [JournalController::class, 'tesAi']);
@@ -85,6 +86,17 @@ Route::middleware(['auth.token', 'isAdmin'])->group(function () {
     // Journal Management
     Route::get('/admin/journals', [JournalController::class, 'adminJournals']);
     Route::delete('/admin/journals/{id}', [JournalController::class, 'deleteJournal']);
+
+    // ===== FITUR REKOMENDASI ARTIKEL =====
+Route::get(
+    '/admin/journals/{id}/recommended-articles',
+    [JournalController::class, 'recommendedArticles']
+);
+
+Route::post(
+    '/admin/journals/send-article',
+    [JournalController::class, 'sendRecommendedArticle']
+);
 
     // Article Management
     Route::get('/admin/articles', [ArticleController::class, 'index']);
