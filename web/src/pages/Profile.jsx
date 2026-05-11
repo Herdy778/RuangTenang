@@ -60,6 +60,13 @@ export default function Profile() {
             Artikel
           </span>
 
+          <span
+  style={styles.navLink}
+  onClick={() => navigate("/admin/manajemen")}
+>
+  Manajemen Admin
+</span>
+
           {/* ACTIVE */}
           <span style={{ ...styles.navLink, ...styles.navLinkActive }}>
             Profile

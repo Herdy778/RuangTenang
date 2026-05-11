@@ -28,9 +28,16 @@ export default function AdminUsers() {
   async function fetchUsers() {
     try {
       setLoading(true);
+
       const res = await API.get("/admin/users");
       const data = res.data.data || [];
-      setAllUsers(data);
+
+      // HANYA TAMPILKAN USER MAHASISWA
+      const mahasiswaOnly = data.filter(
+        (user) => user.role === "mahasiswa"
+      );
+
+      setAllUsers(mahasiswaOnly);
     } catch (err) {
       console.error(err);
       toast.error("Gagal memuat data user");
@@ -252,6 +259,7 @@ export default function AdminUsers() {
           <span style={styles.navLogoText}>RuangTenang</span>
           <span style={styles.navBadge}>Admin</span>
         </div>
+
         <div style={styles.navLinks}>
           <span style={styles.navLink} onClick={() => navigate("/dashboard")}>Dashboard</span>
           <span style={{ ...styles.navLink, ...styles.navLinkActive }}>Data User</span>
@@ -459,6 +467,7 @@ const styles = {
     position: "relative",
     overflowX: "hidden",
   },
+
   blob1: {
     position: "fixed",
     width: "50vw",
@@ -472,6 +481,7 @@ const styles = {
     zIndex: 0,
     pointerEvents: "none",
   },
+
   blob2: {
     position: "fixed",
     width: "40vw",
@@ -498,6 +508,7 @@ const styles = {
     zIndex: 0,
     pointerEvents: "none",
   },
+
   nav: {
     position: "sticky",
     top: 0,
@@ -511,11 +522,13 @@ const styles = {
     height: 70,
     zIndex: 100,
   },
+
   navLogo: {
     display: "flex",
     alignItems: "center",
     gap: 10,
   },
+
   navLogoIcon: {
     fontSize: 26,
     background: "linear-gradient(135deg, #6366F1, #A855F7)",
@@ -526,6 +539,7 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
+
   navLogoText: {
     fontFamily: "'Inter', sans-serif",
     fontSize: 18,
@@ -573,6 +587,7 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
+
   container: {
     maxWidth: 1200,
     margin: "0 auto",
@@ -580,6 +595,7 @@ const styles = {
     position: "relative",
     zIndex: 1,
   },
+
   header: {
     marginBottom: 32,
     display: "flex",
@@ -588,6 +604,7 @@ const styles = {
     flexWrap: "wrap",
     gap: 16,
   },
+
   title: {
     fontSize: 28,
     fontWeight: 700,
@@ -595,6 +612,7 @@ const styles = {
     marginBottom: 8,
     letterSpacing: "-0.3px",
   },
+
   subtitle: {
     fontSize: 14,
     color: "#64748B",
@@ -699,6 +717,7 @@ const styles = {
     fontWeight: 600,
     transition: "all 0.2s ease",
   },
+
   card: {
     background: "white",
     borderRadius: 24,
@@ -706,6 +725,7 @@ const styles = {
     boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
     overflow: "hidden",
   },
+
   table: {
     width: "100%",
     borderCollapse: "collapse",
@@ -740,6 +760,7 @@ const styles = {
     borderBottom: "1px solid #E2E8F0",
     width: 100,
   },
+
   td: {
     padding: "16px 20px",
     fontSize: 14,
@@ -758,6 +779,7 @@ const styles = {
     padding: "16px 20px",
     borderBottom: "1px solid #F1F5F9",
   },
+
   tr: {
     transition: "background 0.2s ease",
   },
@@ -778,6 +800,7 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
   },
+
   badge: {
     padding: "4px 14px",
     borderRadius: 30,
@@ -795,6 +818,7 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
+
   loading: {
     padding: "60px 24px",
     textAlign: "center",
@@ -828,6 +852,7 @@ const styles = {
     fontSize: 13,
     color: "#94A3B8",
   },
+
   pagination: {
     display: "flex",
     justifyContent: "space-between",
@@ -837,15 +862,18 @@ const styles = {
     flexWrap: "wrap",
     gap: 12,
   },
+
   paginationInfo: {
     fontSize: 13,
     color: "#64748B",
   },
+
   paginationControls: {
     display: "flex",
     gap: 8,
     alignItems: "center",
   },
+
   perPageSelect: {
     padding: "6px 10px",
     border: "1px solid #E2E8F0",
@@ -854,6 +882,7 @@ const styles = {
     cursor: "pointer",
     background: "white",
   },
+
   pageBtn: {
     padding: "6px 12px",
     border: "1px solid #E2E8F0",
@@ -863,6 +892,7 @@ const styles = {
     fontSize: 13,
     transition: "all 0.2s ease",
   },
+
   pageInfo: {
     fontSize: 13,
     color: "#475569",
