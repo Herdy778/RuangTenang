@@ -1,4 +1,3 @@
-
 import { useEffect, useState, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import API from "../utils/api";
@@ -17,6 +16,10 @@ export default function AdminUsers() {
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ title: '', content: null });
 
+  // State untuk pagination card role
+  const [roleCardPage, setRoleCardPage] = useState(1);
+  const CARDS_PER_PAGE = 5; // Maksimal 5 card per halaman
+
   const [sortConfig, setSortConfig] = useState({
     key: "nama_lengkap",
     direction: "asc",
@@ -26,16 +29,12 @@ export default function AdminUsers() {
     fetchUsers();
   }, []);
 
-  // ✅ PERBAIKAN: HAPUS FILTER MAHASISWA, TAMPILKAN SEMUA USER
   async function fetchUsers() {
     try {
       setLoading(true);
       const res = await API.get("/admin/users");
       const data = res.data.data || [];
-      
-      // LANGSUNG SET SEMUA DATA TANPA FILTER
       setAllUsers(data);
-      
     } catch (err) {
       console.error(err);
       toast.error("Gagal memuat data user");
@@ -84,6 +83,11 @@ export default function AdminUsers() {
     setCurrentPage(1);
   }, [searchTerm]);
 
+  // Reset role card page saat data user berubah
+  useEffect(() => {
+    setRoleCardPage(1);
+  }, [allUsers]);
+
   async function deleteUser(id) {
     if (!confirm("⚠️ Hapus user ini? Data tidak dapat dikembalikan.")) return;
     try {
@@ -110,7 +114,6 @@ export default function AdminUsers() {
 
   const totalUsers = getSortedUsers.length;
 
-  // Hitung statistik berdasarkan role dari MongoDB
   const roleStats = useMemo(() => {
     const stats = {};
     allUsers.forEach(user => {
@@ -120,7 +123,14 @@ export default function AdminUsers() {
     return stats;
   }, [allUsers]);
 
-  // Fungsi badge role dinamis - mengikuti role dari MongoDB
+  // Konversi roleStats ke array untuk pagination
+  const roleStatsArray = Object.entries(roleStats);
+  const totalRolePages = Math.ceil(roleStatsArray.length / CARDS_PER_PAGE);
+  const paginatedRoleStats = roleStatsArray.slice(
+    (roleCardPage - 1) * CARDS_PER_PAGE,
+    roleCardPage * CARDS_PER_PAGE
+  );
+
   const getRoleBadgeStyle = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
@@ -130,7 +140,6 @@ export default function AdminUsers() {
       case "mahasiswa":
         return { background: "#ECFDF5", color: "#065F46", icon: "🎓", label: "Mahasiswa" };
       default:
-        // Jika ada role lain di MongoDB, tetap ditampilkan
         return { background: "#F1F5F9", color: "#475569", icon: "👤", label: role || "Unknown" };
     }
   };
@@ -149,80 +158,71 @@ export default function AdminUsers() {
     toast.success("Data berhasil diexport");
   };
 
-  // Handler untuk klik card statistik
   const handleCardClick = (type, role = null, count = 0) => {
-    switch(type) {
-      case 'total_users':
-        setModalData({
-          title: '👥 Detail Total Pengguna',
-          content: (
-            <div>
-              <p style={{ marginBottom: 12 }}>Seluruh pengguna yang terdaftar di RuangTenang:</p>
-              <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#4F46E5' }}>{totalUsers}</p>
-              <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
-              <div style={{ marginTop: 16 }}>
-                <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
-                {Object.entries(roleStats).map(([r, c]) => {
-                  const style = getRoleBadgeStyle(r);
-                  const percentage = totalUsers > 0 ? Math.round((c / totalUsers) * 100) : 0;
-                  return (
-                    <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
-                      <span style={{ width: 40 }}>{style.icon}</span>
-                      <span style={{ width: 100 }}>{style.label}</span>
-                      <div style={{ flex: 1, background: '#E2E8F0', borderRadius: 10, height: 24, overflow: 'hidden' }}>
-                        <div style={{ width: `${percentage}%`, background: style.color, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8, color: 'white', fontSize: 11, fontWeight: 600 }}>
-                          {c}
-                        </div>
+    if (type === 'total_users') {
+      setModalData({
+        title: '👥 Detail Total Pengguna',
+        content: (
+          <div>
+            <p style={{ marginBottom: 12 }}>Seluruh pengguna yang terdaftar di RuangTenang:</p>
+            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#0D9488' }}>{totalUsers}</p>
+            <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
+            <div style={{ marginTop: 16 }}>
+              <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
+              {roleStatsArray.map(([r, c]) => {
+                const style = getRoleBadgeStyle(r);
+                const percentage = totalUsers > 0 ? Math.round((c / totalUsers) * 100) : 0;
+                return (
+                  <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
+                    <span style={{ width: 40 }}>{style.icon}</span>
+                    <span style={{ width: 100 }}>{style.label}</span>
+                    <div style={{ flex: 1, background: '#E2E8F0', borderRadius: 10, height: 24, overflow: 'hidden' }}>
+                      <div style={{ width: `${percentage}%`, background: style.color, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8, color: 'white', fontSize: 11, fontWeight: 600 }}>
+                        {c}
                       </div>
-                      <span style={{ width: 50, textAlign: 'right' }}>{percentage}%</span>
                     </div>
-                  );
-                })}
-              </div>
-              <button onClick={() => setShowModal(false)} style={modalButtonStyle}>
-                Tutup
-              </button>
+                    <span style={{ width: 50, textAlign: 'right' }}>{percentage}%</span>
+                  </div>
+                );
+              })}
             </div>
-          )
-        });
-        setShowModal(true);
-        break;
-        
-      case 'role_detail':
-        const roleStyle = getRoleBadgeStyle(role);
-        const percentage = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
-        setModalData({
-          title: `${roleStyle.icon} Detail Role: ${roleStyle.label}`,
-          content: (
-            <div>
-              <p style={{ marginBottom: 12 }}>Jumlah pengguna dengan role <strong>{roleStyle.label}</strong>:</p>
-              <div style={{ textAlign: 'center', padding: 20, background: roleStyle.background, borderRadius: 16 }}>
-                <span style={{ fontSize: 64 }}>{roleStyle.icon}</span>
-                <p style={{ fontSize: 48, fontWeight: 700, marginTop: 8, color: roleStyle.color }}>{count}</p>
-                <p style={{ fontSize: 14, marginTop: 8 }}>pengguna ({percentage}% dari total)</p>
-              </div>
-              <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
-              <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
-                {roleStyle.label === 'Admin' && '👑 Admin memiliki akses penuh untuk mengelola seluruh data, user, jurnal, dan artikel.'}
-                {roleStyle.label === 'Psikolog' && '🧠 Psikolog dapat memberikan konseling, melihat jurnal user, dan memberikan rekomendasi.'}
-                {roleStyle.label === 'Mahasiswa' && '🎓 Mahasiswa adalah pengguna utama yang menulis jurnal, memantau mood, dan menerima rekomendasi.'}
-                {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleStyle.label) && `📌 Role "${roleStyle.label}" memiliki akses terbatas sesuai konfigurasi sistem.`}
-              </p>
-              <button onClick={() => setShowModal(false)} style={modalButtonStyle}>
-                Tutup
-              </button>
+            <button onClick={() => setShowModal(false)} style={modalButtonStyle}>
+              Tutup
+            </button>
+          </div>
+        )
+      });
+      setShowModal(true);
+    } else if (role) {
+      const roleStyle = getRoleBadgeStyle(role);
+      const percentage = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
+      setModalData({
+        title: `${roleStyle.icon} Detail Role: ${roleStyle.label}`,
+        content: (
+          <div>
+            <div style={{ textAlign: 'center', padding: 20, background: roleStyle.background, borderRadius: 16 }}>
+              <span style={{ fontSize: 64 }}>{roleStyle.icon}</span>
+              <p style={{ fontSize: 28, fontWeight: 700, marginTop: 8, color: roleStyle.color }}>{roleStyle.label}</p>
+              <p style={{ fontSize: 48, fontWeight: 700, marginTop: 8 }}>{count}</p>
+              <p style={{ fontSize: 14, marginTop: 4 }}>pengguna ({percentage}% dari total)</p>
             </div>
-          )
-        });
-        setShowModal(true);
-        break;
-        
-      default:
-        break;
+            <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
+            <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
+              {roleStyle.label === 'Admin' && '👑 Admin memiliki akses penuh untuk mengelola seluruh data, user, jurnal, dan artikel.'}
+              {roleStyle.label === 'Psikolog' && '🧠 Psikolog dapat memberikan konseling, melihat jurnal user, dan memberikan rekomendasi.'}
+              {roleStyle.label === 'Mahasiswa' && '🎓 Mahasiswa adalah pengguna utama yang menulis jurnal, memantau mood, dan menerima rekomendasi.'}
+              {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleStyle.label) && `📌 Role "${roleStyle.label}" memiliki akses terbatas sesuai konfigurasi sistem.`}
+            </p>
+            <button onClick={() => setShowModal(false)} style={{ ...modalButtonStyle, background: roleStyle.color }}>
+              Tutup
+            </button>
+          </div>
+        )
+      });
+      setShowModal(true);
     }
   };
 
-  // Fungsi untuk menutup modal
   const closeModal = () => {
     setShowModal(false);
     setModalData({ title: '', content: null });
@@ -234,7 +234,6 @@ export default function AdminUsers() {
     <div style={styles.bg}>
       <Toaster position="top-right" />
       
-      {/* MODAL POPUP */}
       {showModal && (
         <div style={styles.modalOverlay} onClick={closeModal}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -259,7 +258,6 @@ export default function AdminUsers() {
           <span style={styles.navLogoText}>RuangTenang</span>
           <span style={styles.navBadge}>Admin</span>
         </div>
-
         <div style={styles.navLinks}>
           <span style={styles.navLink} onClick={() => navigate("/dashboard")}>Dashboard</span>
           <span style={{ ...styles.navLink, ...styles.navLinkActive }}>Data User</span>
@@ -281,27 +279,29 @@ export default function AdminUsers() {
           </div>
         </div>
 
-        {/* STATS CARDS - Bisa diklik */}
+        {/* STATS CARDS - dengan pagination untuk role cards */}
         <div style={styles.statsGrid}>
+          {/* Total Card - selalu di halaman 1 */}
           <div 
-            style={{ ...styles.statCard, cursor: 'pointer', transition: 'all 0.2s ease' }}
+            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #0D9488, #0F766E)', color: 'white' }}
             onClick={() => handleCardClick('total_users')}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={styles.statIcon}>👥</div>
-            <div style={styles.statNum}>{totalUsers}</div>
-            <div style={styles.statLabel}>Total Pengguna</div>
-            <div style={styles.statTrend}>Semua role</div>
-            <div style={styles.clickHint}>✨ Klik untuk detail</div>
+            <div style={{ ...styles.statNum, color: 'white' }}>{totalUsers}</div>
+            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>Total Pengguna</div>
+            <div style={{ ...styles.statTrend, color: 'rgba(255,255,255,0.6)' }}>Semua role</div>
+            <div style={{ ...styles.clickHint, color: 'rgba(255,255,255,0.6)' }}>✨ Klik untuk detail</div>
           </div>
           
-          {Object.entries(roleStats).map(([role, count]) => {
+          {/* Role Cards dengan Pagination */}
+          {paginatedRoleStats.map(([role, count]) => {
             const roleStyle = getRoleBadgeStyle(role);
             return (
               <div 
                 key={role} 
-                style={{ ...styles.statCard, background: roleStyle.background, border: `1px solid ${roleStyle.color}20`, cursor: 'pointer', transition: 'all 0.2s ease' }}
+                style={{ ...styles.statCard, background: roleStyle.background, border: `1px solid ${roleStyle.color}20`, cursor: 'pointer' }}
                 onClick={() => handleCardClick('role_detail', role, count)}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -314,6 +314,29 @@ export default function AdminUsers() {
             );
           })}
         </div>
+
+        {/* Tombol Navigasi Card Role (Next/Prev) - Hanya muncul jika total role > 5 */}
+        {roleStatsArray.length > CARDS_PER_PAGE && (
+          <div style={styles.cardPagination}>
+            <button 
+              onClick={() => setRoleCardPage(prev => Math.max(prev - 1, 1))}
+              disabled={roleCardPage === 1}
+              style={{ ...styles.cardNavBtn, opacity: roleCardPage === 1 ? 0.5 : 1 }}
+            >
+              ◀ Sebelumnya
+            </button>
+            <span style={styles.cardPageInfo}>
+              Halaman {roleCardPage} dari {totalRolePages}
+            </span>
+            <button 
+              onClick={() => setRoleCardPage(prev => Math.min(prev + 1, totalRolePages))}
+              disabled={roleCardPage === totalRolePages}
+              style={{ ...styles.cardNavBtn, opacity: roleCardPage === totalRolePages ? 0.5 : 1 }}
+            >
+              Selanjutnya ▶
+            </button>
+          </div>
+        )}
 
         <div style={styles.actionBar}>
           <div style={styles.searchWrapper}>
@@ -413,29 +436,11 @@ export default function AdminUsers() {
                     <option value={25}>25 / halaman</option>
                     <option value={50}>50 / halaman</option>
                   </select>
-                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>
-                    «
-                  </button>
-                  <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>
-                    ‹
-                  </button>
-                  <span style={styles.pageInfo}>
-                    Halaman {currentPage} dari {Math.ceil(getSortedUsers.length / itemsPerPage) || 1}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(getSortedUsers.length / itemsPerPage)))}
-                    disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)}
-                    style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}
-                  >
-                    ›
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(Math.ceil(getSortedUsers.length / itemsPerPage))}
-                    disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)}
-                    style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}
-                  >
-                    »
-                  </button>
+                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>«</button>
+                  <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>‹</button>
+                  <span style={styles.pageInfo}>Halaman {currentPage} dari {Math.ceil(getSortedUsers.length / itemsPerPage) || 1}</span>
+                  <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(getSortedUsers.length / itemsPerPage)))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>›</button>
+                  <button onClick={() => setCurrentPage(Math.ceil(getSortedUsers.length / itemsPerPage))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>»</button>
                 </div>
               </div>
             </>
@@ -449,7 +454,7 @@ export default function AdminUsers() {
 const modalButtonStyle = {
   marginTop: 20,
   padding: '10px 20px',
-  background: '#4F46E5',
+  background: '#0D9488',
   color: 'white',
   border: 'none',
   borderRadius: 40,
@@ -467,27 +472,25 @@ const styles = {
     position: "relative",
     overflowX: "hidden",
   },
-
   blob1: {
     position: "fixed",
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#818CF8",
+    background: "#14B8A6",
     filter: "blur(120px)",
-    opacity: 0.12,
+    opacity: 0.1,
     top: "-20vh",
     right: "-10vw",
     zIndex: 0,
     pointerEvents: "none",
   },
-
   blob2: {
     position: "fixed",
     width: "40vw",
     height: "40vw",
     borderRadius: "50%",
-    background: "#34D399",
+    background: "#0D9488",
     filter: "blur(100px)",
     opacity: 0.08,
     bottom: "-10vh",
@@ -508,7 +511,6 @@ const styles = {
     zIndex: 0,
     pointerEvents: "none",
   },
-
   nav: {
     position: "sticky",
     top: 0,
@@ -522,13 +524,11 @@ const styles = {
     height: 70,
     zIndex: 100,
   },
-
   navLogo: {
     display: "flex",
     alignItems: "center",
     gap: 10,
   },
-
   navLogoIcon: {
     fontSize: 26,
     background: "linear-gradient(135deg, #6366F1, #A855F7)",
@@ -539,7 +539,6 @@ const styles = {
     alignItems: "center",
     justifyContent: "center",
   },
-
   navLogoText: {
     fontFamily: "'Inter', sans-serif",
     fontSize: 18,
@@ -587,7 +586,6 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
-
   container: {
     maxWidth: 1200,
     margin: "0 auto",
@@ -595,7 +593,6 @@ const styles = {
     position: "relative",
     zIndex: 1,
   },
-
   header: {
     marginBottom: 32,
     display: "flex",
@@ -604,7 +601,6 @@ const styles = {
     flexWrap: "wrap",
     gap: 16,
   },
-
   title: {
     fontSize: 28,
     fontWeight: 700,
@@ -612,7 +608,6 @@ const styles = {
     marginBottom: 8,
     letterSpacing: "-0.3px",
   },
-
   subtitle: {
     fontSize: 14,
     color: "#64748B",
@@ -628,9 +623,9 @@ const styles = {
   },
   statsGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+    gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))",
     gap: 20,
-    marginBottom: 32,
+    marginBottom: 20,
   },
   statCard: {
     background: "white",
@@ -666,6 +661,29 @@ const styles = {
     marginTop: 10,
     textAlign: 'center',
     fontStyle: 'italic',
+  },
+  cardPagination: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 20,
+    marginBottom: 32,
+    padding: "8px 0",
+  },
+  cardNavBtn: {
+    padding: "8px 20px",
+    borderRadius: 40,
+    border: "1px solid #E2E8F0",
+    background: "white",
+    cursor: "pointer",
+    fontSize: 13,
+    fontWeight: 500,
+    color: "#0D9488",
+    transition: "all 0.2s ease",
+  },
+  cardPageInfo: {
+    fontSize: 13,
+    color: "#64748B",
   },
   actionBar: {
     display: "flex",
@@ -708,7 +726,7 @@ const styles = {
   },
   exportBtn: {
     padding: "12px 28px",
-    background: "linear-gradient(135deg, #3B82F6, #2563EB)",
+    background: "linear-gradient(135deg, #0D9488, #0F766E)",
     color: "white",
     border: "none",
     borderRadius: 48,
@@ -717,7 +735,6 @@ const styles = {
     fontWeight: 600,
     transition: "all 0.2s ease",
   },
-
   card: {
     background: "white",
     borderRadius: 24,
@@ -725,7 +742,6 @@ const styles = {
     boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
     overflow: "hidden",
   },
-
   table: {
     width: "100%",
     borderCollapse: "collapse",
@@ -760,7 +776,6 @@ const styles = {
     borderBottom: "1px solid #E2E8F0",
     width: 100,
   },
-
   td: {
     padding: "16px 20px",
     fontSize: 14,
@@ -779,7 +794,6 @@ const styles = {
     padding: "16px 20px",
     borderBottom: "1px solid #F1F5F9",
   },
-
   tr: {
     transition: "background 0.2s ease",
   },
@@ -792,7 +806,7 @@ const styles = {
     width: 32,
     height: 32,
     borderRadius: 32,
-    background: "linear-gradient(135deg, #6366F1, #A855F7)",
+    background: "linear-gradient(135deg, #0D9488, #0F766E)",
     color: "white",
     display: "flex",
     alignItems: "center",
@@ -800,7 +814,6 @@ const styles = {
     fontSize: 14,
     fontWeight: 600,
   },
-
   badge: {
     padding: "4px 14px",
     borderRadius: 30,
@@ -818,7 +831,6 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
-
   loading: {
     padding: "60px 24px",
     textAlign: "center",
@@ -828,7 +840,7 @@ const styles = {
     width: 40,
     height: 40,
     border: "3px solid #E2E8F0",
-    borderTop: "3px solid #6366F1",
+    borderTop: "3px solid #0D9488",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto 16px",
@@ -852,7 +864,6 @@ const styles = {
     fontSize: 13,
     color: "#94A3B8",
   },
-
   pagination: {
     display: "flex",
     justifyContent: "space-between",
@@ -862,18 +873,15 @@ const styles = {
     flexWrap: "wrap",
     gap: 12,
   },
-
   paginationInfo: {
     fontSize: 13,
     color: "#64748B",
   },
-
   paginationControls: {
     display: "flex",
     gap: 8,
     alignItems: "center",
   },
-
   perPageSelect: {
     padding: "6px 10px",
     border: "1px solid #E2E8F0",
@@ -882,7 +890,6 @@ const styles = {
     cursor: "pointer",
     background: "white",
   },
-
   pageBtn: {
     padding: "6px 12px",
     border: "1px solid #E2E8F0",
@@ -892,12 +899,10 @@ const styles = {
     fontSize: 13,
     transition: "all 0.2s ease",
   },
-
   pageInfo: {
     fontSize: 13,
     color: "#475569",
   },
-  // Modal Styles
   modalOverlay: {
     position: 'fixed',
     top: 0,
@@ -953,4 +958,4 @@ styleSheet.textContent = `
     100% { transform: rotate(360deg); }
   }
 `;
-document.head.appendChild(styleSheet); 
+document.head.appendChild(styleSheet);
