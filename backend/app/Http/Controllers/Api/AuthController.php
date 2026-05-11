@@ -73,6 +73,13 @@ class AuthController extends Controller
     ]);
 }
 
+public function profile(Request $request)
+{
+    return response()->json([
+        'user' => $request->user()
+    ]);
+}
+
 
     public function users()
     {
@@ -141,42 +148,45 @@ class AuthController extends Controller
     }
 
     public function updateProfile(Request $request)
-    {
-        $user = $request->user(); // from TokenAuth middleware
+{
+    $user = $request->user();
 
-        $request->validate([
-            'nama_lengkap' => 'required|string',
-            'email'        => 'required|email',
-        ]);
+    $request->validate([
+        'nama_lengkap' => 'required|string',
+        'email'        => 'required|email',
+        'bio'          => 'nullable|string',
+    ]);
 
-        $user->nama_lengkap = $request->nama_lengkap;
-        $user->email = $request->email;
+    $user->nama_lengkap = $request->nama_lengkap;
+    $user->email = $request->email;
+    $user->bio = $request->bio;
 
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
-
-        if ($request->has('gender')) {
-            $user->gender = $request->gender;
-        }
-
-        if ($request->has('occupation')) {
-            $user->occupation = $request->occupation;
-        }
-
-        $user->save();
-
-        return response()->json([
-            'status' => 'success',
-            'pesan'  => 'Profil berhasil diperbarui',
-            'data'   => [
-                'nama_lengkap' => $user->nama_lengkap,
-                'email'        => $user->email,
-                'gender'       => $user->gender ?? 'Female',
-                'occupation'   => $user->occupation ?? 'Student',
-            ]
-        ]);
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
     }
+
+    if ($request->has('gender')) {
+        $user->gender = $request->gender;
+    }
+
+    if ($request->has('occupation')) {
+        $user->occupation = $request->occupation;
+    }
+
+    $user->save();
+
+    return response()->json([
+        'status' => 'success',
+        'pesan'  => 'Profil berhasil diperbarui',
+        'data'   => [
+            'nama_lengkap' => $user->nama_lengkap,
+            'email'        => $user->email,
+            'bio'          => $user->bio,
+            'gender'       => $user->gender ?? 'Male',
+            'occupation'   => $user->occupation ?? 'Student',
+        ]
+    ]);
+}
 
     public function uploadProfilePhoto(Request $request)
     {

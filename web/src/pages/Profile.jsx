@@ -1,23 +1,100 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function Profile() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState({
-    name: "Gusti Ayu Dhyananti",
-    email: "ayudhyananti@gmail.com",
-    role: "admin",
-    bio: "Tetap tenang, tetap bertumbuh 🌿",
-    joined: "Mei 2026",
-    mood: "Burnout 😤",
+    name: "",
+    email: "",
+    role: "",
+    bio: "",
+    joined: "-",
+    mood: "🌿",
   });
 
-  const [formData, setFormData] = useState(user);
+  useEffect(() => {
+    fetchProfile();
+  }, []);
+
+  const fetchProfile = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        setUser({
+          name: result.user.nama_lengkap,
+          email: result.user.email,
+          role: result.user.role,
+          bio: result.user.bio || "Tetap tenang, tetap bertumbuh 🌿",
+          joined: result.user.created_at
+            ? new Date(result.user.created_at).toLocaleDateString(
+                "id-ID",
+                {
+                  month: "long",
+                  year: "numeric",
+                }
+              )
+            : "-",
+          mood: "🌿",
+        });
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleSave = async () => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/profile",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+  nama_lengkap: user.name,
+  email: user.email,
+  bio: user.bio,
+}),
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        alert("Profil berhasil diperbarui");
+      } else {
+        alert(result.pesan);
+      }
+    } catch (error) {
+      console.log(error);
+      alert("Gagal update profile");
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    navigate("/");
+  };
 
   return (
     <div style={styles.bg}>
-      {/* BACKGROUND */}
       <div style={styles.blob1} />
       <div style={styles.blob2} />
 
@@ -25,7 +102,6 @@ export default function Profile() {
       <nav style={styles.nav}>
         <div style={styles.navLogo}>
           <span style={styles.navLogoIcon}>🌿</span>
-
           <span style={styles.navLogoText}>
             RuangTenang Admin
           </span>
@@ -61,18 +137,27 @@ export default function Profile() {
           </span>
 
           <span
-  style={styles.navLink}
-  onClick={() => navigate("/admin/manajemen")}
->
-  Manajemen Admin
-</span>
+            style={styles.navLink}
+            onClick={() =>
+              navigate("/admin/manajemen")
+            }
+          >
+            Manajemen Admin
+          </span>
 
-          {/* ACTIVE */}
-          <span style={{ ...styles.navLink, ...styles.navLinkActive }}>
+          <span
+            style={{
+              ...styles.navLink,
+              ...styles.navLinkActive,
+            }}
+          >
             Profile
           </span>
 
-          <button style={styles.logoutBtn}>
+          <button
+            style={styles.logoutBtn}
+            onClick={handleLogout}
+          >
             Keluar
           </button>
         </div>
@@ -80,221 +165,159 @@ export default function Profile() {
 
       {/* CONTENT */}
       <div style={styles.container}>
-        {/* HEADER */}
         <div style={styles.header}>
           <h1 style={styles.title}>
             Profile Admin
           </h1>
 
           <p style={styles.subtitle}>
-            Kelola informasi akun admin RuangTenang
+            Kelola informasi akun admin
+            RuangTenang
           </p>
         </div>
 
-        {/* STATS */}
-        <div style={styles.statsGrid}>
-          <div style={styles.statsCard}>
-            <div style={styles.statsNumber}>
-              19
+        <div style={styles.profileLayout}>
+          {/* LEFT */}
+          <div style={styles.sideCard}>
+            <div style={styles.avatarWrapper}>
+              <div style={styles.avatar}>
+                {user.name.charAt(0)}
+              </div>
+
+              <div style={styles.onlineDot} />
             </div>
 
-            <div style={styles.statsLabel}>
-              Total Jurnal
+            <h2 style={styles.profileName}>
+              {user.name}
+            </h2>
+
+            <p style={styles.profileEmail}>
+              {user.email}
+            </p>
+
+            <div style={styles.badgeGroup}>
+              <span
+                style={{
+                  ...styles.badge,
+                  background: "#EDE9FE",
+                  color: "#7C3AED",
+                }}
+              >
+                {user.role}
+              </span>
+
+              <span
+                style={{
+                  ...styles.badge,
+                  background: "#F0FDF4",
+                  color: "#166534",
+                }}
+              >
+                Aktif
+              </span>
             </div>
+
+            <div style={styles.infoList}>
+              <div style={styles.infoItem}>
+                <span>Bergabung</span>
+                <strong>{user.joined}</strong>
+              </div>
+
+              <div style={styles.infoItem}>
+                <span>Mood</span>
+                <strong>{user.mood}</strong>
+              </div>
+            </div>
+
+            <p style={styles.bio}>
+              {user.bio}
+            </p>
           </div>
 
-          <div style={styles.statsCard}>
-            <div style={{ ...styles.statsNumber, color: "#7C3AED" }}>
-              {user.mood}
-            </div>
-
-            <div style={styles.statsLabel}>
-              Mood Dominan
-            </div>
-          </div>
-
-          <div style={styles.statsCard}>
-            <div style={{ ...styles.statsNumber, color: "#166534" }}>
-              {user.joined}
-            </div>
-
-            <div style={styles.statsLabel}>
-              Bergabung Sejak
-            </div>
-          </div>
-        </div>
-
-        {/* PROFILE CARD */}
-        <div style={styles.card}>
-          {/* HEADER */}
-          <div style={styles.cardHeader}>
-            <div>
+          {/* RIGHT */}
+          <div style={styles.card}>
+            <div style={styles.cardHeader}>
               <h2 style={styles.cardTitle}>
-                Informasi Profile
+                Edit Profile
               </h2>
 
               <p style={styles.cardSubtitle}>
-                Data lengkap admin RuangTenang
+                Perbarui informasi akun
               </p>
             </div>
-          </div>
 
-          {/* BODY */}
-          <div style={styles.cardBody}>
-            {/* PROFILE TOP */}
-            <div style={styles.profileTop}>
-              {/* AVATAR */}
-              <div style={styles.avatarWrapper}>
-                <div style={styles.avatar}>
-                  G
+            <div style={styles.cardBody}>
+              <div style={styles.formGrid}>
+                <div>
+                  <label style={styles.label}>
+                    Nama Lengkap
+                  </label>
+
+                  <input
+                    type="text"
+                    value={user.name}
+                    onChange={(e) =>
+                      setUser({
+                        ...user,
+                        name: e.target.value,
+                      })
+                    }
+                    style={styles.input}
+                  />
                 </div>
 
-                <div style={styles.onlineDot} />
-              </div>
+                <div>
+                  <label style={styles.label}>
+                    Email
+                  </label>
 
-              {/* USER INFO */}
-              <div style={styles.profileInfo}>
-                <h2 style={styles.profileName}>
-                  {user.name}
-                </h2>
-
-                <p style={styles.profileEmail}>
-                  {user.email}
-                </p>
-
-                <div style={styles.badgeGroup}>
-                  <span
-                    style={{
-                      ...styles.badge,
-                      background: "#EDE9FE",
-                      color: "#7C3AED",
-                    }}
-                  >
-                    Admin
-                  </span>
-
-                  <span
-                    style={{
-                      ...styles.badge,
-                      background: "#F0FDF4",
-                      color: "#166534",
-                    }}
-                  >
-                    Aktif
-                  </span>
+                  <input
+                    type="email"
+                    value={user.email}
+                    onChange={(e) =>
+                      setUser({
+                        ...user,
+                        email: e.target.value,
+                      })
+                    }
+                    style={styles.input}
+                  />
                 </div>
 
-                <p style={styles.bio}>
-                  {user.bio}
-                </p>
-              </div>
-            </div>
+                <div>
+                  <label style={styles.label}>
+                    Bio
+                  </label>
 
-            {/* FORM */}
-            <div style={styles.formGrid}>
-              <div>
-                <label style={styles.label}>
-                  Nama Lengkap
-                </label>
-
-                <input
-                type="text"
-                value={user.name}
-                onChange={(e) =>
-                setUser({
-                ...user,
-                name: e.target.value,
-                })
-                }
-                style={styles.input}
-                />
+                  <textarea
+                    rows="5"
+                    value={user.bio}
+                    onChange={(e) =>
+                      setUser({
+                        ...user,
+                        bio: e.target.value,
+                      })
+                    }
+                    style={styles.textarea}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label style={styles.label}>
-                  Email
-                </label>
+              <div style={styles.buttonGroup}>
+                <button
+                  style={styles.primaryBtn}
+                  onClick={handleSave}
+                >
+                  Simpan Perubahan
+                </button>
 
-                <input
-                type="email"
-                value={user.email}
-                onChange={(e) =>
-                setUser({
-                ...user,
-                email: e.target.value,
-                })
-                }
-                style={styles.input}
-                />
+                <button
+                  style={styles.secondaryBtn}
+                  onClick={fetchProfile}
+                >
+                  Reset
+                </button>
               </div>
-
-              {/* ROLE */}
-              <div>
-                <label style={styles.label}>
-                Role
-              </label>
-
-              <select
-              value={user.role}
-              onChange={(e) =>
-              setUser({
-              ...user,
-              role: e.target.value,
-              })
-              }
-              style={styles.select}
-              >
-              <option value="admin">Admin</option>
-              <option value="user">User</option>
-              </select>
-              </div>
-
-              <div>
-                <label style={styles.label}>
-                  Bergabung Sejak
-                </label>
-
-                <input
-                  type="text"
-                  defaultValue={user.joined}
-                  style={styles.input}
-                />
-              </div>
-
-              <div style={{ gridColumn: "1 / -1" }}>
-                <label style={styles.label}>
-                  Bio
-                </label>
-
-                <textarea
-                rows="5"
-                value={user.bio}
-                onChange={(e) =>
-                setUser({
-                ...user,
-                bio: e.target.value,
-                })
-                }
-                style={styles.textarea}
-                />
-              </div>
-            </div>
-
-            {/* BUTTON */}
-            <div style={styles.buttonGroup}>
-              <button
-              style={styles.primaryBtn}
-              onClick={() => alert("Perubahan berhasil disimpan")}
-              >
-              Simpan Perubahan
-              </button>
-
-<button
-  style={styles.secondaryBtn}
-  onClick={() => window.location.reload()}
->
-  Batal
-</button>
             </div>
           </div>
         </div>
@@ -342,16 +365,16 @@ const styles = {
     borderBottom: "1px solid #F4F4F5",
     padding: "0 40px",
     display: "flex",
-    alignItems: "center",
     justifyContent: "space-between",
+    alignItems: "center",
     height: 64,
     zIndex: 100,
   },
 
   navLogo: {
     display: "flex",
-    alignItems: "center",
     gap: 8,
+    alignItems: "center",
   },
 
   navLogoIcon: {
@@ -359,10 +382,8 @@ const styles = {
   },
 
   navLogoText: {
-    fontFamily: "Georgia, serif",
     fontSize: 18,
-    fontWeight: 500,
-    color: "#18181B",
+    fontWeight: 600,
   },
 
   navLinks: {
@@ -372,32 +393,28 @@ const styles = {
   },
 
   navLink: {
-    padding: "8px 16px",
+    padding: "8px 14px",
     borderRadius: 8,
-    fontSize: 14,
-    color: "#52525B",
     cursor: "pointer",
+    color: "#52525B",
   },
 
   navLinkActive: {
     background: "#EDE9FE",
     color: "#7C3AED",
-    fontWeight: 500,
+    fontWeight: 600,
   },
 
   logoutBtn: {
-    marginLeft: 8,
     padding: "8px 16px",
-    background: "transparent",
     border: "1px solid #E4E4E7",
     borderRadius: 8,
-    fontSize: 14,
-    color: "#52525B",
+    background: "white",
     cursor: "pointer",
   },
 
   container: {
-    maxWidth: 1000,
+    maxWidth: "1200px",
     margin: "0 auto",
     padding: "40px 24px",
   },
@@ -407,235 +424,177 @@ const styles = {
   },
 
   title: {
-    fontSize: 42,
+    fontSize: 34,
     fontWeight: 700,
-    color: "#18181B",
-    marginBottom: 6,
   },
 
   subtitle: {
-    fontSize: 14,
     color: "#71717A",
   },
 
-  statsGrid: {
+  profileLayout: {
     display: "grid",
-    gridTemplateColumns: "repeat(3, 1fr)",
-    gap: 16,
-    marginBottom: 24,
+    gridTemplateColumns: "320px 1fr",
+    gap: 24,
   },
 
-  statsCard: {
+  sideCard: {
     background: "white",
-    padding: 24,
-    borderRadius: 16,
-    border: "1px solid #F4F4F5",
+    borderRadius: 20,
+    padding: 28,
     textAlign: "center",
+    border: "1px solid #F4F4F5",
+    height: "fit-content",
   },
 
-  statsNumber: {
-    fontSize: 36,
+  avatarWrapper: {
+    position: "relative",
+    display: "inline-block",
+  },
+
+  avatar: {
+    width: 90,
+    height: 90,
+    borderRadius: "50%",
+    background:
+      "linear-gradient(135deg,#A78BFA,#7C3AED)",
+    color: "white",
+    fontSize: 32,
     fontWeight: 700,
-    color: "#18181B",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
   },
 
-  statsLabel: {
-    fontSize: 14,
+  onlineDot: {
+    position: "absolute",
+    right: 5,
+    bottom: 5,
+    width: 16,
+    height: 16,
+    borderRadius: "50%",
+    background: "#22C55E",
+    border: "3px solid white",
+  },
+
+  profileName: {
+    marginTop: 16,
+    fontSize: 22,
+    fontWeight: 700,
+  },
+
+  profileEmail: {
     color: "#71717A",
-    marginTop: 10,
+    marginTop: 4,
+  },
+
+  badgeGroup: {
+    display: "flex",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 16,
+  },
+
+  badge: {
+    padding: "6px 12px",
+    borderRadius: 20,
+    fontSize: 12,
+    fontWeight: 600,
+  },
+
+  infoList: {
+    marginTop: 24,
+    display: "flex",
+    flexDirection: "column",
+    gap: 10,
+  },
+
+  infoItem: {
+    display: "flex",
+    justifyContent: "space-between",
+    background: "#FAFAFA",
+    padding: "12px 14px",
+    borderRadius: 10,
+  },
+
+  bio: {
+    marginTop: 20,
+    color: "#52525B",
   },
 
   card: {
     background: "white",
     borderRadius: 20,
     border: "1px solid #F4F4F5",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-    overflow: "hidden",
   },
 
   cardHeader: {
-    padding: "24px 28px",
+    padding: 24,
     borderBottom: "1px solid #F4F4F5",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
   },
 
   cardTitle: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 700,
-    color: "#18181B",
   },
 
   cardSubtitle: {
-    fontSize: 14,
     color: "#71717A",
     marginTop: 4,
   },
 
-  saveBtn: {
-    padding: "10px 20px",
-    background: "linear-gradient(135deg, #3B82F6 0%, #2563EB 100%)",
-    color: "white",
-    border: "none",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 500,
-  },
-
   cardBody: {
-    padding: 28,
-  },
-
-  profileTop: {
-    display: "flex",
-    gap: 24,
-    alignItems: "center",
-    paddingBottom: 28,
-    borderBottom: "1px solid #F4F4F5",
-    marginBottom: 28,
-  },
-
-  avatarWrapper: {
-    position: "relative",
-  },
-
-  avatar: {
-    width: 120,
-    height: 120,
-    borderRadius: "50%",
-    background: "linear-gradient(135deg, #A78BFA 0%, #7C3AED 100%)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "white",
-    fontSize: 42,
-    fontWeight: 700,
-  },
-
-  onlineDot: {
-    position: "absolute",
-    right: 8,
-    bottom: 8,
-    width: 18,
-    height: 18,
-    borderRadius: "50%",
-    background: "#22C55E",
-    border: "3px solid white",
-  },
-
-  profileInfo: {
-    flex: 1,
-  },
-
-  profileName: {
-    fontSize: 34,
-    fontWeight: 700,
-    color: "#18181B",
-  },
-
-  profileEmail: {
-    fontSize: 16,
-    color: "#71717A",
-    marginTop: 6,
-  },
-
-  badgeGroup: {
-    display: "flex",
-    gap: 10,
-    marginTop: 16,
-    flexWrap: "wrap",
-  },
-
-  badge: {
-    padding: "6px 14px",
-    borderRadius: 20,
-    fontSize: 13,
-    fontWeight: 500,
-  },
-
-  bio: {
-    marginTop: 18,
-    fontSize: 15,
-    lineHeight: 1.7,
-    color: "#52525B",
+    padding: 24,
   },
 
   formGrid: {
     display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 20,
+    gap: 18,
   },
 
   label: {
     display: "block",
     marginBottom: 8,
-    fontSize: 14,
     fontWeight: 500,
-    color: "#52525B",
   },
 
   input: {
     width: "100%",
-    padding: "14px 16px",
+    padding: "14px",
     borderRadius: 12,
     border: "1px solid #E4E4E7",
     background: "#FAFAFA",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
-  },
-
-  select: {
-  width: "100%",
-  padding: "14px 16px",
-  borderRadius: 12,
-  border: "1px solid #E4E4E7",
-  background: "#FAFAFA",
-  fontSize: 14,
-  outline: "none",
-  boxSizing: "border-box",
-  cursor: "pointer",
   },
 
   textarea: {
     width: "100%",
-    padding: "14px 16px",
+    padding: "14px",
     borderRadius: 12,
     border: "1px solid #E4E4E7",
     background: "#FAFAFA",
-    fontSize: 14,
-    outline: "none",
     resize: "none",
-    boxSizing: "border-box",
   },
 
   buttonGroup: {
     display: "flex",
     gap: 12,
-    marginTop: 28,
+    marginTop: 24,
   },
 
   primaryBtn: {
     padding: "12px 20px",
+    borderRadius: 10,
+    border: "none",
     background: "#7C3AED",
     color: "white",
-    border: "none",
-    borderRadius: 10,
     cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 500,
   },
 
   secondaryBtn: {
     padding: "12px 20px",
-    background: "white",
-    color: "#52525B",
-    border: "1px solid #E4E4E7",
     borderRadius: 10,
+    border: "1px solid #E4E4E7",
+    background: "white",
     cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 500,
   },
 };
