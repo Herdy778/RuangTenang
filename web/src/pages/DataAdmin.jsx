@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
 
-export default function AdminManajemen() {
+export default function DataAdmin() {
   const navigate = useNavigate();
 
   const [admins, setAdmins] = useState([
@@ -140,33 +140,62 @@ export default function AdminManajemen() {
         </div>
 
         <div style={styles.navLinks}>
-          <span
-            style={styles.navLink}
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </span>
+  <span
+    style={styles.navLink}
+    onClick={() => navigate("/dashboard")}
+  >
+    Dashboard
+  </span>
 
-          <span
-            style={{ ...styles.navLink, ...styles.navLinkActive }}
-          >
-            Admin Manajemen
-          </span>
+  <span
+    style={styles.navLink}
+    onClick={() => navigate("/admin/users")}
+  >
+    Data User
+  </span>
 
-          <button style={styles.logoutBtn}>
-            Keluar
-          </button>
-        </div>
+  <span
+    style={styles.navLink}
+    onClick={() => navigate("/admin/journals")}
+  >
+    Data Jurnal
+  </span>
+
+  <span
+    style={styles.navLink}
+    onClick={() => navigate("/admin/articles")}
+  >
+    Artikel
+  </span>
+
+  {/* ACTIVE */}
+  <span
+    style={{
+      ...styles.navLink,
+      ...styles.navLinkActive,
+    }}
+    onClick={() => navigate("/admin/data-admin")}
+  >
+    Data Admin
+  </span>
+
+  <span
+    style={styles.navLink}
+    onClick={() => navigate("/profile")}
+  >
+    Profile
+  </span>
+
+  <button style={styles.logoutBtn}>
+    Keluar
+  </button>
+</div>
       </nav>
 
       {/* CONTENT */}
       <div style={styles.container}>
         <div style={styles.header}>
           <h1 style={styles.title}>Admin Manajemen</h1>
-
-          <p style={styles.subtitle}>
-            Tambah, edit, dan hapus data admin aplikasi
-          </p>
         </div>
 
         {/* CARD FORM */}
@@ -332,6 +361,7 @@ export default function AdminManajemen() {
                   <td style={styles.td}>
                     <div style={styles.actionWrapper}>
                       <button
+                        type="button"
                         style={styles.editBtn}
                         onClick={() => handleEdit(admin)}
                       >
@@ -339,6 +369,7 @@ export default function AdminManajemen() {
                       </button>
 
                       <button
+                        type="button"
                         style={styles.deleteBtn}
                         onClick={() => handleDelete(admin.id)}
                       >
@@ -360,7 +391,7 @@ const styles = {
   bg: {
     minHeight: "100vh",
     background: "#FAFAFA",
-    fontFamily: "DM Sans, sans-serif",
+    fontFamily: "'DM Sans', sans-serif",
   },
 
   blob1: {
@@ -412,14 +443,15 @@ const styles = {
   },
 
   navLogoText: {
+    fontFamily: "Georgia, serif",
     fontSize: 18,
-    fontWeight: 600,
+    fontWeight: 500,
     color: "#18181B",
   },
 
   navLinks: {
     display: "flex",
-    gap: 10,
+    gap: 8,
     alignItems: "center",
   },
 
@@ -434,19 +466,22 @@ const styles = {
   navLinkActive: {
     background: "#EDE9FE",
     color: "#7C3AED",
-    fontWeight: 600,
+    fontWeight: 500,
   },
 
   logoutBtn: {
+    marginLeft: 8,
     padding: "8px 16px",
+    background: "transparent",
     border: "1px solid #E4E4E7",
-    background: "white",
     borderRadius: 8,
+    fontSize: 14,
+    color: "#52525B",
     cursor: "pointer",
   },
 
   container: {
-    maxWidth: 1100,
+    maxWidth: 1000,
     margin: "0 auto",
     padding: "40px 24px",
   },
@@ -456,38 +491,42 @@ const styles = {
   },
 
   title: {
-    fontSize: 40,
+    fontSize: 42,
     fontWeight: 700,
     color: "#18181B",
+    marginBottom: 6,
   },
 
   subtitle: {
     fontSize: 14,
     color: "#71717A",
-    marginTop: 6,
   },
 
   card: {
     background: "white",
-    borderRadius: 18,
+    borderRadius: 20,
     border: "1px solid #F4F4F5",
+    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
     overflow: "hidden",
     marginBottom: 24,
   },
 
   cardHeader: {
-    padding: "20px 24px",
+    padding: "24px 28px",
     borderBottom: "1px solid #F4F4F5",
+    display: "flex",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
 
   cardTitle: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 700,
     color: "#18181B",
   },
 
   formGrid: {
-    padding: 24,
+    padding: 28,
     display: "grid",
     gridTemplateColumns: "repeat(2, 1fr)",
     gap: 20,
@@ -531,22 +570,24 @@ const styles = {
   },
 
   primaryBtn: {
-    padding: "12px 18px",
+    padding: "12px 20px",
     background: "#7C3AED",
     color: "white",
     border: "none",
     borderRadius: 10,
     cursor: "pointer",
+    fontSize: 14,
     fontWeight: 500,
   },
 
   secondaryBtn: {
-    padding: "12px 18px",
+    padding: "12px 20px",
     background: "white",
     color: "#52525B",
     border: "1px solid #E4E4E7",
     borderRadius: 10,
     cursor: "pointer",
+    fontSize: 14,
     fontWeight: 500,
   },
 
@@ -559,7 +600,7 @@ const styles = {
     padding: "14px 16px",
     borderRadius: 12,
     border: "1px solid #E4E4E7",
-    background: "white",
+    background: "#FAFAFA",
     fontSize: 14,
     outline: "none",
     boxSizing: "border-box",
@@ -576,6 +617,7 @@ const styles = {
     fontSize: 13,
     color: "#71717A",
     borderBottom: "1px solid #F4F4F5",
+    fontWeight: 600,
   },
 
   td: {
@@ -586,10 +628,10 @@ const styles = {
   },
 
   badge: {
-    padding: "6px 12px",
+    padding: "6px 14px",
     borderRadius: 20,
-    fontSize: 12,
-    fontWeight: 600,
+    fontSize: 13,
+    fontWeight: 500,
   },
 
   actionWrapper: {
@@ -602,7 +644,10 @@ const styles = {
     borderRadius: 10,
     border: "1px solid #E4E4E7",
     background: "white",
+    color: "#52525B",
     cursor: "pointer",
+    fontSize: 13,
+    fontWeight: 500,
   },
 
   deleteBtn: {
@@ -612,5 +657,7 @@ const styles = {
     background: "#FEF2F2",
     color: "#DC2626",
     cursor: "pointer",
+    fontSize: 13,
+    fontWeight: 500,
   },
 };

@@ -1,55 +1,25 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import Auth from './pages/Auth';
-import Dashboard from './pages/Dashboard';
-import AdminUsers from './pages/AdminUsers';
-import AdminJournals from './pages/AdminJournals';
-import AdminArticles from './pages/AdminArticles';
-import Profile from './pages/Profile';
-import AdminManajemen from './pages/AdminManajemen';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-function PrivateRoute({ children }) {
-  const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/" />;
-}
+import Dashboard from "./pages/Dashboard";
+import AdminUsers from "./pages/AdminUsers";
+import AdminJournals from "./pages/AdminJournals";
+import AdminArticles from "./pages/AdminArticles";
+import Profile from "./pages/Profile";
+import DataAdmin from "./pages/DataAdmin";
 
-function App() {
+export default function App() {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Auth />} />
+     <Routes>
+      <Route path="/" element={<Navigate to="/dashboard" />} />
 
-        <Route
-          path="/dashboard"
-          element={<PrivateRoute><Dashboard /></PrivateRoute>}
-        />
-
-        <Route
-          path="/admin/users"
-          element={<PrivateRoute><AdminUsers /></PrivateRoute>}
-        />
-
-        <Route
-          path="/admin/journals"
-          element={<PrivateRoute><AdminJournals /></PrivateRoute>}
-        />
-
-        <Route
-          path="/admin/articles"
-          element={<PrivateRoute><AdminArticles /></PrivateRoute>}
-        />
-
-        <Route
-          path="/profile"
-          element={<PrivateRoute><Profile /></PrivateRoute>}
-        />
-
-        <Route
-          path="/admin/manajemen"
-          element={<PrivateRoute><AdminManajemen /></PrivateRoute>}
-        />
-      </Routes>
+      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/admin/users" element={<AdminUsers />} />
+      <Route path="/admin/journals" element={<AdminJournals />} />
+      <Route path="/admin/articles" element={<AdminArticles />} />
+      <Route path="/admin/data-admin" element={<DataAdmin />} />
+      <Route path="/profile" element={<Profile />} />
+     </Routes>
     </BrowserRouter>
   );
 }
-
-export default App;

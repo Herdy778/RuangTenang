@@ -5,6 +5,7 @@ import MoodChart from '../components/MoodChart';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,11 +52,35 @@ export default function Dashboard() {
   }
 
   const moodColors = {
-    Burnout: { bg: '#FEF3C7', color: '#92400E', emoji: '😤' },
-    Cemas: { bg: '#EDE9FE', color: '#5B21B6', emoji: '😰' },
-    Sedih: { bg: '#DBEAFE', color: '#1E40AF', emoji: '😢' },
-    Netral: { bg: '#F0FDF4', color: '#166534', emoji: '😌' },
-    Krisis: { bg: '#FFE4E6', color: '#9F1239', emoji: '🆘' },
+    Burnout: {
+      bg: '#FEF3C7',
+      color: '#92400E',
+      emoji: '😤',
+    },
+
+    Cemas: {
+      bg: '#EDE9FE',
+      color: '#5B21B6',
+      emoji: '😰',
+    },
+
+    Sedih: {
+      bg: '#DBEAFE',
+      color: '#1E40AF',
+      emoji: '😢',
+    },
+
+    Netral: {
+      bg: '#F0FDF4',
+      color: '#166534',
+      emoji: '😌',
+    },
+
+    Krisis: {
+      bg: '#FFE4E6',
+      color: '#9F1239',
+      emoji: '🆘',
+    },
   };
 
   // Hitung jumlah mood untuk statistik
@@ -76,41 +101,64 @@ export default function Dashboard() {
       <nav style={styles.nav}>
         <div style={styles.navLogo}>
           <span style={styles.navLogoIcon}>🌿</span>
-          <span style={styles.navLogoText}>RuangTenang Admin</span>
+
+          <span style={styles.navLogoText}>
+            RuangTenang Admin
+          </span>
         </div>
 
         <div style={styles.navLinks}>
-          <span style={{ ...styles.navLink, ...styles.navLinkActive }}>
+          {/* DASHBOARD */}
+          <span
+            style={{
+              ...styles.navLink,
+              ...styles.navLinkActive,
+            }}
+          >
             Dashboard
           </span>
 
+          {/* DATA USER */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/users')}
+            onClick={() =>
+              navigate('/admin/users')
+            }
           >
             Data User
           </span>
 
+          {/* DATA JURNAL */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/journals')}
+            onClick={() =>
+              navigate('/admin/journals')
+            }
           >
             Data Jurnal
           </span>
 
+          {/* ARTIKEL */}
           <span
             style={styles.navLink}
-            onClick={() => navigate('/admin/articles')}
+            onClick={() =>
+              navigate('/admin/articles')
+            }
           >
             Artikel
           </span>
 
+<span
+  style={styles.navLink}
+  onClick={() => navigate("/admin/data-admin")}
+>
+  Data Admin
+</span>
 
           <span
             style={styles.navLink}
             onClick={() => navigate('/profile')}
           >
-
             Profile
           </span>
 
@@ -123,41 +171,69 @@ export default function Dashboard() {
       <div style={styles.container}>
         {/* HEADER */}
         <div style={styles.header}>
-          <h1 style={styles.title}>Dashboard Admin</h1>
+          <h1 style={styles.title}>
+            Dashboard Admin
+          </h1>
+
           <p style={styles.subtitle}>
-            Monitoring data pengguna dan analisis mood
+            Monitoring data pengguna dan
+            analisis mood
           </p>
         </div>
 
         {/* STATS CARDS */}
         <div style={styles.statsGrid}>
+          {/* TOTAL JURNAL */}
           <div style={styles.statCard}>
-            <div style={styles.statNum}>{journals.length}</div>
-            <div style={styles.statLabel}>Total Jurnal</div>
+            <div style={styles.statNum}>
+              {journals.length}
+            </div>
+
+            <div style={styles.statLabel}>
+              Total Jurnal
+            </div>
           </div>
 
+          {/* MOOD DOMINAN */}
           <div
             style={{
               ...styles.statCard,
-              background: 'linear-gradient(135deg,#8B5CF6,#7C3AED)',
-              color: 'white'
+              background:
+                'linear-gradient(135deg,#8B5CF6,#7C3AED)',
+              color: 'white',
             }}
           >
-            <div style={{ ...styles.statNum, color: 'white' }}>
+            <div
+              style={{
+                ...styles.statNum,
+                color: 'white',
+              }}
+            >
               {dominantMood
                 ? `${moodColors[dominantMood]?.emoji || '😐'} ${dominantMood}`
                 : '-'}
             </div>
-            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>
+
+            <div
+              style={{
+                ...styles.statLabel,
+                color:
+                  'rgba(255,255,255,0.8)',
+              }}
+            >
               Mood Dominan Global
             </div>
           </div>
 
+          {/* VARIASI MOOD */}
           <div style={styles.statCard}>
             <div style={styles.statNum}>
               {Object.keys(moodCount).length}
             </div>
-            <div style={styles.statLabel}>Variasi Mood</div>
+
+            <div style={styles.statLabel}>
+              Variasi Mood
+            </div>
           </div>
         </div>
 
@@ -183,7 +259,10 @@ export default function Dashboard() {
             </div>
           ) : journals.length === 0 ? (
             <div style={styles.emptyCard}>
-              <p style={styles.emptyEmoji}>📝</p>
+              <p style={styles.emptyEmoji}>
+                📝
+              </p>
+
               <p style={styles.emptyText}>
                 Belum ada jurnal dari user
               </p>
@@ -270,20 +349,20 @@ export default function Dashboard() {
 
 const styles = {
   bg: {
-    minHeight: "100vh",
-    background: "#FAFAFA",
+    minHeight: '100vh',
+    background: '#FAFAFA',
     fontFamily: "'DM Sans', sans-serif",
     position: "relative",
     overflowX: "hidden",
   },
   
   blob1: {
-    position: "fixed",
+    position: 'fixed',
     width: 600,
     height: 600,
-    borderRadius: "50%",
-    background: "#C4B5FD",
-    filter: "blur(100px)",
+    borderRadius: '50%',
+    background: '#C4B5FD',
+    filter: 'blur(100px)',
     opacity: 0.2,
     top: -200,
     right: -200,
@@ -292,12 +371,12 @@ const styles = {
   },
   
   blob2: {
-    position: "fixed",
+    position: 'fixed',
     width: 400,
     height: 400,
-    borderRadius: "50%",
-    background: "#34D399",
-    filter: "blur(80px)",
+    borderRadius: '50%',
+    background: '#34D399',
+    filter: 'blur(80px)',
     opacity: 0.15,
     bottom: -100,
     left: -100,
@@ -306,7 +385,7 @@ const styles = {
   },
   
   nav: {
-    position: "sticky",
+    position: 'sticky',
     top: 0,
     background: "rgba(255,255,255,0.95)",
     backdropFilter: "blur(20px)",
@@ -320,8 +399,8 @@ const styles = {
   },
   
   navLogo: {
-    display: "flex",
-    alignItems: "center",
+    display: 'flex',
+    alignItems: 'center',
     gap: 8,
   },
   
@@ -330,20 +409,20 @@ const styles = {
   },
   
   navLogoText: {
-    fontFamily: "Georgia, serif",
+    fontFamily: 'Georgia, serif',
     fontSize: 18,
     fontWeight: 500,
-    color: "#18181B",
+    color: '#18181B',
   },
   
   navLinks: {
-    display: "flex",
+    display: 'flex',
     gap: 8,
-    alignItems: "center",
+    alignItems: 'center',
   },
   
   navLink: {
-    padding: "8px 16px",
+    padding: '8px 16px',
     borderRadius: 8,
     fontSize: 14,
     color: "#52525B",
@@ -352,16 +431,16 @@ const styles = {
   },
   
   navLinkActive: {
-    background: "#EDE9FE",
-    color: "#7C3AED",
+    background: '#EDE9FE',
+    color: '#7C3AED',
     fontWeight: 500,
   },
   
   logoutBtn: {
     marginLeft: 8,
-    padding: "8px 16px",
-    background: "transparent",
-    border: "1px solid #E4E4E7",
+    padding: '8px 16px',
+    background: 'transparent',
+    border: '1px solid #E4E4E7',
     borderRadius: 8,
     fontSize: 14,
     color: "#52525B",
@@ -390,7 +469,7 @@ const styles = {
   
   subtitle: {
     fontSize: 14,
-    color: "#A1A1AA",
+    color: '#A1A1AA',
   },
   
   statsGrid: {
@@ -401,7 +480,7 @@ const styles = {
   },
   
   statCard: {
-    background: "white",
+    background: 'white',
     padding: 20,
     borderRadius: 16,
     border: "1px solid #F4F4F5",
@@ -439,13 +518,13 @@ const styles = {
   },
   
   journalList: {
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
     gap: 12,
   },
   
   journalCard: {
-    background: "white",
+    background: 'white',
     padding: 20,
     borderRadius: 16,
     border: "1px solid #F4F4F5",
@@ -463,7 +542,7 @@ const styles = {
   },
   
   moodBadge: {
-    padding: "4px 12px",
+    padding: '4px 12px',
     borderRadius: 20,
     fontSize: 12,
     fontWeight: 500,
@@ -471,7 +550,7 @@ const styles = {
   
   journalDate: {
     fontSize: 12,
-    color: "#A1A1AA",
+    color: '#A1A1AA',
   },
   
   journalText: {
@@ -495,8 +574,8 @@ const styles = {
     background: "white",
     padding: 60,
     borderRadius: 16,
-    textAlign: "center",
-    border: "1px solid #F4F4F5",
+    textAlign: 'center',
+    border: '1px solid #F4F4F5',
   },
   
   emptyEmoji: {
