@@ -35,6 +35,8 @@ class RuangTenangApp extends StatelessWidget {
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeNotifier.themeMode,
+          themeAnimationDuration: const Duration(milliseconds: 500),
+          themeAnimationCurve: Curves.easeInOut,
           home: FutureBuilder(
             future: checkLogin(),
             builder: (context, snapshot) {

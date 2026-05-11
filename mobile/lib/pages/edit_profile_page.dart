@@ -476,7 +476,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AppTextStyles.bodySM.copyWith(
+        labelStyle: AppTextStyles.label.copyWith(
           color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
         ),
         prefixIcon: Icon(
@@ -534,7 +534,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: AppTextStyles.bodySM.copyWith(
+        labelStyle: AppTextStyles.label.copyWith(
           color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
         ),
         prefixIcon: Icon(

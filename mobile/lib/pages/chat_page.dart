@@ -377,7 +377,7 @@ final response = await http.post(
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
-          _buildAnimatedBlobs(),
+          RepaintBoundary(child: _buildAnimatedBlobs()),
 
           SafeArea(
             child: Column(
