@@ -1,3 +1,4 @@
+
 import { useEffect, useState, useMemo } from "react";
 import toast, { Toaster } from "react-hot-toast";
 import API from "../utils/api";
@@ -25,19 +26,16 @@ export default function AdminUsers() {
     fetchUsers();
   }, []);
 
+  // ✅ PERBAIKAN: HAPUS FILTER MAHASISWA, TAMPILKAN SEMUA USER
   async function fetchUsers() {
     try {
       setLoading(true);
-
       const res = await API.get("/admin/users");
       const data = res.data.data || [];
-
-      // HANYA TAMPILKAN USER MAHASISWA
-      const mahasiswaOnly = data.filter(
-        (user) => user.role === "mahasiswa"
-      );
-
-      setAllUsers(mahasiswaOnly);
+      
+      // LANGSUNG SET SEMUA DATA TANPA FILTER
+      setAllUsers(data);
+      
     } catch (err) {
       console.error(err);
       toast.error("Gagal memuat data user");
@@ -112,6 +110,7 @@ export default function AdminUsers() {
 
   const totalUsers = getSortedUsers.length;
 
+  // Hitung statistik berdasarkan role dari MongoDB
   const roleStats = useMemo(() => {
     const stats = {};
     allUsers.forEach(user => {
@@ -121,6 +120,7 @@ export default function AdminUsers() {
     return stats;
   }, [allUsers]);
 
+  // Fungsi badge role dinamis - mengikuti role dari MongoDB
   const getRoleBadgeStyle = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
@@ -130,6 +130,7 @@ export default function AdminUsers() {
       case "mahasiswa":
         return { background: "#ECFDF5", color: "#065F46", icon: "🎓", label: "Mahasiswa" };
       default:
+        // Jika ada role lain di MongoDB, tetap ditampilkan
         return { background: "#F1F5F9", color: "#475569", icon: "👤", label: role || "Unknown" };
     }
   };
@@ -163,22 +164,23 @@ export default function AdminUsers() {
                 <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
                 {Object.entries(roleStats).map(([r, c]) => {
                   const style = getRoleBadgeStyle(r);
+                  const percentage = totalUsers > 0 ? Math.round((c / totalUsers) * 100) : 0;
                   return (
                     <div key={r} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
                       <span style={{ width: 40 }}>{style.icon}</span>
                       <span style={{ width: 100 }}>{style.label}</span>
                       <div style={{ flex: 1, background: '#E2E8F0', borderRadius: 10, height: 24, overflow: 'hidden' }}>
-                        <div style={{ width: `${(c / totalUsers) * 100}%`, background: style.color, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8, color: 'white', fontSize: 11, fontWeight: 600 }}>
+                        <div style={{ width: `${percentage}%`, background: style.color, height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 8, color: 'white', fontSize: 11, fontWeight: 600 }}>
                           {c}
                         </div>
                       </div>
-                      <span style={{ width: 50, textAlign: 'right' }}>{Math.round((c / totalUsers) * 100)}%</span>
+                      <span style={{ width: 50, textAlign: 'right' }}>{percentage}%</span>
                     </div>
                   );
                 })}
               </div>
-              <button onClick={() => navigate('/admin/users')} style={modalButtonStyle}>
-                Lihat Semua Pengguna →
+              <button onClick={() => setShowModal(false)} style={modalButtonStyle}>
+                Tutup
               </button>
             </div>
           )
@@ -188,6 +190,7 @@ export default function AdminUsers() {
         
       case 'role_detail':
         const roleStyle = getRoleBadgeStyle(role);
+        const percentage = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
         setModalData({
           title: `${roleStyle.icon} Detail Role: ${roleStyle.label}`,
           content: (
@@ -196,19 +199,16 @@ export default function AdminUsers() {
               <div style={{ textAlign: 'center', padding: 20, background: roleStyle.background, borderRadius: 16 }}>
                 <span style={{ fontSize: 64 }}>{roleStyle.icon}</span>
                 <p style={{ fontSize: 48, fontWeight: 700, marginTop: 8, color: roleStyle.color }}>{count}</p>
-                <p style={{ fontSize: 14, marginTop: 8 }}>pengguna</p>
+                <p style={{ fontSize: 14, marginTop: 8 }}>pengguna ({percentage}% dari total)</p>
               </div>
               <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
-              <p style={{ fontSize: 14, color: '#64748B' }}>
-                {roleStyle.label === 'Admin' && 'Admin memiliki akses penuh untuk mengelola seluruh data.'}
-                {roleStyle.label === 'Psikolog' && 'Psikolog dapat memberikan konseling dan melihat jurnal user.'}
-                {roleStyle.label === 'Mahasiswa' && 'Mahasiswa adalah pengguna utama yang menulis jurnal dan memantau mood.'}
-                {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleStyle.label) && 'Role khusus dengan akses terbatas sesuai konfigurasi.'}
+              <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
+                {roleStyle.label === 'Admin' && '👑 Admin memiliki akses penuh untuk mengelola seluruh data, user, jurnal, dan artikel.'}
+                {roleStyle.label === 'Psikolog' && '🧠 Psikolog dapat memberikan konseling, melihat jurnal user, dan memberikan rekomendasi.'}
+                {roleStyle.label === 'Mahasiswa' && '🎓 Mahasiswa adalah pengguna utama yang menulis jurnal, memantau mood, dan menerima rekomendasi.'}
+                {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleStyle.label) && `📌 Role "${roleStyle.label}" memiliki akses terbatas sesuai konfigurasi sistem.`}
               </p>
-              <button onClick={() => {
-                setShowModal(false);
-                // Optional: filter by role
-              }} style={modalButtonStyle}>
+              <button onClick={() => setShowModal(false)} style={modalButtonStyle}>
                 Tutup
               </button>
             </div>
@@ -274,14 +274,14 @@ export default function AdminUsers() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>👥 Data Pengguna</h1>
-            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang </p>
+            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang (semua role)</p>
           </div>
           <div style={styles.dateBadge}>
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
 
-        {/* STATS CARDS - Sekarang bisa diklik */}
+        {/* STATS CARDS - Bisa diklik */}
         <div style={styles.statsGrid}>
           <div 
             style={{ ...styles.statCard, cursor: 'pointer', transition: 'all 0.2s ease' }}
@@ -557,13 +557,11 @@ const styles = {
     color: "#7C3AED",
     fontWeight: 500,
   },
-
   navLinks: {
     display: "flex",
     gap: 6,
     alignItems: "center",
   },
-
   navLink: {
     padding: "8px 18px",
     borderRadius: 40,
@@ -573,12 +571,10 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
-
   navLinkActive: {
     background: "#EEF2FF",
     color: "#4F46E5",
   },
-
   logoutBtn: {
     marginLeft: 8,
     padding: "8px 20px",
@@ -755,7 +751,6 @@ const styles = {
     borderBottom: "1px solid #E2E8F0",
     width: 70,
   },
-
   thAksi: {
     textAlign: "center",
     padding: "16px 20px",
@@ -772,7 +767,6 @@ const styles = {
     color: "#1E293B",
     borderBottom: "1px solid #F1F5F9",
   },
-
   tdNo: {
     textAlign: "center",
     padding: "16px 20px",
@@ -780,7 +774,6 @@ const styles = {
     color: "#64748B",
     borderBottom: "1px solid #F1F5F9",
   },
-
   tdAksi: {
     textAlign: "center",
     padding: "16px 20px",
@@ -960,4 +953,4 @@ styleSheet.textContent = `
     100% { transform: rotate(360deg); }
   }
 `;
-document.head.appendChild(styleSheet);
+document.head.appendChild(styleSheet); 
