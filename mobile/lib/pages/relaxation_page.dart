@@ -14,7 +14,7 @@ class RelaxationPage extends StatefulWidget {
 class _RelaxationPageState extends State<RelaxationPage>
     with TickerProviderStateMixin {
   int? _playingIndex;
-  bool _isSaving = false;
+  final bool _isSaving = false;
   late AnimationController _waveController;
   final AudioPlayer _audioPlayer = AudioPlayer();
   Duration? _actualDuration;
@@ -111,9 +111,7 @@ class _RelaxationPageState extends State<RelaxationPage>
         d = await _audioPlayer.getDuration();
 
         // Jika limitasi browser membuat durasi tetap ghaib, pasang default 1 menit
-        if (d == null) {
-          d = const Duration(minutes: 1);
-        }
+        d ??= const Duration(minutes: 1);
       }
 
       // 3. Update UI agar teks tombol segera berubah

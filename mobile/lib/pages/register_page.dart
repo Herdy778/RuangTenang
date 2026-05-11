@@ -102,7 +102,10 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
           data['data']?['nama_lengkap'] ?? nameController.text,
         );
         await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
-        await prefs.setString('occupation', data['data']?['occupation'] ?? 'Student');
+        await prefs.setString(
+          'occupation',
+          data['data']?['occupation'] ?? 'Student',
+        );
         await prefs.setString('token', data['token'] ?? '');
 
         ScaffoldMessenger.of(context).showSnackBar(

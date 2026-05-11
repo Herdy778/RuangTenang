@@ -177,4 +177,87 @@ class AuthController extends Controller
             ]
         ]);
     }
+
+    public function uploadProfilePhoto(Request $request)
+    {
+        try {
+            // Get user by token
+            $bearerToken = $request->bearerToken();
+            if (!$bearerToken) {
+                return response()->json(['status' => 'error', 'pesan' => 'No token'], 401);
+            }
+
+            $hashedToken = hash('sha256', $bearerToken);
+            $tokenRecord = Token::where('token', $hashedToken)->first();
+            if (!$tokenRecord) {
+                return response()->json(['status' => 'error', 'pesan' => 'Invalid token'], 401);
+            }
+
+            $user = User::where('_id', $tokenRecord->user_id)->first();
+            if (!$user) {
+                return response()->json(['status' => 'error', 'pesan' => 'User not found'], 401);
+            }
+
+            // Validate request has file
+            if (!$request->hasFile('photo')) {
+                return response()->json(['status' => 'error', 'pesan' => 'No file'], 400);
+            }
+
+            $file = $request->file('photo');
+            
+            // Validate file
+            if (!$file || !$file->isValid()) {
+                return response()->json(['status' => 'error', 'pesan' => 'Invalid file'], 400);
+            }
+
+            // Check size: max 5MB
+            $size = $file->getSize();
+            if ($size > 5242880) {
+                return response()->json(['status' => 'error', 'pesan' => 'File too large'], 400);
+            }
+
+            // Check mime type
+            $mime = $file->getMimeType();
+            if (!in_array($mime, ['image/jpeg', 'image/png', 'image/gif'])) {
+                return response()->json(['status' => 'error', 'pesan' => 'Invalid format'], 400);
+            }
+
+            // Ensure profile-photos directory exists
+            $dir = storage_path('app/public/profile-photos');
+            if (!is_dir($dir)) {
+                mkdir($dir, 0777, true);
+            }
+
+            // Store file
+            $filename = 'profile_' . $user->_id . '_' . time() . '.' . $file->getClientOriginalExtension();
+            $path = $file->storeAs('profile-photos', $filename, 'public');
+            
+            if (!$path) {
+                return response()->json(['status' => 'error', 'pesan' => 'Storage failed'], 500);
+            }
+
+            // Update user database
+            $user->photo = str_replace('\\', '/', $path);
+            $user->save();
+
+            // Build full URL
+            $url = url('/storage/' . str_replace('\\', '/', $path));
+
+            return response()->json([
+                'status' => 'success',
+                'pesan' => 'Upload success',
+                'data' => [
+                    'photo_url' => $url,
+                    'photo_path' => $path
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Profile upload error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Upload failed: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

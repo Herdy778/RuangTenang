@@ -27,18 +27,18 @@ class JournalPage extends StatefulWidget {
 class _JournalPageState extends State<JournalPage>
     with TickerProviderStateMixin {
   // ── Controllers ─────────────────────────────────────────────
-  final _textController   = TextEditingController();
-  final _textFocus        = FocusNode();
+  final _textController = TextEditingController();
+  final _textFocus = FocusNode();
   final _scrollController = ScrollController();
 
   // ── PHQ-9 State ─────────────────────────────────────────────
-  int _perasaanSedih       = 0;
-  int _minatKegiatan        = 0;
-  int _kualitasTidur        = 0;
-  int _tingkatLelah         = 0;
+  int _perasaanSedih = 0;
+  int _minatKegiatan = 0;
+  int _kualitasTidur = 0;
+  int _tingkatLelah = 0;
   int _kesulitanKonsentrasi = 0;
 
-  bool _isLoading   = false;
+  bool _isLoading = false;
   bool _textFocused = false;
 
   // ── Animations ──────────────────────────────────────────────
@@ -54,16 +54,31 @@ class _JournalPageState extends State<JournalPage>
   ];
 
   static const _questions = [
-    _Question('💧', 'Perasaan Sedih',
-        'Merasa sedih, murung, atau tidak punya harapan'),
-    _Question('🌱', 'Minat & Kegiatan',
-        'Kurang tertarik atau tidak menikmati aktivitas seperti biasa'),
-    _Question('🌙', 'Kualitas Tidur',
-        'Sulit tidur, terlalu banyak tidur, atau tidur tidak nyenyak'),
-    _Question('⚡', 'Tingkat Kelelahan',
-        'Merasa lelah atau tidak punya energi untuk beraktivitas'),
-    _Question('🧠', 'Konsentrasi',
-        'Sulit fokus saat membaca, menonton, atau melakukan pekerjaan'),
+    _Question(
+      '💧',
+      'Perasaan Sedih',
+      'Merasa sedih, murung, atau tidak punya harapan',
+    ),
+    _Question(
+      '🌱',
+      'Minat & Kegiatan',
+      'Kurang tertarik atau tidak menikmati aktivitas seperti biasa',
+    ),
+    _Question(
+      '🌙',
+      'Kualitas Tidur',
+      'Sulit tidur, terlalu banyak tidur, atau tidur tidak nyenyak',
+    ),
+    _Question(
+      '⚡',
+      'Tingkat Kelelahan',
+      'Merasa lelah atau tidak punya energi untuk beraktivitas',
+    ),
+    _Question(
+      '🧠',
+      'Konsentrasi',
+      'Sulit fokus saat membaca, menonton, atau melakukan pekerjaan',
+    ),
   ];
 
   // ── Lifecycle ────────────────────────────────────────────────
@@ -106,39 +121,52 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Helpers ──────────────────────────────────────────────────
   int _getValue(int i) => [
-        _perasaanSedih,
-        _minatKegiatan,
-        _kualitasTidur,
-        _tingkatLelah,
-        _kesulitanKonsentrasi,
-      ][i];
+    _perasaanSedih,
+    _minatKegiatan,
+    _kualitasTidur,
+    _tingkatLelah,
+    _kesulitanKonsentrasi,
+  ][i];
 
   void _setValue(int i, int v) {
     HapticFeedback.selectionClick();
     setState(() {
       switch (i) {
-        case 0: _perasaanSedih       = v; break;
-        case 1: _minatKegiatan        = v; break;
-        case 2: _kualitasTidur        = v; break;
-        case 3: _tingkatLelah         = v; break;
-        case 4: _kesulitanKonsentrasi = v; break;
+        case 0:
+          _perasaanSedih = v;
+          break;
+        case 1:
+          _minatKegiatan = v;
+          break;
+        case 2:
+          _kualitasTidur = v;
+          break;
+        case 3:
+          _tingkatLelah = v;
+          break;
+        case 4:
+          _kesulitanKonsentrasi = v;
+          break;
       }
     });
   }
 
   int get _totalSkor =>
-      _perasaanSedih + _minatKegiatan + _kualitasTidur +
-      _tingkatLelah + _kesulitanKonsentrasi;
+      _perasaanSedih +
+      _minatKegiatan +
+      _kualitasTidur +
+      _tingkatLelah +
+      _kesulitanKonsentrasi;
 
   // ── Stagger (mirrors _StaggeredFadeInUp from DashboardPage) ──
   Widget _stagger({required int index, required Widget child}) {
-    final start   = (index * 0.08).clamp(0.0, 0.75);
-    final end     = (start + 0.35).clamp(0.0, 1.0);
-    final curved  = CurvedAnimation(
+    final start = (index * 0.08).clamp(0.0, 0.75);
+    final end = (start + 0.35).clamp(0.0, 1.0);
+    final curved = CurvedAnimation(
       parent: _staggerController,
       curve: Interval(start, end, curve: Curves.easeOutCubic),
     );
-    final opacity    = Tween<double>(begin: 0, end: 1).animate(curved);
+    final opacity = Tween<double>(begin: 0, end: 1).animate(curved);
     final translateY = Tween<double>(begin: 20, end: 0).animate(curved);
 
     return AnimatedBuilder(
@@ -176,19 +204,18 @@ class _JournalPageState extends State<JournalPage>
           if (token != null) 'Authorization': 'Bearer $token',
         },
         body: jsonEncode({
-          'teks_curhat':           _textController.text.trim(),
-          'perasaan_sedih':        _perasaanSedih,
-          'minat_kegiatan':         _minatKegiatan,
-          'kualitas_tidur':         _kualitasTidur,
-          'tingkat_lelah':          _tingkatLelah,
-          'kesulitan_konsentrasi':  _kesulitanKonsentrasi,
+          'teks_curhat': _textController.text.trim(),
+          'perasaan_sedih': _perasaanSedih,
+          'minat_kegiatan': _minatKegiatan,
+          'kualitas_tidur': _kualitasTidur,
+          'tingkat_lelah': _tingkatLelah,
+          'kesulitan_konsentrasi': _kesulitanKonsentrasi,
         }),
       );
 
       if (res.statusCode == 200) {
         final body = jsonDecode(res.body);
-        final prediction =
-            (body['data']?['prediction'] ?? 'Minimal') as String;
+        final prediction = (body['data']?['prediction'] ?? 'Minimal') as String;
         final skor = (body['data']?['skor_total'] ?? _totalSkor) as int;
         if (mounted) _showResultSheet(prediction, skor);
       } else {
@@ -209,9 +236,13 @@ class _JournalPageState extends State<JournalPage>
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(msg,
-            style: AppTextStyles.bodySM.copyWith(color: Colors.white)),
-        backgroundColor: AppColors.textPrimary,
+        content: Text(
+          msg,
+          style: AppTextStyles.bodySM.copyWith(color: Colors.white),
+        ),
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.cardBackgroundDark
+            : AppColors.textPrimary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
@@ -225,7 +256,7 @@ class _JournalPageState extends State<JournalPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       extendBodyBehindAppBar: true,
       appBar: _buildAppBar(),
       body: Stack(
@@ -237,25 +268,31 @@ class _JournalPageState extends State<JournalPage>
             child: CustomScrollView(
               controller: _scrollController,
               physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics()),
+                parent: BouncingScrollPhysics(),
+              ),
               slivers: [
                 SliverToBoxAdapter(
-                    child: _stagger(index: 0, child: _buildHeader())),
+                  child: _stagger(index: 0, child: _buildHeader()),
+                ),
                 SliverToBoxAdapter(
-                    child: _stagger(index: 1, child: _buildCurhatCard())),
+                  child: _stagger(index: 1, child: _buildCurhatCard()),
+                ),
                 SliverToBoxAdapter(
-                    child: _stagger(index: 2, child: _buildSectionLabel())),
+                  child: _stagger(index: 2, child: _buildSectionLabel()),
+                ),
                 SliverList(
                   delegate: SliverChildBuilderDelegate(
-                    (_, i) => _stagger(
-                        index: 3 + i, child: _buildQuestionCard(i)),
+                    (_, i) =>
+                        _stagger(index: 3 + i, child: _buildQuestionCard(i)),
                     childCount: 5,
                   ),
                 ),
                 SliverToBoxAdapter(
-                    child: _stagger(index: 8, child: _buildScoreRow())),
+                  child: _stagger(index: 8, child: _buildScoreRow()),
+                ),
                 SliverToBoxAdapter(
-                    child: _stagger(index: 9, child: _buildAnalyzeButton())),
+                  child: _stagger(index: 9, child: _buildAnalyzeButton()),
+                ),
                 const SliverToBoxAdapter(child: SizedBox(height: 48)),
               ],
             ),
@@ -278,28 +315,49 @@ class _JournalPageState extends State<JournalPage>
           child: Container(
             margin: const EdgeInsets.symmetric(vertical: 10),
             decoration: AppDecorations.card.copyWith(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.cardBackgroundDark
+                  : AppColors.cardBackground,
+              border: Border.all(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBorderDark
+                    : AppColors.cardBorder,
+                width: 1,
+              ),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(
+            child: Icon(
               Icons.arrow_back_ios_new_rounded,
-              color: AppColors.textPrimary,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimary,
               size: 16,
             ),
           ),
         ),
       ),
-      title: Text('Jurnal Harian', style: AppTextStyles.titleMD),
+      title: Builder(builder: (ctx) {
+        final d = Theme.of(ctx).brightness == Brightness.dark;
+        return Text('Jurnal Harian', style: AppTextStyles.titleMD.copyWith(
+          color: d ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ));
+      }),
       centerTitle: true,
       actions: [
         Container(
           margin: const EdgeInsets.only(right: 20, top: 10, bottom: 10),
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.primaryLight,
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.primary.withOpacity(0.15)
+                : AppColors.primaryLight.withOpacity(0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.auto_awesome_rounded,
-              color: AppColors.primary, size: 18),
+          child: const Icon(
+            Icons.auto_awesome_rounded,
+            color: AppColors.primary,
+            size: 18,
+          ),
         ),
       ],
     );
@@ -329,7 +387,8 @@ class _JournalPageState extends State<JournalPage>
               top: -50 + moveYPurple,
               right: -50 + moveXPurple,
               child: Container(
-                width: 300, height: 300,
+                width: 300,
+                height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.blobPurple.withOpacity(pulsePurple),
@@ -340,7 +399,8 @@ class _JournalPageState extends State<JournalPage>
               bottom: 200 + moveYGreen,
               left: -50 + moveXGreen,
               child: Container(
-                width: 250, height: 250,
+                width: 250,
+                height: 250,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: AppColors.blobGreen.withOpacity(pulseGreen),
@@ -355,13 +415,32 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Header ───────────────────────────────────────────────────
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
     const weekdays = [
-      '', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'
+      '',
+      'Senin',
+      'Selasa',
+      'Rabu',
+      'Kamis',
+      'Jumat',
+      'Sabtu',
+      'Minggu',
     ];
     const months = [
-      '', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
-      'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+      '',
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
     ];
     final dateLabel =
         '${weekdays[now.weekday]}, ${now.day} ${months[now.month]}';
@@ -373,10 +452,11 @@ class _JournalPageState extends State<JournalPage>
         children: [
           // Tanggal chip
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+              color: isDark
+                  ? AppColors.primary.withOpacity(0.15)
+                  : AppColors.primarySurface,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
@@ -392,7 +472,9 @@ class _JournalPageState extends State<JournalPage>
           // Greeting — Georgia heading seperti DashboardPage
           RichText(
             text: TextSpan(
-              style: AppTextStyles.headingMD,
+              style: AppTextStyles.headingMD.copyWith(
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              ),
               children: const [
                 TextSpan(text: 'Bagaimana\n'),
                 TextSpan(text: 'perasaanmu hari ini?'),
@@ -404,7 +486,7 @@ class _JournalPageState extends State<JournalPage>
           Text(
             'Tidak ada jawaban yang salah. Ceritakan dengan jujur.',
             style: AppTextStyles.bodyMD.copyWith(
-              color: AppColors.textMuted,
+              color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               height: 1.55,
             ),
           ),
@@ -416,6 +498,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Curhat Card ──────────────────────────────────────────────
   Widget _buildCurhatCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedContainer(
@@ -423,6 +506,9 @@ class _JournalPageState extends State<JournalPage>
         // Pakai AppDecorations.card; override border saat fokus
         decoration: _textFocused
             ? AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 border: Border.all(
                   color: AppColors.primary.withOpacity(0.35),
                   width: 1.5,
@@ -435,7 +521,17 @@ class _JournalPageState extends State<JournalPage>
                   ),
                 ],
               )
-            : AppDecorations.card,
+            : AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -444,31 +540,38 @@ class _JournalPageState extends State<JournalPage>
             Row(
               children: [
                 Container(
-                  width: 36, height: 36,
+                  width: 36,
+                  height: 36,
                   decoration: BoxDecoration(
-                    color: AppColors.primaryLight,
+                    color: isDark
+                        ? AppColors.primary.withOpacity(0.15)
+                        : AppColors.primarySurface,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   alignment: Alignment.center,
-                  child: const Text('✍️',
-                      style: TextStyle(fontSize: 17)),
+                  child: const Text('✍️', style: TextStyle(fontSize: 17)),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Tulis Perasaanmu',
-                        style: AppTextStyles.titleSM),
-                    Text(
-                      'Ceritakan apa saja yang ada di pikiranmu',
-                      style: AppTextStyles.caption,
-                    ),
-                  ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Tulis Perasaanmu', style: AppTextStyles.titleSM.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      )),
+                      Text(
+                        'Ceritakan apa saja yang ada di pikiranmu',
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
             const SizedBox(height: 16),
-            Divider(height: 1, color: AppColors.cardBorder),
+            Divider(height: 1, color: isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
             const SizedBox(height: 16),
             // TextField
             TextField(
@@ -476,11 +579,14 @@ class _JournalPageState extends State<JournalPage>
               focusNode: _textFocus,
               maxLines: 5,
               minLines: 3,
-              style: AppTextStyles.bodyMD.copyWith(height: 1.65),
+              style: AppTextStyles.bodyMD.copyWith(
+                height: 1.65,
+                color: isDark ? AppColors.textPrimaryDark : AppColors.textSecondary,
+              ),
               decoration: InputDecoration(
                 hintText: 'Hari ini aku merasa...',
                 hintStyle: AppTextStyles.bodyMD.copyWith(
-                  color: AppColors.textMuted.withOpacity(0.55),
+                  color: (isDark ? AppColors.textMutedDark : AppColors.textMuted).withOpacity(0.55),
                 ),
                 border: InputBorder.none,
                 isDense: true,
@@ -497,6 +603,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Section Label ────────────────────────────────────────────
   Widget _buildSectionLabel() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
       child: Column(
@@ -513,7 +620,9 @@ class _JournalPageState extends State<JournalPage>
           const SizedBox(height: 4),
           Text(
             'Pilih seberapa sering kamu merasakan hal-hal\nberikut dalam 2 minggu terakhir.',
-            style: AppTextStyles.bodySM,
+            style: AppTextStyles.bodySM.copyWith(
+              color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+            ),
           ),
         ],
       ),
@@ -522,8 +631,9 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Question Card ────────────────────────────────────────────
   Widget _buildQuestionCard(int index) {
-    final q      = _questions[index];
-    final value  = _getValue(index);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final q = _questions[index];
+    final value = _getValue(index);
     final active = value > 0;
 
     return Padding(
@@ -533,6 +643,9 @@ class _JournalPageState extends State<JournalPage>
         curve: Curves.easeOutCubic,
         decoration: active
             ? AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 border: Border.all(
                   color: AppColors.primary.withOpacity(0.28),
                   width: 1.5,
@@ -545,7 +658,17 @@ class _JournalPageState extends State<JournalPage>
                   ),
                 ],
               )
-            : AppDecorations.card,
+            : AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
         padding: const EdgeInsets.all(18),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -555,7 +678,8 @@ class _JournalPageState extends State<JournalPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 40, height: 40,
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
                     color: active
                         ? AppColors.primaryLight
@@ -563,19 +687,24 @@ class _JournalPageState extends State<JournalPage>
                     borderRadius: BorderRadius.circular(11),
                   ),
                   alignment: Alignment.center,
-                  child: Text(q.emoji,
-                      style: const TextStyle(fontSize: 19)),
+                  child: Text(q.emoji, style: const TextStyle(fontSize: 19)),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(q.title, style: AppTextStyles.titleSM),
+                      Text(q.title, style: AppTextStyles.titleSM.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      )),
                       const SizedBox(height: 2),
-                      Text(q.subtitle,
-                          style: AppTextStyles.caption
-                              .copyWith(height: 1.45)),
+                      Text(
+                        q.subtitle,
+                        style: AppTextStyles.caption.copyWith(
+                          height: 1.45,
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -614,11 +743,8 @@ class _JournalPageState extends State<JournalPage>
                 child: Text(
                   _scaleLabels[value],
                   style: AppTextStyles.caption.copyWith(
-                    color: active
-                        ? AppColors.primary
-                        : AppColors.textMuted,
-                    fontWeight:
-                        active ? FontWeight.w600 : FontWeight.w400,
+                    color: active ? AppColors.primary : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
                   ),
                 ),
               ),
@@ -631,30 +757,45 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Score Row ────────────────────────────────────────────────
   Widget _buildScoreRow() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: Container(
-        decoration: AppDecorations.card,
-        padding:
-            const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        decoration: AppDecorations.card.copyWith(
+          color: Theme.of(context).brightness == Brightness.dark
+              ? AppColors.cardBackgroundDark
+              : AppColors.cardBackground,
+          border: Border.all(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.cardBorderDark
+                : AppColors.cardBorder,
+            width: 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: Row(
           children: [
             Container(
-              width: 40, height: 40,
+              width: 40,
+              height: 40,
               decoration: BoxDecoration(
                 color: AppColors.primaryLight,
                 borderRadius: BorderRadius.circular(11),
               ),
               alignment: Alignment.center,
-              child: const Icon(Icons.bar_chart_rounded,
-                  color: AppColors.primary, size: 20),
+              child: const Icon(
+                Icons.bar_chart_rounded,
+                color: AppColors.primary,
+                size: 20,
+              ),
             ),
             const SizedBox(width: 14),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total Skor PHQ-9',
-                    style: AppTextStyles.caption),
+                Text('Total Skor PHQ-9', style: AppTextStyles.caption.copyWith(
+                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                )),
                 RichText(
                   text: TextSpan(
                     children: [
@@ -668,7 +809,7 @@ class _JournalPageState extends State<JournalPage>
                       TextSpan(
                         text: ' / 15',
                         style: AppTextStyles.bodyMD.copyWith(
-                          color: AppColors.textMuted,
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -684,12 +825,13 @@ class _JournalPageState extends State<JournalPage>
               children: List.generate(15, (i) {
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 200),
-                  width: 7, height: 7,
+                  width: 7,
+                  height: 7,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: i < _totalSkor
                         ? AppColors.primary.withOpacity(0.7)
-                        : AppColors.cardBorder,
+                        : (isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
                   ),
                 );
               }),
@@ -729,20 +871,27 @@ class _JournalPageState extends State<JournalPage>
           alignment: Alignment.center,
           child: _isLoading
               ? const SizedBox(
-                  width: 22, height: 22,
+                  width: 22,
+                  height: 22,
                   child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
+                    color: Colors.white,
+                    strokeWidth: 2,
+                  ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.psychology_alt_rounded,
-                        color: Colors.white, size: 20),
+                    const Icon(
+                      Icons.psychology_alt_rounded,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     const SizedBox(width: 10),
                     Text(
                       'Analisis Kondisiku',
-                      style: AppTextStyles.titleSM
-                          .copyWith(color: Colors.white),
+                      style: AppTextStyles.titleSM.copyWith(
+                        color: Colors.white,
+                      ),
                     ),
                   ],
                 ),
@@ -775,8 +924,11 @@ class _StepChip extends StatelessWidget {
   final int step;
   final bool isSelected;
   final VoidCallback onTap;
-  const _StepChip(
-      {required this.step, required this.isSelected, required this.onTap});
+  const _StepChip({
+    required this.step,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -800,9 +952,15 @@ class _StepChip extends StatelessWidget {
                 ],
               )
             : BoxDecoration(
-                color: AppColors.background,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.background,
                 borderRadius: BorderRadius.circular(11),
-                border: Border.all(color: AppColors.cardBorder),
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                ),
               ),
         alignment: Alignment.center,
         child: Text(
@@ -811,7 +969,11 @@ class _StepChip extends StatelessWidget {
             fontFamily: 'Georgia',
             fontSize: 15,
             fontWeight: FontWeight.w700,
-            color: isSelected ? Colors.white : AppColors.textMuted,
+            color: isSelected
+                ? Colors.white
+                : (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textMutedDark
+                    : AppColors.textMuted),
           ),
         ),
       ),
@@ -831,9 +993,14 @@ class _ScoreBadge extends StatelessWidget {
     final active = value > 0;
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
-      width: 32, height: 32,
+      width: 32,
+      height: 32,
       decoration: BoxDecoration(
-        color: active ? AppColors.primaryLight : AppColors.cardBorder,
+        color: active
+            ? AppColors.primaryLight
+            : (Theme.of(context).brightness == Brightness.dark
+                ? AppColors.cardBorderDark
+                : AppColors.cardBorder),
         borderRadius: BorderRadius.circular(9),
       ),
       alignment: Alignment.center,
@@ -846,7 +1013,11 @@ class _ScoreBadge extends StatelessWidget {
             fontFamily: 'Georgia',
             fontSize: 14,
             fontWeight: FontWeight.w700,
-            color: active ? AppColors.primary : AppColors.textMuted,
+            color: active
+                ? AppColors.primary
+                : (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textMutedDark
+                    : AppColors.textMuted),
           ),
         ),
       ),
@@ -861,10 +1032,11 @@ class _ResultSheet extends StatefulWidget {
   final String prediction;
   final int skorTotal;
   final VoidCallback onClose;
-  const _ResultSheet(
-      {required this.prediction,
-      required this.skorTotal,
-      required this.onClose});
+  const _ResultSheet({
+    required this.prediction,
+    required this.skorTotal,
+    required this.onClose,
+  });
 
   @override
   State<_ResultSheet> createState() => _ResultSheetState();
@@ -880,13 +1052,17 @@ class _ResultSheetState extends State<_ResultSheet>
   void initState() {
     super.initState();
     _ac = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600));
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
     _scaleAnim = CurvedAnimation(
-        parent: _ac,
-        curve: const Interval(0, 0.7, curve: Curves.elasticOut));
+      parent: _ac,
+      curve: const Interval(0, 0.7, curve: Curves.elasticOut),
+    );
     _fadeAnim = CurvedAnimation(
-        parent: _ac,
-        curve: const Interval(0.2, 0.9, curve: Curves.easeOut));
+      parent: _ac,
+      curve: const Interval(0.2, 0.9, curve: Curves.easeOut),
+    );
     _ac.forward();
   }
 
@@ -896,57 +1072,70 @@ class _ResultSheetState extends State<_ResultSheet>
     super.dispose();
   }
 
-  ({Color color, Color bgLight, String emoji, String title, String desc, String cta})
-      get _meta {
+  ({
+    Color color,
+    Color bgLight,
+    String emoji,
+    String title,
+    String desc,
+    String cta,
+  })
+  _getMeta(bool isDark) {
     switch (widget.prediction.toLowerCase()) {
       case 'minimal':
         return (
-          color:   const Color(0xFF059669),
-          bgLight: const Color(0xFFD1FAE5),
-          emoji:   '🌿',
-          title:   'Kondisi Minimal',
-          desc:    'Kondisi mentalmu cukup baik saat ini. Teruslah menjaga keseimbangan dan luangkan waktu untuk merawat diri.',
-          cta:     'Bagus sekali! Tetap jaga ya 💚',
+          color: const Color(0xFF10B981),
+          bgLight: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
+          emoji: '🌿',
+          title: 'Kondisi Minimal',
+          desc:
+              'Kondisi mentalmu cukup baik saat ini. Teruslah menjaga keseimbangan dan luangkan waktu untuk merawat diri.',
+          cta: 'Bagus sekali! Tetap jaga ya 💚',
         );
       case 'ringan':
         return (
-          color:   const Color(0xFFD97706),
-          bgLight: const Color(0xFFFEF3C7),
-          emoji:   '🌤️',
-          title:   'Gejala Ringan',
-          desc:    'Ada sedikit tekanan yang kamu rasakan. Istirahat yang cukup dan olahraga ringan dapat sangat membantu.',
-          cta:     'Kamu tidak sendiri 💛',
+          color: const Color(0xFFF59E0B),
+          bgLight: isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7),
+          emoji: '🌤️',
+          title: 'Gejala Ringan',
+          desc:
+              'Ada sedikit tekanan yang kamu rasakan. Istirahat yang cukup dan olahraga ringan dapat sangat membantu.',
+          cta: 'Kamu tidak sendiri 💛',
         );
       case 'sedang':
         return (
-          color:   const Color(0xFFEA580C),
-          bgLight: const Color(0xFFFFEDD5),
-          emoji:   '🌧️',
-          title:   'Gejala Sedang',
-          desc:    'Kamu mungkin membutuhkan dukungan lebih. Pertimbangkan untuk berbicara dengan konselor atau psikolog.',
-          cta:     'Minta bantuan adalah kekuatan 🧡',
+          color: const Color(0xFFF97316),
+          bgLight: isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5),
+          emoji: '🌧️',
+          title: 'Gejala Sedang',
+          desc:
+              'Kamu mungkin membutuhkan dukungan lebih. Pertimbangkan untuk berbicara dengan konselor atau psikolog.',
+          cta: 'Minta bantuan adalah kekuatan 🧡',
         );
       case 'berat':
       default:
         return (
-          color:   const Color(0xFFDC2626),
-          bgLight: const Color(0xFFFEE2E2),
-          emoji:   '🆘',
-          title:   'Gejala Berat',
-          desc:    'Kondisimu membutuhkan perhatian serius. Jangan ragu untuk segera menghubungi psikolog atau psikiater terdekat.',
-          cta:     'Segera cari bantuan profesional ❤️',
+          color: const Color(0xFFEF4444),
+          bgLight: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
+          emoji: '🆘',
+          title: 'Gejala Berat',
+          desc:
+              'Kondisimu membutuhkan perhatian serius. Jangan ragu untuk segera menghubungi psikolog atau psikiater terdekat.',
+          cta: 'Segera cari bantuan profesional ❤️',
         );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final m = _meta;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final m = _getMeta(isDark);
 
     return Container(
       decoration: BoxDecoration(
-        // Background putih/light sama persis dengan AppColors.background
-        color: AppColors.background,
+        color: Theme.of(context).brightness == Brightness.dark
+            ? AppColors.cardBackgroundDark
+            : AppColors.background,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
         boxShadow: const [
           BoxShadow(
@@ -962,9 +1151,12 @@ class _ResultSheetState extends State<_ResultSheet>
         children: [
           // Handle
           Container(
-            width: 36, height: 4,
+            width: 36,
+            height: 4,
             decoration: BoxDecoration(
-              color: AppColors.cardBorder,
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.cardBorderDark
+                  : AppColors.cardBorder,
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -974,16 +1166,15 @@ class _ResultSheetState extends State<_ResultSheet>
           ScaleTransition(
             scale: _scaleAnim,
             child: Container(
-              width: 80, height: 80,
+              width: 80,
+              height: 80,
               decoration: BoxDecoration(
                 color: m.bgLight,
                 shape: BoxShape.circle,
-                border: Border.all(
-                    color: m.color.withOpacity(0.3), width: 2),
+                border: Border.all(color: m.color.withOpacity(0.3), width: 2),
               ),
               alignment: Alignment.center,
-              child:
-                  Text(m.emoji, style: const TextStyle(fontSize: 36)),
+              child: Text(m.emoji, style: const TextStyle(fontSize: 36)),
             ),
           ),
           const SizedBox(height: 16),
@@ -992,22 +1183,27 @@ class _ResultSheetState extends State<_ResultSheet>
           FadeTransition(
             opacity: _fadeAnim,
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 16, vertical: 7),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 7),
               decoration: BoxDecoration(
                 color: m.bgLight,
                 borderRadius: BorderRadius.circular(24),
-                border: Border.all(
-                    color: m.color.withOpacity(0.25), width: 1),
+                border: Border.all(color: m.color.withOpacity(0.25), width: 1),
               ),
-              child: Text(m.title,
-                  style:
-                      AppTextStyles.titleSM.copyWith(color: m.color)),
+              child: Text(
+                m.title,
+                style: AppTextStyles.titleSM.copyWith(color: m.color),
+              ),
             ),
           ),
           const SizedBox(height: 6),
-          Text('Skor ${widget.skorTotal} / 15',
-              style: AppTextStyles.caption),
+          Text(
+            'Skor ${widget.skorTotal} / 15',
+            style: AppTextStyles.caption.copyWith(
+              color: Theme.of(context).brightness == Brightness.dark
+                  ? AppColors.textMutedDark
+                  : AppColors.textMuted,
+            ),
+          ),
           const SizedBox(height: 20),
 
           // Deskripsi — pakai AppDecorations.card
@@ -1016,12 +1212,24 @@ class _ResultSheetState extends State<_ResultSheet>
             child: Container(
               width: double.infinity,
               padding: const EdgeInsets.all(18),
-              decoration: AppDecorations.card,
+              decoration: AppDecorations.card.copyWith(
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.backgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
               child: Text(
                 m.desc,
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyMD.copyWith(
-                  color: AppColors.textSecondary,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textSecondaryDark
+                      : AppColors.textSecondary,
                   height: 1.65,
                 ),
               ),
@@ -1033,17 +1241,18 @@ class _ResultSheetState extends State<_ResultSheet>
           GestureDetector(
             onTap: widget.onClose,
             child: Container(
-              width: double.infinity, height: 52,
+              width: double.infinity,
+              height: 52,
               decoration: BoxDecoration(
                 color: m.bgLight,
                 borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                    color: m.color.withOpacity(0.2), width: 1),
+                border: Border.all(color: m.color.withOpacity(0.2), width: 1),
               ),
               alignment: Alignment.center,
-              child: Text(m.cta,
-                  style: AppTextStyles.titleSM
-                      .copyWith(color: m.color)),
+              child: Text(
+                m.cta,
+                style: AppTextStyles.titleSM.copyWith(color: m.color),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -1053,10 +1262,15 @@ class _ResultSheetState extends State<_ResultSheet>
             onTap: widget.onClose,
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Text('Tutup',
-                  style: AppTextStyles.caption.copyWith(
-                    decoration: TextDecoration.underline,
-                  )),
+              child: Text(
+                'Tutup',
+                style: AppTextStyles.caption.copyWith(
+                  decoration: TextDecoration.underline,
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.textMutedDark
+                      : AppColors.textMuted,
+                ),
+              ),
             ),
           ),
         ],

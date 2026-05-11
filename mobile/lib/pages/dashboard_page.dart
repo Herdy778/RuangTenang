@@ -18,12 +18,21 @@ class _DashboardPageState extends State<DashboardPage>
     with TickerProviderStateMixin {
   late AnimationController _blobAnimController;
   late AnimationController _staggeredController;
-  String _userName = "";
+  String userName = "Pengguna";
+  String? _profileImageUrl;
+
+  Future<void> _loadProfileData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('nama_lengkap') ?? "Pengguna";
+      _profileImageUrl = prefs.getString('profile_image_url');
+    });
+  }
 
   @override
   void initState() {
     super.initState();
-    _loadUserName();
+    _loadProfileData();
     _blobAnimController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 10),
@@ -40,16 +49,6 @@ class _DashboardPageState extends State<DashboardPage>
     });
   }
 
-  Future<void> _loadUserName() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _userName = prefs.getString('nama_lengkap') ?? "Guest";
-
-      // Jika kosong, mungkin data lama (sebelum update SharedPreferences).
-      if (_userName.isEmpty) _userName = "User";
-    });
-  }
-
   @override
   void dispose() {
     _blobAnimController.dispose();
@@ -61,25 +60,19 @@ class _DashboardPageState extends State<DashboardPage>
     // Karena arsitektur menggunakan pemanggilan Future statis (inline) di FutureBuilder,
     // kita sekadar melakukan setState untuk memicu re-render dan menunda penyelesaian RefreshIndicator
     // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
+    await _loadProfileData(); // Tarik ulang foto dan nama jika berubah
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 800));
   }
 
-  Future<void> _logout() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Hapus semua data sesi
-    if (mounted) {
-      Navigator.pushNamedAndRemoveUntil(context, '/login', (route) => false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     int animIndex =
         0; // Digunakan secara inkremental untuk animasi staggered per elemen
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Latar belakang: Animasi Blobs melayang pelan secara diagonal
@@ -232,6 +225,7 @@ class _DashboardPageState extends State<DashboardPage>
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            final isDark = Theme.of(context).brightness == Brightness.dark;
             return Container(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -240,7 +234,7 @@ class _DashboardPageState extends State<DashboardPage>
                 right: 24,
               ),
               decoration: BoxDecoration(
-                color: AppColors.background,
+                color: Theme.of(context).scaffoldBackgroundColor,
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(24),
                 ),
@@ -262,7 +256,9 @@ class _DashboardPageState extends State<DashboardPage>
                   const SizedBox(height: 24),
                   Text(
                     "Bagaimana perasaanmu saat ini?",
-                    style: AppTextStyles.titleMD,
+                    style: AppTextStyles.titleMD.copyWith(
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   Row(
@@ -318,10 +314,15 @@ class _DashboardPageState extends State<DashboardPage>
                     controller: noteController,
                     maxLines: 3,
                     decoration: InputDecoration(
-                      hintText: "Ceritakan sedikit tentang perasaanmu...",
-                      hintStyle: TextStyle(color: AppColors.textMuted),
+                      hintStyle: TextStyle(
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
+                      ),
                       filled: true,
-                      fillColor: Colors.grey[100],
+                      fillColor: isDark
+                          ? AppColors.inputFillDark
+                          : Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -347,7 +348,9 @@ class _DashboardPageState extends State<DashboardPage>
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     const SnackBar(
-                                      content: Text('Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝'),
+                                      content: Text(
+                                        'Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝',
+                                      ),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
                                       duration: Duration(seconds: 2),
@@ -355,8 +358,12 @@ class _DashboardPageState extends State<DashboardPage>
                                   );
                                   setState(() {});
                                   // Arahkan ke tab Jurnal setelah 2 detik, bawa teksnya
-                                  await Future.delayed(const Duration(seconds: 2));
-                                  widget.onNavigateToJournal?.call(noteController.text);
+                                  await Future.delayed(
+                                    const Duration(seconds: 2),
+                                  );
+                                  widget.onNavigateToJournal?.call(
+                                    noteController.text,
+                                  );
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
@@ -465,23 +472,28 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
             Container(
-              width: 48,
-              height: 48,
-              decoration: const BoxDecoration(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: AppGradients.avatarGradient,
+                color: AppColors.primaryBorder,
+                image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(_profileImageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
               ),
-              child: const Icon(
-                Icons.person_rounded,
-                color: Colors.white,
-                size: 28,
-              ),
+              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+                  ? const Icon(Icons.person, color: AppColors.primary, size: 32)
+                  : null,
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -490,11 +502,13 @@ class _DashboardPageState extends State<DashboardPage>
                 children: [
                   RichText(
                     text: TextSpan(
-                      style: AppTextStyles.headingMD,
+                      style: AppTextStyles.headingMD.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      ),
                       children: [
                         const TextSpan(text: "Selamat datang kembali,\n"),
                         TextSpan(
-                          text: _userName,
+                          text: userName,
                           style: AppTextStyles.headingMD.copyWith(
                             fontStyle: FontStyle.italic,
                             color: AppColors.primary,
@@ -508,56 +522,11 @@ class _DashboardPageState extends State<DashboardPage>
                   Text(
                     "Bagaimana perasaanmu hari ini?",
                     style: AppTextStyles.bodyMD.copyWith(
-                      color: AppColors.textMuted,
+                      color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                     ),
                   ),
                 ],
               ),
-            ),
-            IconButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text(
-                      "Logout",
-                      style: TextStyle(fontWeight: FontWeight.bold),
-                    ),
-                    content: const Text("Apakah yakin ingin keluar dari akun?"),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.grey[700]),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          Navigator.pop(context);
-                          _logout();
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.redAccent,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text(
-                          "Keluar",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-              icon: const Icon(Icons.logout_rounded, color: Colors.redAccent),
-              padding: EdgeInsets.zero,
-              constraints: const BoxConstraints(),
             ),
           ],
         ),
@@ -633,6 +602,7 @@ class _DashboardPageState extends State<DashboardPage>
     bool isPrimary, {
     VoidCallback? onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
@@ -651,6 +621,15 @@ class _DashboardPageState extends State<DashboardPage>
                   ],
                 )
               : AppDecorations.card.copyWith(
+                  color: isDark
+                      ? AppColors.cardBackgroundDark
+                      : AppColors.cardBackground,
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.cardBorderDark
+                        : AppColors.cardBorder,
+                    width: 1,
+                  ),
                   borderRadius: BorderRadius.circular(16),
                 ),
           child: Column(
@@ -665,7 +644,11 @@ class _DashboardPageState extends State<DashboardPage>
                   fontFamily: 'Georgia',
                   fontWeight: FontWeight.w600,
                   fontSize: 22,
-                  color: isPrimary ? Colors.white : AppColors.textPrimary,
+                  color: isPrimary
+                      ? Colors.white
+                      : (isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary),
                 ),
               ),
               const SizedBox(height: 8),
@@ -675,7 +658,7 @@ class _DashboardPageState extends State<DashboardPage>
                 style: AppTextStyles.caption.copyWith(
                   color: isPrimary
                       ? Colors.white.withOpacity(0.9)
-                      : AppColors.textMuted,
+                      : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -687,6 +670,7 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildCTACard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -742,11 +726,17 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildRecentEntriesTitle() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Text("Jurnal Terbaru", style: AppTextStyles.titleMD),
+        Text(
+          "Jurnal Terbaru",
+          style: AppTextStyles.titleMD.copyWith(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
+        ),
         GestureDetector(
           onTap: () {
             // Navigasi ke tab Jurnal (index 1)
@@ -762,6 +752,7 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildRecentList() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return FutureBuilder<List<dynamic>>(
       future: ApiService().fetchRecentJournals(limit: 3),
       builder: (context, snapshot) {
@@ -781,7 +772,9 @@ class _DashboardPageState extends State<DashboardPage>
             child: Center(
               child: Text(
                 'Belum ada jurnal. Yuk mulai menulis! ✍️',
-                style: AppTextStyles.bodyMD.copyWith(color: AppColors.textMuted),
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -800,9 +793,11 @@ class _DashboardPageState extends State<DashboardPage>
               final now = DateTime.now();
               final diff = now.difference(dt).inDays;
               if (diff == 0) {
-                dateLabel = 'Hari ini, ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+                dateLabel =
+                    'Hari ini, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
               } else if (diff == 1) {
-                dateLabel = 'Kemarin, ${dt.hour.toString().padLeft(2,'0')}:${dt.minute.toString().padLeft(2,'0')}';
+                dateLabel =
+                    'Kemarin, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
               } else {
                 dateLabel = '${dt.day}/${dt.month}/${dt.year}';
               }
@@ -812,7 +807,17 @@ class _DashboardPageState extends State<DashboardPage>
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(16),
-              decoration: AppDecorations.card,
+              decoration: AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -820,7 +825,10 @@ class _DashboardPageState extends State<DashboardPage>
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: moodStyle.background,
                           borderRadius: BorderRadius.circular(20),
@@ -828,7 +836,10 @@ class _DashboardPageState extends State<DashboardPage>
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(moodStyle.emoji, style: const TextStyle(fontSize: 12)),
+                            Text(
+                              moodStyle.emoji,
+                              style: const TextStyle(fontSize: 12),
+                            ),
                             const SizedBox(width: 6),
                             Text(
                               mood,
@@ -840,13 +851,20 @@ class _DashboardPageState extends State<DashboardPage>
                           ],
                         ),
                       ),
-                      Text(dateLabel, style: AppTextStyles.caption),
+                      Text(
+                        dateLabel,
+                        style: AppTextStyles.caption.copyWith(
+                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 12),
                   Text(
                     teks,
-                    style: AppTextStyles.bodyMD,
+                    style: AppTextStyles.bodyMD.copyWith(
+                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                    ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -967,21 +985,33 @@ class _MoodBarChartState extends State<MoodBarChart> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     const double maxBarHeight = 120.0;
 
     return Container(
       // Lebar total layar dikurangi margin/padding horizontal Dashboard (20+20 = 40)
       width: MediaQuery.of(context).size.width - 40,
       padding: const EdgeInsets.all(20),
-      decoration: AppDecorations.card,
+      decoration: AppDecorations.card.copyWith(
+        color: isDark ? AppColors.cardBackgroundDark : AppColors.cardBackground,
+        border: Border.all(
+          color: isDark ? AppColors.cardBorderDark : AppColors.cardBorder,
+          width: 1,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text("Tren Mood Mingguan", style: AppTextStyles.titleMD),
+          Text(
+            "Tren Mood Mingguan",
+            style: AppTextStyles.titleMD.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 12),
 
           SizedBox(
-            height: 180,
+            height: 200,
             child: Stack(
               children: [
                 // Grid horizontal belakang
@@ -1024,6 +1054,8 @@ class _MoodBarChartState extends State<MoodBarChart> {
                             });
                           },
                           child: Column(
+                            // Menambahkan expanded atau membatasi ukuran bar jika lebih besar dari maxBarHeight
+                            mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               // Tooltip Interaktif
@@ -1037,7 +1069,7 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppColors.textPrimary,
+                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -1105,8 +1137,10 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                       ? FontWeight.w700
                                       : FontWeight.w500,
                                   color: isSelected
-                                      ? AppColors.textPrimary
-                                      : AppColors.textMuted,
+                                      ? AppColors.primary
+                                      : (isDark
+                                          ? AppColors.textMutedDark
+                                          : AppColors.textMuted),
                                 ),
                               ),
                             ],

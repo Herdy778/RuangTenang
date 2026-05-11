@@ -178,6 +178,11 @@ export default function AdminUsers() {
           <button style={styles.logoutBtn} onClick={doLogout}>
             Keluar
           </button>
+          <button
+            onClick={() => navigate("/admin/manajemen")}
+          >
+            Manajemen Admin
+          </button>
         </div>
       </nav>
 

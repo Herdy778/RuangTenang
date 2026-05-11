@@ -254,6 +254,12 @@ export default function Dashboard() {
               >
                 Lihat Semua Jurnal ({journals.length})
               </button>
+
+              <button
+                onClick={() => navigate("/admin/manajemen")}
+              >
+                Manajemen Admin
+              </button>
             </div>
           )}
         </div>

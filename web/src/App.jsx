@@ -5,6 +5,7 @@ import AdminUsers from './pages/AdminUsers';
 import AdminJournals from './pages/AdminJournals';
 import AdminArticles from './pages/AdminArticles';
 import Profile from './pages/Profile';
+import AdminManajemen from './pages/AdminManajemen';
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem('token');
@@ -39,7 +40,12 @@ function App() {
 
         <Route
           path="/profile"
-          element={<PrivateRoute><Profile/></PrivateRoute>}
+          element={<PrivateRoute><Profile /></PrivateRoute>}
+        />
+
+        <Route
+          path="/admin/manajemen"
+          element={<PrivateRoute><AdminManajemen /></PrivateRoute>}
         />
       </Routes>
     </BrowserRouter>
