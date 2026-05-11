@@ -6,13 +6,13 @@ use App\Models\Token;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Contracts\Auth\Authenticatable;
 
 class TokenAuth
 {
     public function handle(Request $request, Closure $next)
     {
         try {
+            // Ambil bearer token dari header Authorization
             $bearerToken = $request->bearerToken();
 
             if (!$bearerToken) {
@@ -22,7 +22,10 @@ class TokenAuth
                 ], 401);
             }
 
+            // Hash token karena token disimpan hashed di database
             $hashedToken = hash('sha256', $bearerToken);
+
+            // Cari token
             $token = Token::where('token', $hashedToken)->first();
 
             if (!$token) {
@@ -32,7 +35,7 @@ class TokenAuth
                 ], 401);
             }
 
-            // Query user langsung dari token
+            // Cari user berdasarkan token
             $user = User::where('_id', $token->user_id)->first();
 
             if (!$user) {
@@ -42,40 +45,40 @@ class TokenAuth
                 ], 401);
             }
 
-            $token->update(['last_used_at' => now()]);
+            // Update last_used_at
+            $token->update([
+                'last_used_at' => now()
+            ]);
 
-            // Properly set user untuk Laravel auth system
-            if ($request instanceof Request) {
-                $request->setUserResolver(function () use ($user) {
-                    return $user;
-                });
-            }
+            /*
+             |-----------------------------------------
+             | PENTING:
+             | Simpan user ke request
+             |-----------------------------------------
+             */
+
+            // supaya bisa dipanggil: $request->auth_user
+            $request->merge([
+                'auth_user' => $user
+            ]);
+
+            // supaya bisa dipanggil: auth()->user()
+            $request->setUserResolver(function () use ($user) {
+                return $user;
+            });
 
             return $next($request);
+
         } catch (\Exception $e) {
-            \Log::error('TokenAuth middleware error: ' . $e->getMessage());
+
+            \Log::error('TokenAuth middleware error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'status' => 'error',
                 'pesan'  => 'Authentication error: ' . $e->getMessage()
             ], 401);
         }
-
-        // Gunakan Eloquent User model agar konversi _id otomatis dihandle
-        $user = User::where('_id', $token->user_id)->first();
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'pesan'  => 'User tidak ditemukan'
-            ], 401);
-        }
-
-        $token->update(['last_used_at' => now()]);
-
-        // Simpan user ke request untuk diakses controller
-        $request->merge(['auth_user' => $user]);
-        $request->setUserResolver(fn() => $user);
-
-        return $next($request);
     }
 }

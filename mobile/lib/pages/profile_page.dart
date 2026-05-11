@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/theme_notifier.dart';
 import 'edit_profile_page.dart';
 
 class ProfilePage extends StatefulWidget {
@@ -205,12 +207,15 @@ class _ProfilePageState extends State<ProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDark = themeNotifier.isDarkMode;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
         title: Text('Profil & Pengaturan', style: AppTextStyles.headingMD),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -227,6 +232,7 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildProfileHeader() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Column(
       children: [
         CircleAvatar(
@@ -243,7 +249,8 @@ class _ProfilePageState extends State<ProfilePage> {
         const SizedBox(height: 16),
         Text(
           _userName,
-          style: AppTextStyles.headingMD.copyWith(color: AppColors.textPrimary),
+          style: AppTextStyles.headingMD.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
         ),
         const SizedBox(height: 4),
         Text(
@@ -277,13 +284,35 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildSettingsSection() {
+    final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final isDark = themeNotifier.isDarkMode;
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Pengaturan Aplikasi', style: AppTextStyles.titleMD),
+          Text(
+            'Pengaturan Aplikasi',
+            style: AppTextStyles.titleMD.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 16),
+          _buildSettingsTile(
+            icon: isDark ? Icons.dark_mode : Icons.light_mode,
+            title: 'Mode Gelap',
+            trailing: Switch(
+              value: isDark,
+              onChanged: (val) {
+                themeNotifier.toggleTheme(val);
+              },
+              activeColor: AppColors.primary,
+            ),
+            onTap: () {
+              themeNotifier.toggleTheme(!isDark);
+            },
+          ),
           _buildSettingsTile(
             icon: Icons.notifications_outlined,
             title: 'Notifikasi',
@@ -301,7 +330,12 @@ class _ProfilePageState extends State<ProfilePage> {
             onTap: _showPrivacySettings,
           ),
           const SizedBox(height: 24),
-          Text('Bantuan & Info', style: AppTextStyles.titleMD),
+          Text(
+            'Bantuan & Info',
+            style: AppTextStyles.titleMD.copyWith(
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            ),
+          ),
           const SizedBox(height: 16),
           _buildSettingsTile(
             icon: Icons.help_outline,
@@ -371,8 +405,10 @@ class _ProfilePageState extends State<ProfilePage> {
     required IconData icon,
     required String title,
     String? subtitle,
+    Widget? trailing,
     required VoidCallback onTap,
   }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Container(
@@ -383,15 +419,26 @@ class _ProfilePageState extends State<ProfilePage> {
         ),
         child: Icon(icon, color: AppColors.primary, size: 20),
       ),
-      title: Text(title, style: AppTextStyles.titleSM),
-      subtitle: subtitle != null
-          ? Text(subtitle, style: AppTextStyles.caption)
-          : null,
-      trailing: const Icon(
-        Icons.arrow_forward_ios,
-        size: 16,
-        color: AppColors.textMuted,
+      title: Text(
+        title,
+        style: AppTextStyles.titleSM.copyWith(
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
       ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: AppTextStyles.caption.copyWith(
+                color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+              ),
+            )
+          : null,
+      trailing: trailing ??
+          Icon(
+            Icons.arrow_forward_ios,
+            size: 16,
+            color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+          ),
       onTap: onTap,
     );
   }

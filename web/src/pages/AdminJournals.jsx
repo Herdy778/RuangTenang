@@ -53,40 +53,26 @@ export default function AdminJournals() {
     setCurrentPage(1);
   }, [searchTerm, moodFilter]);
 
-  // Ambil daftar artikel untuk rekomendasi
- const fetchArticles = async () => {
-  try {
-    // Coba salah satu endpoint ini:
-    const res = await API.get("/articles");  // ← tanpa admin
-    // atau
-    // const res = await API.get("/api/articles");
-    
-    console.log("Response artikel:", res);
-    setArticles(res.data.data || []);
-  } catch (err) {
-    console.error("Error fetch articles:", err);
-    toast.error("Gagal memuat artikel");
-  }
-};
-
   // Kirim rekomendasi artikel
   const sendRecommendation = async (journalId, articleId) => {
   try {
-    console.log("Mengirim:", { journalId, articleId });
-    
-    // Coba salah satu endpoint ini:
-    const response = await API.post(`/admin/journals/${journalId}/recommend`, { articleId });
-    // atau
-    // const response = await API.post(`/recommendations`, { journalId, articleId });
-    
-    console.log("Response:", response);
+    await API.post("/admin/journals/send-article", {
+      journal_id: journalId,
+      article_id: articleId,
+    });
+
     toast.success("Rekomendasi berhasil dikirim!");
     setShowRecommendModal(false);
+
   } catch (err) {
-    console.error("Error:", err.response || err);
-    toast.error(err.response?.data?.message || "Gagal mengirim rekomendasi");
+    console.error(err.response || err);
+    toast.error(
+      err.response?.data?.message ||
+      "Gagal mengirim rekomendasi"
+    );
   }
 };
+
   async function fetchJournals() {
     try {
       const res = await API.get("/admin/journals");
@@ -296,17 +282,29 @@ async function handleDelete(id) {
                     <span style={styles.user}>
                       👤 {j.user_nama || "User"}
                     </span>
-                    <button 
-                      style={styles.recommendBtn}
-                      onClick={async () => {
-                        console.log("Tombol diklik, journal:", j);
-                        setSelectedJournal(j);
-                        await fetchArticles();
-                        setShowRecommendModal(true);
-                      }}
-                    >
-                      📖 Rekomendasi Artikel
-                    </button>
+                    <button
+  style={styles.recommendBtn}
+  onClick={async () => {
+    try {
+      setSelectedJournal(j);
+
+      const res = await API.get(
+        `/admin/journals/${j._id}/recommended-articles`
+      );
+
+      setArticles(res.data.data || []);
+      setShowRecommendModal(true);
+
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        "Gagal mengambil rekomendasi artikel"
+      );
+    }
+  }}
+>
+  📖 Rekomendasi Artikel
+</button>
                   </div>
                   <div style={{ marginTop: 16, display: "flex", gap: 10 }}>
   <button 
@@ -385,10 +383,11 @@ async function handleDelete(id) {
             {articles.map(article => (
               <div key={article._id} style={styles.articleItem}>
                 <div style={{ flex: 1 }}>
-                  <strong>{article.judul}</strong>
-                  <p style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
-                    {article.kategori || "Artikel"}
-                  </p>
+                  <strong>{article.judul_artikel}</strong>
+
+<p style={{ fontSize: 12, color: "#666", marginTop: 4 }}>
+  {article.kategori_tag || "Artikel"}
+</p>
                 </div>
                 <button 
                   style={styles.selectArticleBtn}

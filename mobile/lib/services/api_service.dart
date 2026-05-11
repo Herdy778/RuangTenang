@@ -108,4 +108,25 @@ class ApiService {
       throw Exception('Gagal ambil jurnal terbaru');
     }
   }
+
+ Future<List<dynamic>> fetchRecommendedArticles() async {
+  final response = await get('/my-recommended-articles');
+
+  print("ARTICLE RESPONSE: $response");
+
+  if (response['status'] == 'success') {
+    return response['data'];
+  } else {
+    return [];
+  }
+}
+
+Future<dynamic> get(String endpoint) async {
+   final res = await http.get(
+      Uri.parse('$baseUrl$endpoint'),
+      headers: await _headers(),
+   );
+
+   return jsonDecode(res.body);
+}
 }

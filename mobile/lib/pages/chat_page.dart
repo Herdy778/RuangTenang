@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../theme/app_theme.dart';
 import 'journal_page.dart'; // Untuk navigasi ke halaman Jurnal AI
@@ -184,6 +185,54 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
+  Future<void> loadChatHistory() async {
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse(historyUrl),
+      headers: {
+        "Accept": "application/json",
+        "Authorization": "Bearer $token",
+      },
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
+      final List messages = data['data'];
+
+      setState(() {
+        _messages.clear();
+
+        if (messages.isEmpty) {
+          _messages.add({
+            "role": "ai",
+            "text":
+                "Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.",
+            "moodCategory": null,
+          });
+        } else {
+          for (var msg in messages) {
+            _messages.add({
+              "role": msg['sender'],
+              "text": msg['message'],
+              "moodCategory": null,
+            });
+          }
+        }
+      });
+
+      _scrollToBottom();
+    }
+  } catch (e) {
+    print("Load history gagal: $e");
+  }
+}
+
   // Setiap pesan: role (user/ai), text, dan opsional moodCategory untuk artikel
   final List<Map<String, String?>> _messages = [
     {
@@ -207,15 +256,19 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   // --- PERHATIAN UNTUK URL API BACKEND ---
   // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
   final String apiUrl = "http://127.0.0.1:8000/api/test-ai";
+final String historyUrl = "http://127.0.0.1:8000/api/chat-history";
 
-  @override
-  void initState() {
-    super.initState();
-    _blobAnimController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 10),
-    )..repeat(reverse: true);
-  }
+@override
+void initState() {
+  super.initState();
+
+  _blobAnimController = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 10),
+  )..repeat(reverse: true);
+
+  loadChatHistory();
+}
 
   @override
   void dispose() {
@@ -254,14 +307,20 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     _scrollToBottom();
 
     try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({"message": text}),
-      );
+      final prefs = await SharedPreferences.getInstance();
+final token = prefs.getString('token');
+
+final response = await http.post(
+  Uri.parse(apiUrl),
+  headers: {
+    "Content-Type": "application/json",
+    "Accept": "application/json",
+    "Authorization": "Bearer $token",
+  },
+  body: jsonEncode({
+    "message": text,
+  }),
+);
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -314,11 +373,11 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
-          _buildAnimatedBlobs(),
+          RepaintBoundary(child: _buildAnimatedBlobs()),
 
           SafeArea(
             child: Column(
@@ -436,9 +495,11 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
         children: [
           if (Navigator.canPop(context))
             IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_rounded,
-                color: AppColors.textPrimary,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
               ),
               onPressed: () => Navigator.pop(context),
             )
@@ -513,7 +574,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                     decoration: BoxDecoration(
                       color: isUser
                           ? AppColors.primarySurface
-                          : AppColors.cardBackground,
+                          : (Theme.of(context).brightness == Brightness.dark
+                              ? AppColors.cardBackgroundDark
+                              : AppColors.cardBackground),
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -522,7 +585,13 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       ),
                       border: isUser
                           ? null
-                          : Border.all(color: AppColors.cardBorder, width: 1),
+                          : Border.all(
+                              color: Theme.of(context).brightness ==
+                                      Brightness.dark
+                                  ? AppColors.cardBorderDark
+                                  : AppColors.cardBorder,
+                              width: 1,
+                            ),
                       boxShadow: isUser
                           ? [
                               BoxShadow(
@@ -544,7 +613,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       style: AppTextStyles.bodyMD.copyWith(
                         color: isUser
                             ? AppColors.primary
-                            : AppColors.textPrimary,
+                            : (Theme.of(context).brightness == Brightness.dark
+                                ? AppColors.textPrimaryDark
+                                : AppColors.textPrimary),
                       ),
                     ),
                   ),
@@ -615,14 +686,20 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                color: AppColors.cardBackground,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
                   bottomLeft: Radius.circular(4),
                   bottomRight: Radius.circular(16),
                 ),
-                border: Border.all(color: AppColors.cardBorder, width: 1),
+                border: Border.all(
+                    color: Theme.of(context).brightness == Brightness.dark
+                        ? AppColors.cardBorderDark
+                        : AppColors.cardBorder,
+                    width: 1),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -657,9 +734,16 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
             bottom: 20,
           ),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.6),
-            border: const Border(
-              top: BorderSide(color: Colors.white, width: 1.5),
+            color: (Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBackgroundDark
+                    : Colors.white)
+                .withOpacity(0.8),
+            border: Border(
+              top: BorderSide(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : Colors.white,
+                  width: 1.5),
             ),
           ),
           child: Row(

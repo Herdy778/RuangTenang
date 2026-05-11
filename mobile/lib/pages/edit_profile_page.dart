@@ -301,17 +301,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Edit Profil',
-          style: TextStyle(color: Colors.black87),
+          style: AppTextStyles.titleMD.copyWith(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: Theme.of(context).scaffoldBackgroundColor,
         elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.black87),
+        iconTheme: IconThemeData(
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
@@ -382,79 +388,46 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
             const SizedBox(height: 32),
 
-            TextField(
+            _buildTextField(
               controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Nama Lengkap',
-                prefixIcon: const Icon(Icons.person_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              label: 'Nama Lengkap',
+              icon: Icons.person_outline,
             ),
             const SizedBox(height: 20),
-
-            TextField(
+            _buildTextField(
               controller: _emailController,
-              decoration: InputDecoration(
-                labelText: 'Email',
-                prefixIcon: const Icon(Icons.email_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
+              label: 'Email',
+              icon: Icons.email_outlined,
+              keyboardType: TextInputType.emailAddress,
             ),
             const SizedBox(height: 20),
-
-            DropdownButtonFormField<String>(
+            _buildDropdown(
               value: _gender,
-              items: _genderOptions
-                  .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                  .toList(),
+              options: _genderOptions,
+              label: 'Jenis Kelamin',
+              icon: Icons.person_pin_outlined,
               onChanged: (v) => setState(() => _gender = v!),
-              decoration: InputDecoration(
-                labelText: 'Jenis Kelamin',
-                prefixIcon: const Icon(Icons.person_pin_outlined),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
             ),
             const SizedBox(height: 20),
-
-            DropdownButtonFormField<String>(
+            _buildDropdown(
               value: _occupation,
-              items: _occupationOptions
-                  .map((opt) => DropdownMenuItem(value: opt, child: Text(opt)))
-                  .toList(),
+              options: _occupationOptions,
+              label: 'Aktivitas Utama',
+              icon: Icons.work_outline,
               onChanged: (v) => setState(() => _occupation = v!),
-              decoration: InputDecoration(
-                labelText: 'Aktivitas Utama',
-                prefixIcon: const Icon(Icons.work_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
             ),
             const SizedBox(height: 20),
-
-            TextField(
+            _buildTextField(
               controller: _passwordController,
+              label: 'Password Baru (Opsional)',
+              icon: Icons.lock_outline,
               obscureText: _isHidden,
-              decoration: InputDecoration(
-                labelText: 'Password Baru (Opsional)',
-                prefixIcon: const Icon(Icons.lock_outline),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+              suffixIcon: IconButton(
+                icon: Icon(
+                  _isHidden ? Icons.visibility_off : Icons.visibility,
+                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                 ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _isHidden ? Icons.visibility_off : Icons.visibility,
-                  ),
-                  onPressed: () {
-                    setState(() => _isHidden = !_isHidden);
-                  },
-                ),
+                onPressed: () => setState(() => _isHidden = !_isHidden),
               ),
             ),
             const SizedBox(height: 40),
@@ -481,6 +454,109 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    bool obscureText = false,
+    Widget? suffixIcon,
+    TextInputType? keyboardType,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return TextField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      style: AppTextStyles.bodyMD.copyWith(
+        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: AppTextStyles.label.copyWith(
+          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+        ),
+        suffixIcon: suffixIcon,
+        filled: true,
+        fillColor: isDark ? AppColors.inputFillDark : AppColors.inputFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required String value,
+    required List<String> options,
+    required String label,
+    required IconData icon,
+    required ValueChanged<String?> onChanged,
+  }) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return DropdownButtonFormField<String>(
+      value: value,
+      dropdownColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
+      items: options
+          .map((opt) => DropdownMenuItem(
+                value: opt,
+                child: Text(
+                  opt,
+                  style: AppTextStyles.bodyMD.copyWith(
+                    color: isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary,
+                  ),
+                ),
+              ))
+          .toList(),
+      onChanged: onChanged,
+      style: AppTextStyles.bodyMD.copyWith(
+        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: AppTextStyles.label.copyWith(
+          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+        ),
+        prefixIcon: Icon(
+          icon,
+          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+        ),
+        filled: true,
+        fillColor: isDark ? AppColors.inputFillDark : AppColors.inputFill,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
       ),
     );
   }

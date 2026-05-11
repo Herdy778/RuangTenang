@@ -5,12 +5,31 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Journal;
 use App\Models\Article;
+use App\Models\ChatMessage;
+use App\Models\ArticleRecommendation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\DB;
 
 class JournalController extends Controller
 {
+    private function getAuthenticatedUserId(Request $request)
+{
+    if (!isset($request->auth_user) || !$request->auth_user) {
+        throw new \Exception('Unauthorized: auth_user tidak ditemukan');
+    }
+
+    $userId = DB::connection('mongodb')
+        ->collection('users')
+        ->where('email', $request->auth_user->email)
+        ->value('_id');
+
+    if (!$userId) {
+        throw new \Exception('User tidak ditemukan di database');
+    }
+
+    return (string) $userId;
+}
     public function store(Request $request)
     {
         $request->validate([
@@ -62,13 +81,10 @@ class JournalController extends Controller
             $hasilMood = trim($aiResult['choices'][0]['message']['content'] ?? 'Netral');
             $hasilMood = preg_replace('/[^a-zA-Z]/', '', $hasilMood);
 
-            $userId = DB::connection('mongodb')
-                ->collection('users')
-                ->where('email', $request->auth_user->email)
-                ->value('_id');
+$userId = $this->getAuthenticatedUserId($request);
 
             $journal = Journal::create([
-                'user_id' => (string) $userId,
+                'user_id' => $userId,
                 'teks_curhat' => $curhatan,
                 'hasil_mood' => $hasilMood,
                 'tanggal' => now(),
@@ -99,12 +115,9 @@ class JournalController extends Controller
 
     public function index(Request $request)
     {
-        $userId = DB::connection('mongodb')
-            ->collection('users')
-            ->where('email', $request->auth_user->email)
-            ->value('_id');
+ $userId = $this->getAuthenticatedUserId($request);
 
-        $journals = Journal::where('user_id', (string) $userId)
+        $journals = Journal::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -126,6 +139,71 @@ class JournalController extends Controller
             'data' => $journals
         ]);
     }
+
+    // =========================
+// ADMIN AMBIL ARTIKEL REKOMENDASI
+// =========================
+public function recommendedArticles($id)
+{
+    $journal = Journal::where('_id', $id)->first();
+
+    if (!$journal) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Jurnal tidak ditemukan'
+        ], 404);
+    }
+
+    $mood = $journal->hasil_mood;
+
+    $articles = Article::where(
+        'kategori_tag',
+        $mood
+    )->limit(5)->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $articles
+    ]);
+}
+
+
+// =========================
+// ADMIN KIRIM ARTIKEL KE USER
+// =========================
+public function sendRecommendedArticle(Request $request)
+{
+    $request->validate([
+        'journal_id' => 'required',
+        'article_id' => 'required'
+    ]);
+
+    $journal = Journal::where(
+        '_id',
+        $request->journal_id
+    )->first();
+
+    if (!$journal) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Jurnal tidak ditemukan'
+        ], 404);
+    }
+
+    ArticleRecommendation::create([
+        'user_id' => $journal->user_id,
+        'journal_id' => $journal->_id,
+        'article_id' => $request->article_id,
+        'admin_id' => $request->auth_user->_id ?? null,
+        'is_read' => false,
+        'created_at' => now()
+    ]);
+
+    return response()->json([
+        'status' => 'success',
+        'message' => 'Artikel berhasil dikirim'
+    ]);
+}
 
     // =========================
     // ADMIN DELETE JURNAL
@@ -188,17 +266,35 @@ class JournalController extends Controller
     }
 
     // =========================
-    // 🔥 FILTER TOPIK (LAYER 1)
+    // 🔍 AMBIL USER ID
+    // =========================
+$userId = $this->getAuthenticatedUserId($request);
+
+    // =========================
+    // 🔥 FILTER TOPIK
     // =========================
     $allowedKeywords = [
-        'stres', 'cemas', 'depresi', 'sedih',
-        'overthinking', 'mental', 'emosi',
-        'burnout', 'trauma', 'hubungan',
-        'capek', 'lelah', 'bingung', 'takut',
-        'khawatir', 'gelisah', 'kesepian'
+        'stres',
+        'cemas',
+        'depresi',
+        'sedih',
+        'overthinking',
+        'mental',
+        'emosi',
+        'burnout',
+        'trauma',
+        'hubungan',
+        'capek',
+        'lelah',
+        'bingung',
+        'takut',
+        'khawatir',
+        'gelisah',
+        'kesepian'
     ];
 
     $isValid = false;
+
     foreach ($allowedKeywords as $keyword) {
         if (str_contains(strtolower($userMessage), $keyword)) {
             $isValid = true;
@@ -206,10 +302,31 @@ class JournalController extends Controller
         }
     }
 
-    // ❌ Kalau di luar topik → langsung tolak
+    // =========================
+    // ❌ TOPIK DI LUAR MENTAL HEALTH
+    // =========================
     if (!$isValid) {
+
+        $reply =
+            'Sepertinya itu di luar topik kesehatan mental. '
+            . 'Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊';
+
+        // Simpan pesan user
+        ChatMessage::create([
+         'user_id' => $userId,
+            'sender' => 'user',
+            'message' => $userMessage,
+        ]);
+
+        // Simpan balasan AI
+        ChatMessage::create([
+'user_id' => $userId,
+            'sender' => 'ai',
+            'message' => $reply,
+        ]);
+
         return response()->json([
-            'reply' => 'Sepertinya itu di luar topik kesehatan mental. Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊'
+            'reply' => $reply
         ]);
     }
 
@@ -217,36 +334,45 @@ class JournalController extends Controller
     // 🔑 API KEY CHECK
     // =========================
     $apiKey = env('GROQ_API_KEY');
+
     if (!$apiKey) {
         return response()->json([
-            'reply' => 'Maaf, layanan AI sedang tidak tersedia. API Key belum dikonfigurasi.'
+            'reply' => 'Maaf, layanan AI sedang tidak tersedia.'
         ], 500);
     }
 
     try {
+
         // =========================
-        // 🧠 PROMPT AI (LAYER 2)
+        // 💾 SIMPAN CHAT USER
+        // =========================
+        ChatMessage::create([
+          'user_id' => $userId,
+            'sender' => 'user',
+            'message' => $userMessage,
+        ]);
+
+        // =========================
+        // 🧠 SYSTEM PROMPT
         // =========================
         $systemPrompt = "
 Kamu adalah asisten psikologi bernama RuangTenang.
 
-Tugasmu adalah:
-- Mendengarkan curhatan pengguna dengan empati
-- Memberikan respon yang menenangkan dan suportif
+Tugasmu:
+- Mendengarkan curhatan pengguna
+- Memberikan dukungan emosional
 - Membantu pengguna memahami perasaannya
 
-BATASAN:
-- Hanya jawab topik kesehatan mental, emosi, dan hubungan
-- Jika pengguna keluar topik (misalnya memasak, teknologi, dll),
-  tolak dengan sopan dan arahkan kembali ke perasaan mereka
+Aturan:
+- Hanya jawab topik kesehatan mental
+- Jangan jawab topik di luar psikologi
+- Jangan menghakimi pengguna
 - Jangan memberikan diagnosis medis
-- Jangan menghakimi
-
-Gunakan bahasa yang hangat, santai, dan manusiawi seperti psikolog.
+- Gunakan bahasa hangat dan empatik
 ";
 
         // =========================
-        // 🚀 HIT API GROQ
+        // 🚀 HIT GROQ API
         // =========================
         $response = Http::timeout(30)->withHeaders([
             'Authorization' => 'Bearer ' . trim($apiKey),
@@ -268,32 +394,77 @@ Gunakan bahasa yang hangat, santai, dan manusiawi seperti psikolog.
         ]);
 
         // =========================
-        // ❌ HANDLE ERROR API
+        // ❌ HANDLE ERROR
         // =========================
         if ($response->failed()) {
+
+            $reply =
+                'Maaf, saya sedang mengalami gangguan koneksi. '
+                . 'Coba lagi ya 🙏';
+
+            // Simpan error response
+            ChatMessage::create([
+              'user_id' => $userId,
+                'sender' => 'ai',
+                'message' => $reply,
+            ]);
+
             return response()->json([
-                'reply' => 'Maaf, saya sedang mengalami gangguan koneksi. Coba lagi ya 🙏'
+                'reply' => $reply
             ], 500);
         }
 
         // =========================
-        // ✅ AMBIL HASIL AI
+        // ✅ HASIL AI
         // =========================
         $aiResult = $response->json();
+
         $hasilTeksAI = trim(
             $aiResult['choices'][0]['message']['content']
             ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
         );
+
+        // =========================
+        // 💾 SIMPAN BALASAN AI
+        // =========================
+        ChatMessage::create([
+          'user_id' => $userId,
+            'sender' => 'ai',
+            'message' => $hasilTeksAI,
+        ]);
 
         return response()->json([
             'reply' => $hasilTeksAI
         ]);
 
     } catch (\Exception $e) {
+
+        $reply = 'Maaf, terjadi kesalahan pada sistem AI.';
+
+        ChatMessage::create([
+           'user_id' => $userId,
+            'sender' => 'ai',
+            'message' => $reply,
+        ]);
+
         return response()->json([
-            'reply' => 'Maaf, terjadi kesalahan pada sistem AI.'
+            'reply' => $reply
         ], 500);
     }
+}
+
+public function getChatHistory(Request $request)
+{
+    $userId = $this->getAuthenticatedUserId($request);
+
+    $messages = ChatMessage::where('user_id', $userId)
+    ->orderBy('created_at', 'asc')
+    ->get();
+
+    return response()->json([
+        'status' => 'success',
+        'data' => $messages
+    ]);
 }
 
     public function analyzeMentalHealth(Request $request)
@@ -309,13 +480,7 @@ Gunakan bahasa yang hangat, santai, dan manusiawi seperti psikolog.
                 $hasilPrediksi = $response->json();
 
                 // 3. Simpan jurnal ke MongoDB
-                $userId = null;
-                if ($request->auth_user) {
-                    $userId = DB::connection('mongodb')
-                        ->collection('users')
-                        ->where('email', $request->auth_user->email)
-                        ->value('_id');
-                }
+                $userId = $this->getAuthenticatedUserId($request);
 
                 $kategoriML = $hasilPrediksi['prediction'] ?? 'Minimal';
                 $skorTotal = $hasilPrediksi['skor_total'] ?? 0;
@@ -390,7 +555,7 @@ Gunakan bahasa yang hangat, santai, dan manusiawi seperti psikolog.
                 // ==========================================
 
                 Journal::create([
-                    'user_id' => (string) $userId,
+                  'user_id' => $userId,
                     'teks_curhat' => $teksCurhat,
                     'hasil_mood' => $moodMap[$kategoriFinal] ?? 'Netral',
                     'kategori_phq' => $kategoriFinal,

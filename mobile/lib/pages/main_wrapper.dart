@@ -30,39 +30,39 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      DashboardPage(onNavigateToJournal: _navigateToJournal),
-      JournalPage(initialNote: _journalInitialNote),
-      const ChatAiPage(),
-      const ProfilePage(),
-    ];
-
+    // Menggunakan IndexedStack agar semua halaman tetap 'alive' dan menghindari
+    // masalah unmount dependency saat transisi tema di Flutter Web.
     return Scaffold(
       extendBody: true,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeInCubic,
-        switchOutCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: KeyedSubtree(
-          key: ValueKey<int>(_currentIndex),
-          child: pages[_currentIndex],
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          DashboardPage(
+            key: const ValueKey('dashboard'),
+            onNavigateToJournal: _navigateToJournal,
+          ),
+          JournalPage(
+            key: const ValueKey('journal'),
+            initialNote: _journalInitialNote,
+          ),
+          const ChatAiPage(key: ValueKey('chat')),
+          const ProfilePage(key: ValueKey('profile')),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
   Widget _buildBottomNav() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         boxShadow: [
           BoxShadow(
-            color: Color(0x0A000000),
+            color: isDark ? Colors.black26 : const Color(0x0A000000),
             blurRadius: 20,
-            offset: Offset(0, -5),
+            offset: const Offset(0, -5),
           ),
         ],
       ),
@@ -70,7 +70,8 @@ class _MainWrapperState extends State<MainWrapper> {
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Container(
-            color: Colors.white.withOpacity(0.85),
+            color: (isDark ? AppColors.cardBackgroundDark : Colors.white)
+                .withOpacity(0.85),
             child: BottomNavigationBar(
               currentIndex: _currentIndex,
               onTap: (index) {
@@ -80,14 +81,16 @@ class _MainWrapperState extends State<MainWrapper> {
               },
               backgroundColor: Colors.transparent,
               elevation: 0,
-              selectedItemColor: AppColors.primary,
-              unselectedItemColor: AppColors.textMuted,
+              selectedItemColor: isDark ? AppColors.primaryLight : AppColors.primary,
+              unselectedItemColor: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               selectedLabelStyle: AppTextStyles.label.copyWith(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
+                color: isDark ? AppColors.primaryLight : AppColors.primary,
               ),
               unselectedLabelStyle: AppTextStyles.caption.copyWith(
                 fontSize: 12,
+                color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               ),
               items: const [
                 BottomNavigationBarItem(
