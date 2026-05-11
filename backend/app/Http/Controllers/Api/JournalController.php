@@ -206,7 +206,7 @@ public function sendRecommendedArticle(Request $request)
 }
 
     // =========================
-    // ADMIN DELETE JURNAL
+    // ADMIN DELETE JURNAL          
     // =========================
     public function deleteJournal($id)
     {
