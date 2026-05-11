@@ -30,26 +30,24 @@ class _MainWrapperState extends State<MainWrapper> {
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> pages = [
-      DashboardPage(onNavigateToJournal: _navigateToJournal),
-      JournalPage(initialNote: _journalInitialNote),
-      const ChatAiPage(),
-      const ProfilePage(),
-    ];
-
+    // Menggunakan IndexedStack agar semua halaman tetap 'alive' dan menghindari
+    // masalah unmount dependency saat transisi tema di Flutter Web.
     return Scaffold(
       extendBody: true,
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        switchInCurve: Curves.easeInCubic,
-        switchOutCurve: Curves.easeOutCubic,
-        transitionBuilder: (child, animation) {
-          return FadeTransition(opacity: animation, child: child);
-        },
-        child: KeyedSubtree(
-          key: ValueKey<int>(_currentIndex),
-          child: pages[_currentIndex],
-        ),
+      body: IndexedStack(
+        index: _currentIndex,
+        children: [
+          DashboardPage(
+            key: const ValueKey('dashboard'),
+            onNavigateToJournal: _navigateToJournal,
+          ),
+          JournalPage(
+            key: const ValueKey('journal'),
+            initialNote: _journalInitialNote,
+          ),
+          const ChatAiPage(key: ValueKey('chat')),
+          const ProfilePage(key: ValueKey('profile')),
+        ],
       ),
       bottomNavigationBar: _buildBottomNav(),
     );

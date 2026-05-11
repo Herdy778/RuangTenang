@@ -318,7 +318,7 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
-          _buildAnimatedBlobs(),
+          RepaintBoundary(child: _buildAnimatedBlobs()),
 
           SafeArea(
             child: Column(

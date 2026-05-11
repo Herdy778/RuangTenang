@@ -76,7 +76,7 @@ class _DashboardPageState extends State<DashboardPage>
       body: Stack(
         children: [
           // Latar belakang: Animasi Blobs melayang pelan secara diagonal
-          _buildAnimatedBlobs(),
+          RepaintBoundary(child: _buildAnimatedBlobs()),
 
           // Konten Utama
           SafeArea(
@@ -674,7 +674,7 @@ class _DashboardPageState extends State<DashboardPage>
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-      decoration: AppDecorations.ctaCard,
+      decoration: AppDecorations.ctaCard(isDark),
       child: Row(
         children: [
           Expanded(
@@ -684,14 +684,14 @@ class _DashboardPageState extends State<DashboardPage>
                 Text(
                   "Mulai Jurnal Baru",
                   style: AppTextStyles.titleLG.copyWith(
-                    color: AppColors.primary,
+                    color: isDark ? AppColors.primaryLight : AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   "Curahkan isi hatimu hari ini agar pikiran lebih tenang.",
                   style: AppTextStyles.bodySM.copyWith(
-                    color: AppColors.textSecondary,
+                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                   ),
                 ),
               ],
