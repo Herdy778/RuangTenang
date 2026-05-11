@@ -557,11 +557,13 @@ const styles = {
     color: "#7C3AED",
     fontWeight: 500,
   },
+
   navLinks: {
     display: "flex",
     gap: 6,
     alignItems: "center",
   },
+
   navLink: {
     padding: "8px 18px",
     borderRadius: 40,
@@ -571,10 +573,12 @@ const styles = {
     cursor: "pointer",
     transition: "all 0.2s ease",
   },
+
   navLinkActive: {
     background: "#EEF2FF",
     color: "#4F46E5",
   },
+
   logoutBtn: {
     marginLeft: 8,
     padding: "8px 20px",
@@ -751,6 +755,7 @@ const styles = {
     borderBottom: "1px solid #E2E8F0",
     width: 70,
   },
+
   thAksi: {
     textAlign: "center",
     padding: "16px 20px",
@@ -767,6 +772,7 @@ const styles = {
     color: "#1E293B",
     borderBottom: "1px solid #F1F5F9",
   },
+
   tdNo: {
     textAlign: "center",
     padding: "16px 20px",
@@ -774,6 +780,7 @@ const styles = {
     color: "#64748B",
     borderBottom: "1px solid #F1F5F9",
   },
+
   tdAksi: {
     textAlign: "center",
     padding: "16px 20px",
