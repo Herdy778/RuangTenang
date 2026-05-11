@@ -20,7 +20,8 @@ export default function Dashboard() {
 
   const fetchJournals = async () => {
     try {
-      const res = await API.get("/journals");
+      const res = await API.get("/admin/journals");
+console.log("Response journals:", res.data);
       const rawData = res.data.data || res.data || [];
       const mappedData = rawData.map((item) => ({
         _id: item.id || item._id,
