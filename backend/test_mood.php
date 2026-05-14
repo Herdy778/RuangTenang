@@ -18,5 +18,5 @@ echo "STORE RESPONSE:\n";
 echo $response->getContent() . "\n";
 
 echo "INDEX RESPONSE:\n";
-$indexResponse = $controller->index();
+$indexResponse = $controller->index($request);
 echo $indexResponse->getContent() . "\n";
