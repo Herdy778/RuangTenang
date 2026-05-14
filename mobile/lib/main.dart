@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'theme/theme_notifier.dart';
+import 'theme/language_notifier.dart';
+import 'services/notification_service.dart';
 import 'pages/login_page.dart';
 import 'pages/main_wrapper.dart';
 import 'pages/register_page.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().init();
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => ThemeNotifier(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => ThemeNotifier()),
+        ChangeNotifierProvider(create: (_) => LanguageNotifier()),
+      ],
       child: const RuangTenangApp(),
     ),
   );

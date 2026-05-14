@@ -3,7 +3,9 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_html/flutter_html.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/language_notifier.dart';
 import 'relaxation_page.dart';
 import '../services/api_service.dart';
 
@@ -131,6 +133,7 @@ class _DashboardPageState extends State<DashboardPage>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     int animIndex =
         0; // Digunakan secara inkremental untuk animasi staggered per elemen
 
@@ -197,17 +200,17 @@ class _DashboardPageState extends State<DashboardPage>
                             return Center(
                               child: Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text('Gagal memuat data mood'),
+                                child: Text(langNotifier.translate('dash_error')),
                               ),
                             );
                           }
                           if (snapshot.hasData) {
                             final data = snapshot.data!;
                             if (data.isEmpty) {
-                              return const Center(
+                              return Center(
                                 child: Padding(
-                                  padding: EdgeInsets.all(20.0),
-                                  child: Text('Belum ada data mood hari ini'),
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Text(langNotifier.translate('dash_no_data')),
                                 ),
                               );
                             }
@@ -252,36 +255,42 @@ child: _buildRecommendedArticles(context),
 
   void _showAddMoodBottomSheet(BuildContext context) {
     int selectedScore = 3; // Default Netral
-    String selectedMood = "Netral";
+    String selectedMoodLabelKey = "mood_neutral";
+    String selectedMoodValue = "Netral";
     final TextEditingController noteController = TextEditingController();
     bool isLoading = false;
 
     final moodOptions = [
       {
+        "moodKey": "mood_v_sad",
         "mood": "Sangat Sedih",
         "score": 1,
         "emoji": "😭",
         "color": Colors.grey[400]!,
       },
       {
+        "moodKey": "mood_sad",
         "mood": "Sedih",
         "score": 2,
         "emoji": "😔",
         "color": Colors.blueGrey[300]!,
       },
       {
+        "moodKey": "mood_neutral",
         "mood": "Netral",
         "score": 3,
         "emoji": "😐",
         "color": Colors.deepPurple[200]!,
       },
       {
+        "moodKey": "mood_happy",
         "mood": "Senang",
         "score": 4,
         "emoji": "😊",
         "color": Colors.deepPurple[400]!,
       },
       {
+        "moodKey": "mood_v_happy",
         "mood": "Sangat Senang",
         "score": 5,
         "emoji": "😁",
@@ -297,6 +306,7 @@ child: _buildRecommendedArticles(context),
         return StatefulBuilder(
           builder: (context, setModalState) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
+            final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
             return Container(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -326,7 +336,7 @@ child: _buildRecommendedArticles(context),
                   ),
                   const SizedBox(height: 24),
                   Text(
-                    "Bagaimana perasaanmu saat ini?",
+                    langNotifier.translate('how_feel_now'),
                     style: AppTextStyles.titleMD.copyWith(
                       color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                     ),
@@ -340,7 +350,8 @@ child: _buildRecommendedArticles(context),
                         onTap: () {
                           setModalState(() {
                             selectedScore = option["score"] as int;
-                            selectedMood = option["mood"] as String;
+                            selectedMoodValue = option["mood"] as String;
+                            selectedMoodLabelKey = option["moodKey"] as String;
                           });
                         },
                         child: AnimatedContainer(
@@ -369,7 +380,7 @@ child: _buildRecommendedArticles(context),
                   const SizedBox(height: 12),
                   Center(
                     child: Text(
-                      selectedMood,
+                      langNotifier.translate(selectedMoodLabelKey),
                       style: AppTextStyles.bodyMD.copyWith(
                         color:
                             moodOptions.firstWhere(
@@ -411,16 +422,16 @@ child: _buildRecommendedArticles(context),
                               setModalState(() => isLoading = true);
                               try {
                                 await ApiService().saveMood(
-                                  selectedMood,
+                                  selectedMoodValue,
                                   selectedScore,
                                   noteController.text,
                                 );
                                 if (context.mounted) {
                                   Navigator.pop(context);
                                   ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
+                                    SnackBar(
                                       content: Text(
-                                        'Mood tersimpan! Yuk lanjut ceritakan perasaanmu lebih dalam di Jurnal AI 📝',
+                                        langNotifier.translate('mood_saved_snack'),
                                       ),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
@@ -466,7 +477,7 @@ child: _buildRecommendedArticles(context),
                               ),
                             )
                           : Text(
-                              "Simpan",
+                              langNotifier.translate('save'),
                               style: AppTextStyles.titleSM.copyWith(
                                 color: Colors.white,
                               ),
@@ -544,6 +555,7 @@ child: _buildRecommendedArticles(context),
 
   Widget _buildHeader() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -577,7 +589,7 @@ child: _buildRecommendedArticles(context),
                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
                       ),
                       children: [
-                        const TextSpan(text: "Selamat datang kembali,\n"),
+                        TextSpan(text: "${langNotifier.translate('welcome')},\n"),
                         TextSpan(
                           text: userName,
                           style: AppTextStyles.headingMD.copyWith(
@@ -591,7 +603,7 @@ child: _buildRecommendedArticles(context),
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Bagaimana perasaanmu hari ini?",
+                    langNotifier.translate('how_feel'),
                     style: AppTextStyles.bodyMD.copyWith(
                       color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                     ),
@@ -606,6 +618,7 @@ child: _buildRecommendedArticles(context),
   }
 
   Widget _buildStatsGrid() {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return FutureBuilder<Map<String, dynamic>>(
       future: ApiService().fetchDashboardStats(),
       builder: (context, snapshot) {
@@ -639,12 +652,12 @@ child: _buildRecommendedArticles(context),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildStatCard("Total Jurnal", totalJurnal, false),
+              _buildStatCard(langNotifier.translate('total_journal'), totalJurnal, false),
               const SizedBox(width: 12),
-              _buildStatCard("Mood Dominan", moodDominan, true),
+              _buildStatCard(langNotifier.translate('dominant_mood'), moodDominan, true),
               const SizedBox(width: 12),
               _buildStatCard(
-                "Sesi Relaksasi",
+                langNotifier.translate('relax_session'),
                 sesiRelaksasi,
                 false,
                 onTap: () async {
@@ -742,6 +755,7 @@ child: _buildRecommendedArticles(context),
 
   Widget _buildCTACard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
@@ -753,14 +767,14 @@ child: _buildRecommendedArticles(context),
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Mulai Jurnal Baru",
+                  langNotifier.translate('start_journal'),
                   style: AppTextStyles.titleLG.copyWith(
                     color: isDark ? AppColors.primaryLight : AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  "Curahkan isi hatimu hari ini agar pikiran lebih tenang.",
+                  langNotifier.translate('journal_desc'),
                   style: AppTextStyles.bodySM.copyWith(
                     color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
                   ),
@@ -783,7 +797,7 @@ child: _buildRecommendedArticles(context),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: Text(
-              "Curhat\nSekarang",
+              langNotifier.translate('chat_now'),
               textAlign: TextAlign.center,
               style: AppTextStyles.titleSM.copyWith(
                 color: Colors.white,
@@ -798,12 +812,13 @@ child: _buildRecommendedArticles(context),
 
   Widget _buildRecentEntriesTitle() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Text(
-          "Jurnal Terbaru",
+          langNotifier.translate('recent_journal'),
           style: AppTextStyles.titleMD.copyWith(
             color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
           ),
@@ -814,7 +829,7 @@ child: _buildRecommendedArticles(context),
             widget.onNavigateToJournal?.call(null);
           },
           child: Text(
-            "Lihat Semua →",
+            langNotifier.translate('see_all'),
             style: AppTextStyles.label.copyWith(color: AppColors.primary),
           ),
         ),
@@ -824,6 +839,7 @@ child: _buildRecommendedArticles(context),
 
   Widget _buildRecentList() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return FutureBuilder<List<dynamic>>(
       future: ApiService().fetchRecentJournals(limit: 3),
       builder: (context, snapshot) {
@@ -842,7 +858,7 @@ child: _buildRecommendedArticles(context),
             decoration: AppDecorations.card,
             child: Center(
               child: Text(
-                'Belum ada jurnal. Yuk mulai menulis! ✍️',
+                langNotifier.translate('no_recent_journal'),
                 style: AppTextStyles.bodyMD.copyWith(
                   color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                 ),
@@ -1333,4 +1349,5 @@ class _MoodBarChartState extends State<MoodBarChart> {
       ),
     );
   }
+
 }
