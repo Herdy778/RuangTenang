@@ -1,9 +1,12 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import '../config/app_config.dart';
 
 class ApiService {
-  static const String baseUrl = 'http://10.248.133.182:8000/api';
+  // ✅ Ganti static const → static String get
+  static String get baseUrl => AppConfig.baseUrl;
 
   // 🔥 Ambil token
   Future<String?> _getToken() async {
@@ -13,8 +16,7 @@ class ApiService {
 
   // 🔥 Header default + token
   Future<Map<String, String>> _headers() async {
-    String? token = await _getToken();
-
+    final String? token = await _getToken();
     return {
       'Content-Type': 'application/json',
       'Accept': 'application/json',
@@ -32,7 +34,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      Map<String, dynamic> body = jsonDecode(response.body);
+      final Map<String, dynamic> body = jsonDecode(response.body);
       return body['data'];
     } else {
       throw Exception('Gagal ambil data statistik');
@@ -54,7 +56,7 @@ class ApiService {
 
       return response.statusCode == 200 || response.statusCode == 201;
     } catch (e) {
-      print('Error relaxation: $e');
+      debugPrint('Error relaxation: $e');
       return false;
     }
   }
@@ -83,7 +85,7 @@ class ApiService {
     );
 
     if (response.statusCode == 200) {
-      Map<String, dynamic> body = jsonDecode(response.body);
+      final Map<String, dynamic> body = jsonDecode(response.body);
       return body['data'];
     } else {
       throw Exception('Gagal ambil data mood');
@@ -102,31 +104,29 @@ class ApiService {
     if (response.statusCode == 200) {
       final body = jsonDecode(response.body);
       final List<dynamic> all = body['data'] ?? [];
-      // Ambil hanya N entry terbaru
       return all.take(limit).toList();
     } else {
       throw Exception('Gagal ambil jurnal terbaru');
     }
   }
 
- Future<List<dynamic>> fetchRecommendedArticles() async {
-  final response = await get('/my-recommended-articles');
+  Future<List<dynamic>> fetchRecommendedArticles() async {
+    final response = await get('/my-recommended-articles');
 
-  print("ARTICLE RESPONSE: $response");
+    debugPrint('ARTICLE RESPONSE: $response');
 
-  if (response['status'] == 'success') {
-    return response['data'];
-  } else {
-    return [];
+    if (response['status'] == 'success') {
+      return response['data'];
+    } else {
+      return [];
+    }
   }
-}
 
-Future<dynamic> get(String endpoint) async {
-   final res = await http.get(
+  Future<dynamic> get(String endpoint) async {
+    final res = await http.get(
       Uri.parse('$baseUrl$endpoint'),
       headers: await _headers(),
-   );
-
-   return jsonDecode(res.body);
-}
+    );
+    return jsonDecode(res.body);
+  }
 }

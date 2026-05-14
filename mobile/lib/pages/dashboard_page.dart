@@ -11,7 +11,6 @@ import '../services/api_service.dart';
 class DashboardPage extends StatefulWidget {
   final Function(String?)? onNavigateToJournal;
   const DashboardPage({super.key, this.onNavigateToJournal});
-  
 
   @override
   State<DashboardPage> createState() => _DashboardPageState();
@@ -41,9 +40,7 @@ void _showArticleDetail(
         height: MediaQuery.of(context).size.height * 0.85,
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.cardBackgroundDark
-              : Colors.white,
+          color: isDark ? AppColors.cardBackgroundDark : Colors.white,
           borderRadius: const BorderRadius.vertical(
             top: Radius.circular(24),
           ),
@@ -58,9 +55,7 @@ void _showArticleDetail(
                   color: AppColors.primary,
                 ),
               ),
-
               const SizedBox(height: 20),
-
               Text(
                 _stripHtml(content),
                 style: AppTextStyles.bodyMD.copyWith(
@@ -107,7 +102,6 @@ class _DashboardPageState extends State<DashboardPage>
       duration: const Duration(milliseconds: 1500),
     );
 
-    // Mulai animasi masuk (staggered) segera setelah frame pertama di-render
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _staggeredController.forward();
     });
@@ -121,37 +115,29 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Future<void> _refreshData() async {
-    // Karena arsitektur menggunakan pemanggilan Future statis (inline) di FutureBuilder,
-    // kita sekadar melakukan setState untuk memicu re-render dan menunda penyelesaian RefreshIndicator
-    // agar animasi loading alamiah dari FutureBuilder berkesempatan tampil dan diproses tuntas.
-    await _loadProfileData(); // Tarik ulang foto dan nama jika berubah
+    await _loadProfileData();
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 800));
   }
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // FIX 1: Hapus isDark karena tidak dipakai langsung di build()
     final langNotifier = Provider.of<LanguageNotifier>(context);
-    int animIndex =
-        0; // Digunakan secara inkremental untuk animasi staggered per elemen
+    int animIndex = 0;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Latar belakang: Animasi Blobs melayang pelan secara diagonal
           RepaintBoundary(child: _buildAnimatedBlobs()),
-
-          // Konten Utama
           SafeArea(
             child: RefreshIndicator(
               color: AppColors.primary,
               backgroundColor: AppColors.cardBackground,
               onRefresh: _refreshData,
               child: SingleChildScrollView(
-                physics:
-                    const AlwaysScrollableScrollPhysics(), // Supaya konten selalu bisa ditarik meskipun pendek
+                physics: const AlwaysScrollableScrollPhysics(),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 20,
                   vertical: 24,
@@ -199,7 +185,8 @@ class _DashboardPageState extends State<DashboardPage>
                             return Center(
                               child: Padding(
                                 padding: const EdgeInsets.all(20.0),
-                                child: Text(langNotifier.translate('dash_error')),
+                                child: Text(
+                                    langNotifier.translate('dash_error')),
                               ),
                             );
                           }
@@ -209,7 +196,8 @@ class _DashboardPageState extends State<DashboardPage>
                               return Center(
                                 child: Padding(
                                   padding: const EdgeInsets.all(20.0),
-                                  child: Text(langNotifier.translate('dash_no_data')),
+                                  child: Text(
+                                      langNotifier.translate('dash_no_data')),
                                 ),
                               );
                             }
@@ -221,12 +209,11 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
                     const SizedBox(height: 36),
 
-_StaggeredFadeInUp(
-  index: animIndex++,
-  controller: _staggeredController,
-child: _buildRecommendedArticles(context),
-),
-
+                    _StaggeredFadeInUp(
+                      index: animIndex++,
+                      controller: _staggeredController,
+                      child: _buildRecommendedArticles(context),
+                    ),
                     const SizedBox(height: 36),
 
                     _StaggeredFadeInUp(
@@ -246,14 +233,14 @@ child: _buildRecommendedArticles(context),
                 ),
               ),
             ),
-          ), // Penutup SafeArea yang tadinya tertelan oleh RefreshIndicator
+          ),
         ],
       ),
     );
   }
 
   void _showAddMoodBottomSheet(BuildContext context) {
-    int selectedScore = 3; // Default Netral
+    int selectedScore = 3;
     String selectedMoodLabelKey = "mood_neutral";
     String selectedMoodValue = "Netral";
     final TextEditingController noteController = TextEditingController();
@@ -305,7 +292,8 @@ child: _buildRecommendedArticles(context),
         return StatefulBuilder(
           builder: (context, setModalState) {
             final isDark = Theme.of(context).brightness == Brightness.dark;
-            final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
+            final langNotifier =
+                Provider.of<LanguageNotifier>(context, listen: false);
             return Container(
               padding: EdgeInsets.only(
                 bottom: MediaQuery.of(context).viewInsets.bottom + 24,
@@ -337,7 +325,9 @@ child: _buildRecommendedArticles(context),
                   Text(
                     langNotifier.translate('how_feel_now'),
                     style: AppTextStyles.titleMD.copyWith(
-                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -381,11 +371,9 @@ child: _buildRecommendedArticles(context),
                     child: Text(
                       langNotifier.translate(selectedMoodLabelKey),
                       style: AppTextStyles.bodyMD.copyWith(
-                        color:
-                            moodOptions.firstWhere(
-                                  (e) => e["score"] == selectedScore,
-                                )["color"]
-                                as Color,
+                        color: moodOptions.firstWhere(
+                              (e) => e["score"] == selectedScore,
+                            )["color"] as Color,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -401,9 +389,8 @@ child: _buildRecommendedArticles(context),
                             : AppColors.textMuted,
                       ),
                       filled: true,
-                      fillColor: isDark
-                          ? AppColors.inputFillDark
-                          : Colors.grey[100],
+                      fillColor:
+                          isDark ? AppColors.inputFillDark : Colors.grey[100],
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -430,21 +417,20 @@ child: _buildRecommendedArticles(context),
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
                                       content: Text(
-                                        langNotifier.translate('mood_saved_snack'),
+                                        langNotifier
+                                            .translate('mood_saved_snack'),
                                       ),
                                       backgroundColor: Colors.green,
                                       behavior: SnackBarBehavior.floating,
-                                      duration: Duration(seconds: 2),
+                                      duration: const Duration(seconds: 2),
                                     ),
                                   );
                                   setState(() {});
-                                  // Arahkan ke tab Jurnal setelah 2 detik, bawa teksnya
                                   await Future.delayed(
                                     const Duration(seconds: 2),
                                   );
-                                  widget.onNavigateToJournal?.call(
-                                    noteController.text,
-                                  );
+                                  widget.onNavigateToJournal
+                                      ?.call(noteController.text);
                                 }
                               } catch (e) {
                                 setModalState(() => isLoading = false);
@@ -500,12 +486,10 @@ child: _buildRecommendedArticles(context),
             math.sin(_blobAnimController.value * math.pi) * 30;
         final double moveXPurple =
             math.cos(_blobAnimController.value * math.pi) * 30;
-
         final double moveYGreen =
             math.cos(_blobAnimController.value * math.pi) * 30;
         final double moveXGreen =
             math.sin(_blobAnimController.value * math.pi) * 30;
-
         final double pulsePurple =
             0.15 + (math.sin(_blobAnimController.value * math.pi) * 0.05);
         final double pulseGreen =
@@ -513,7 +497,6 @@ child: _buildRecommendedArticles(context),
 
         return Stack(
           children: [
-            // Blob Ungu
             Positioned(
               top: -50 + moveYPurple,
               right: -50 + moveXPurple,
@@ -526,7 +509,6 @@ child: _buildRecommendedArticles(context),
                 ),
               ),
             ),
-            // Blob Hijau
             Positioned(
               bottom: 150 + moveYGreen,
               left: -50 + moveXGreen,
@@ -539,7 +521,6 @@ child: _buildRecommendedArticles(context),
                 ),
               ),
             ),
-            // Kaca (Blur)
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 80, sigmaY: 80),
@@ -566,7 +547,8 @@ child: _buildRecommendedArticles(context),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: AppColors.primaryBorder,
-                image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                image: _profileImageUrl != null &&
+                        _profileImageUrl!.isNotEmpty
                     ? DecorationImage(
                         image: NetworkImage(_profileImageUrl!),
                         fit: BoxFit.cover,
@@ -574,7 +556,8 @@ child: _buildRecommendedArticles(context),
                     : null,
               ),
               child: _profileImageUrl == null || _profileImageUrl!.isEmpty
-                  ? const Icon(Icons.person, color: AppColors.primary, size: 32)
+                  ? const Icon(Icons.person,
+                      color: AppColors.primary, size: 32)
                   : null,
             ),
             const SizedBox(width: 16),
@@ -585,10 +568,13 @@ child: _buildRecommendedArticles(context),
                   RichText(
                     text: TextSpan(
                       style: AppTextStyles.headingMD.copyWith(
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                        color: isDark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary,
                       ),
                       children: [
-                        TextSpan(text: "${langNotifier.translate('welcome')},\n"),
+                        TextSpan(
+                            text: "${langNotifier.translate('welcome')},\n"),
                         TextSpan(
                           text: userName,
                           style: AppTextStyles.headingMD.copyWith(
@@ -604,7 +590,9 @@ child: _buildRecommendedArticles(context),
                   Text(
                     langNotifier.translate('how_feel'),
                     style: AppTextStyles.bodyMD.copyWith(
-                      color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
                     ),
                   ),
                 ],
@@ -622,9 +610,9 @@ child: _buildRecommendedArticles(context),
       future: ApiService().fetchDashboardStats(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return Center(
+          return const Center(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
+              padding: EdgeInsets.all(20.0),
               child: SizedBox(
                 width: 24,
                 height: 24,
@@ -651,9 +639,11 @@ child: _buildRecommendedArticles(context),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildStatCard(langNotifier.translate('total_journal'), totalJurnal, false),
+              _buildStatCard(
+                  langNotifier.translate('total_journal'), totalJurnal, false),
               const SizedBox(width: 12),
-              _buildStatCard(langNotifier.translate('dominant_mood'), moodDominan, true),
+              _buildStatCard(
+                  langNotifier.translate('dominant_mood'), moodDominan, true),
               const SizedBox(width: 12),
               _buildStatCard(
                 langNotifier.translate('relax_session'),
@@ -666,7 +656,6 @@ child: _buildRecommendedArticles(context),
                       builder: (context) => const RelaxationPage(),
                     ),
                   );
-                  // Bila kembalian true artinya data berhasil disimpan
                   if (result == true) {
                     _refreshData();
                   }
@@ -741,7 +730,9 @@ child: _buildRecommendedArticles(context),
                 style: AppTextStyles.caption.copyWith(
                   color: isPrimary
                       ? Colors.white.withOpacity(0.9)
-                      : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
+                      : (isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted),
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -768,14 +759,17 @@ child: _buildRecommendedArticles(context),
                 Text(
                   langNotifier.translate('start_journal'),
                   style: AppTextStyles.titleLG.copyWith(
-                    color: isDark ? AppColors.primaryLight : AppColors.primary,
+                    color:
+                        isDark ? AppColors.primaryLight : AppColors.primary,
                   ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   langNotifier.translate('journal_desc'),
                   style: AppTextStyles.bodySM.copyWith(
-                    color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                    color: isDark
+                        ? AppColors.textSecondaryDark
+                        : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -783,9 +777,7 @@ child: _buildRecommendedArticles(context),
           ),
           const SizedBox(width: 16),
           ElevatedButton(
-            onPressed: () {
-              _showAddMoodBottomSheet(context);
-            },
+            onPressed: () => _showAddMoodBottomSheet(context),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               foregroundColor: Colors.white,
@@ -793,7 +785,8 @@ child: _buildRecommendedArticles(context),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(12),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             child: Text(
               langNotifier.translate('chat_now'),
@@ -823,10 +816,7 @@ child: _buildRecommendedArticles(context),
           ),
         ),
         GestureDetector(
-          onTap: () {
-            // Navigasi ke tab Jurnal (index 1)
-            widget.onNavigateToJournal?.call(null);
-          },
+          onTap: () => widget.onNavigateToJournal?.call(null),
           child: Text(
             langNotifier.translate('see_all'),
             style: AppTextStyles.label.copyWith(color: AppColors.primary),
@@ -851,7 +841,9 @@ child: _buildRecommendedArticles(context),
           );
         }
 
-        if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+        if (snapshot.hasError ||
+            !snapshot.hasData ||
+            snapshot.data!.isEmpty) {
           return Container(
             padding: const EdgeInsets.all(20),
             decoration: AppDecorations.card,
@@ -859,7 +851,9 @@ child: _buildRecommendedArticles(context),
               child: Text(
                 langNotifier.translate('no_recent_journal'),
                 style: AppTextStyles.bodyMD.copyWith(
-                  color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                  color: isDark
+                      ? AppColors.textMutedDark
+                      : AppColors.textMuted,
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -878,12 +872,16 @@ child: _buildRecommendedArticles(context),
               final dt = DateTime.parse(tanggal.toString()).toLocal();
               final now = DateTime.now();
               final diff = now.difference(dt).inDays;
+              final timeStr =
+                  '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+              // FIX 5: Pakai langNotifier untuk teks tanggal
               if (diff == 0) {
                 dateLabel =
-                    'Hari ini, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                    '${langNotifier.translate('today')}, $timeStr';
               } else if (diff == 1) {
                 dateLabel =
-                    'Kemarin, ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+                    '${langNotifier.translate('yesterday')}, $timeStr';
               } else {
                 dateLabel = '${dt.day}/${dt.month}/${dt.year}';
               }
@@ -940,7 +938,9 @@ child: _buildRecommendedArticles(context),
                       Text(
                         dateLabel,
                         style: AppTextStyles.caption.copyWith(
-                          color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                          color: isDark
+                              ? AppColors.textMutedDark
+                              : AppColors.textMuted,
                         ),
                       ),
                     ],
@@ -949,7 +949,9 @@ child: _buildRecommendedArticles(context),
                   Text(
                     teks,
                     style: AppTextStyles.bodyMD.copyWith(
-                      color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary,
                     ),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -964,19 +966,22 @@ child: _buildRecommendedArticles(context),
   }
 }
 
+// FIX 2 & 3: Pakai langNotifier untuk teks + tambah error handling
 Widget _buildRecommendedArticles(BuildContext context) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
+  final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
 
   return FutureBuilder<List<dynamic>>(
     future: ApiService().fetchRecommendedArticles(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
-        return const Center(
-          child: CircularProgressIndicator(),
-        );
+        return const Center(child: CircularProgressIndicator());
       }
 
-      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+      // FIX 3: Tambah pengecekan error
+      if (snapshot.hasError ||
+          !snapshot.hasData ||
+          snapshot.data!.isEmpty) {
         return const SizedBox.shrink();
       }
 
@@ -985,17 +990,16 @@ Widget _buildRecommendedArticles(BuildContext context) {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // FIX 2: Pakai langNotifier bukan hardcoded string
           Text(
-            "📖 Artikel Rekomendasi Untukmu",
+            langNotifier.translate('recommended_articles'),
             style: AppTextStyles.titleMD.copyWith(
               color: isDark
                   ? AppColors.textPrimaryDark
                   : AppColors.textPrimary,
             ),
           ),
-
           const SizedBox(height: 16),
-
           ...articles.map((article) {
             return Container(
               margin: const EdgeInsets.only(bottom: 12),
@@ -1009,56 +1013,53 @@ Widget _buildRecommendedArticles(BuildContext context) {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (article['thumbnail_url'] != null &&
-        article['thumbnail_url'].toString().isNotEmpty)
-      ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Image.network(
-          article['thumbnail_url'],
-          height: 140,
-          width: double.infinity,
-          fit: BoxFit.cover,
-        ),
-      ),
-
-    const SizedBox(height: 12),
+                      article['thumbnail_url'].toString().isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.network(
+                        article['thumbnail_url'],
+                        height: 140,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  const SizedBox(height: 12),
                   Text(
                     article['judul_artikel'] ?? '-',
                     style: AppTextStyles.titleSM.copyWith(
                       color: AppColors.primary,
                     ),
                   ),
-
                   const SizedBox(height: 8),
-
                   Text(
-  _stripHtml(article['isi_konten'] ?? ''),
-  maxLines: 3,
-  overflow: TextOverflow.ellipsis,
-  style: AppTextStyles.bodyMD.copyWith(
-    color: isDark
-        ? AppColors.textSecondaryDark
-        : AppColors.textSecondary,
-  ),
-),
-const SizedBox(height: 8),
-
-GestureDetector(
-  onTap: () {
-    _showArticleDetail(
-      context,
-      article['judul_artikel'] ?? '',
-      article['isi_konten'] ?? '',
-    );
-  },
-  child: Text(
-    "Baca selengkapnya",
-    style: TextStyle(
-      color: AppColors.primary,
-      fontWeight: FontWeight.w600,
-      fontSize: 13,
-    ),
-  ),
-),
+                    _stripHtml(article['isi_konten'] ?? ''),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMD.copyWith(
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  GestureDetector(
+                    onTap: () {
+                      _showArticleDetail(
+                        context,
+                        article['judul_artikel'] ?? '',
+                        article['isi_konten'] ?? '',
+                      );
+                    },
+                    // FIX 2: Pakai langNotifier bukan hardcoded string
+                    child: Text(
+                      langNotifier.translate('read_more'),
+                      style: const TextStyle(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
                 ],
               ),
             );
@@ -1083,7 +1084,6 @@ class _StaggeredFadeInUp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Semakin besar index, semakin lambat delay mulainya
     final start = (index * 0.1).clamp(0.0, 1.0);
     final end = (start + 0.4).clamp(0.0, 1.0);
 
@@ -1123,7 +1123,6 @@ class _MoodBarChartState extends State<MoodBarChart> {
   int? _selectedIndex;
 
   List<Map<String, dynamic>> get _parsedData {
-    // Membalik data karena API mengembalikan data terbaru di awal list
     var reversedData = widget.data.reversed.toList();
     return reversedData.map((item) {
       String dayStr = "-";
@@ -1143,9 +1142,6 @@ class _MoodBarChartState extends State<MoodBarChart> {
       int level = 3;
       if (item['score'] != null) {
         level = int.tryParse(item['score'].toString()) ?? 3;
-      } else if (item['hasil_mood'] != null) {
-        // Fallback jika pakai model Journal
-        level = 3;
       }
 
       String mood =
@@ -1177,14 +1173,15 @@ class _MoodBarChartState extends State<MoodBarChart> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     const double maxBarHeight = 120.0;
 
     return Container(
-      // Lebar total layar dikurangi margin/padding horizontal Dashboard (20+20 = 40)
       width: MediaQuery.of(context).size.width - 40,
       padding: const EdgeInsets.all(20),
       decoration: AppDecorations.card.copyWith(
-        color: isDark ? AppColors.cardBackgroundDark : AppColors.cardBackground,
+        color:
+            isDark ? AppColors.cardBackgroundDark : AppColors.cardBackground,
         border: Border.all(
           color: isDark ? AppColors.cardBorderDark : AppColors.cardBorder,
           width: 1,
@@ -1194,62 +1191,54 @@ class _MoodBarChartState extends State<MoodBarChart> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            "Tren Mood Mingguan",
+            langNotifier.translate('weekly_mood_trend'),
             style: AppTextStyles.titleMD.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              color: isDark
+                  ? AppColors.textPrimaryDark
+                  : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 12),
-
           SizedBox(
             height: 200,
             child: Stack(
               children: [
-                // Grid horizontal belakang
                 Positioned(
-                  top: 30, // Ruang atas untuk tooltip
+                  top: 30,
                   left: 0,
                   right: 0,
-                  bottom: 30, // Ruang bawah untuk label teks
+                  bottom: 30,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: List.generate(5, (index) {
-                      return Container(height: 1, color: AppColors.cardBorder);
+                      return Container(
+                          height: 1, color: AppColors.cardBorder);
                     }),
                   ),
                 ),
-
-                // Grafik Batang Interaktif
                 Positioned.fill(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: List.generate(_parsedData.length, (index) {
                       final item = _parsedData[index];
-                      // Menyesuaikan rasio ketinggian maksimal (5 level)
                       final int level = item["level"] as int;
                       final double heightRatio = level / 5.0;
                       final targetHeight = maxBarHeight * heightRatio;
                       final isSelected = _selectedIndex == index;
                       final dynamicBarColor = _getBarColor(level);
-                      final moodStyle = AppMoodColors.of(
-                        item["mood"] as String,
-                      );
 
                       return Expanded(
                         child: GestureDetector(
                           onTap: () {
-                            // Tap memunculkan tooltip dan glow
                             setState(() {
                               _selectedIndex = isSelected ? null : index;
                             });
                           },
                           child: Column(
-                            // Menambahkan expanded atau membatasi ukuran bar jika lebih besar dari maxBarHeight
                             mainAxisSize: MainAxisSize.min,
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              // Tooltip Interaktif
                               AnimatedOpacity(
                                 duration: const Duration(milliseconds: 200),
                                 opacity: isSelected ? 1.0 : 0.0,
@@ -1260,7 +1249,9 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                     vertical: 4,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                                    color: isDark
+                                        ? AppColors.textPrimaryDark
+                                        : AppColors.textPrimary,
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: Text(
@@ -1276,23 +1267,18 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                   ),
                                 ),
                               ),
-
-                              // Bar Animasi (Elastis / Bounce dari Tween)
                               TweenAnimationBuilder<double>(
                                 tween: Tween(begin: 0.0, end: 1.0),
                                 duration: const Duration(milliseconds: 1000),
                                 curve: Curves.elasticOut,
                                 builder: (context, value, child) {
                                   return AnimatedContainer(
-                                    duration: const Duration(milliseconds: 300),
-                                    width:
-                                        20, // Lebar batang sedikit dirampingkan lagi
-                                    height:
-                                        targetHeight *
-                                        value, // Tingginya membal
+                                    duration:
+                                        const Duration(milliseconds: 300),
+                                    width: 20,
+                                    height: targetHeight * value,
                                     decoration: BoxDecoration(
-                                      color:
-                                          dynamicBarColor, // Warna dinamis sesuai score level
+                                      color: dynamicBarColor,
                                       borderRadius: const BorderRadius.only(
                                         topLeft: Radius.circular(12),
                                         topRight: Radius.circular(12),
@@ -1320,7 +1306,6 @@ class _MoodBarChartState extends State<MoodBarChart> {
                                 },
                               ),
                               const SizedBox(height: 12),
-                              // Label Bawah (Hari)
                               Text(
                                 item["day"] as String,
                                 style: AppTextStyles.caption.copyWith(
@@ -1348,5 +1333,4 @@ class _MoodBarChartState extends State<MoodBarChart> {
       ),
     );
   }
-
 }

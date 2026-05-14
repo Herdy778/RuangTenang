@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ruangtenang_mobile/config/app_config.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -70,7 +71,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     try {
       var response = await http
     .post(
-      Uri.parse("http://10.248.133.182:8000/api/login"),
+      Uri.parse("${AppConfig.baseUrl}/login"),
       headers: {
         "Accept": "application/json",
         "Content-Type": "application/json",
@@ -116,7 +117,7 @@ print("RESPONSE BODY: ${response.body}");
               .last
               .split('\\')
               .last;
-          final fullUrl = "http://10.248.133.182:8000/api/photo/$filename";
+          final fullUrl = "${AppConfig.baseUrl}/photo/$filename";
           await prefs.setString('profile_image_url', fullUrl);
         } else {
           // If no photo in backend, clear the old locally cached photo

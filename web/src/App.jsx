@@ -7,6 +7,7 @@ import AdminJournals from "./pages/AdminJournals";
 import AdminArticles from "./pages/AdminArticles";
 import Profile from "./pages/Profile";
 import DataAdmin from "./pages/DataAdmin";
+import ApiTester from "./pages/ApiTester";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
         <Route path="/admin/articles" element={<AdminArticles />} />
         <Route path="/admin/data-admin" element={<DataAdmin />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/api-tester" element={<ApiTester />} />
       </Routes>
     </BrowserRouter>
   );

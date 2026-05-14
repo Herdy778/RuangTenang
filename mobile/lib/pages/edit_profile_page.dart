@@ -3,8 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
-import 'dart:typed_data'; // Added for Uint8List
+import 'dart:typed_data';
 import '../theme/app_theme.dart';
+import 'package:ruangtenang_mobile/config/app_config.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -91,7 +92,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://10.248.133.182:8000/api/profile/upload-photo'),
+        Uri.parse("${AppConfig.baseUrl}/profile/upload-photo"),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -146,7 +147,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               .last;
 
           // Use the API route that provides CORS headers
-          final fullUrl = "http://10.248.133.182:8000/api/photo/$filename";
+          final fullUrl = "${AppConfig.baseUrl}/photo/$filename";
 
           await prefs.setString('profile_image_url', fullUrl);
           setState(() {
@@ -227,29 +228,32 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   Future<void> _saveProfile() async {
-    if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nama dan Email tidak boleh kosong!')),
-      );
-      return;
-    }
+  if (_nameController.text.isEmpty || _emailController.text.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Nama dan Email tidak boleh kosong!')),
+    );
+    return;
+  }
 
-    setState(() => _isLoading = true);
+  setState(() => _isLoading = true);
 
-    // Upload image if one was selected
-    if (_selectedImage != null) {
-      bool uploadSuccess = await _uploadProfileImage() ?? false;
-      if (mounted) setState(() => _isLoading = true);
-      // If we tried to upload but it failed, we can optionally stop here or continue.
-      // We will continue to save text changes.
+  // Upload foto dulu jika ada gambar yang dipilih
+  if (_selectedImage != null) {
+    final uploadSuccess = await _uploadProfileImage();
+    if (!uploadSuccess) {
+      // Foto gagal, tapi tetap lanjut simpan data teks
+      // Snackbar error sudah ditampilkan di dalam _uploadProfileImage()
     }
+    // Pastikan loading tetap true untuk proses simpan profil berikutnya
+    if (mounted) setState(() => _isLoading = true);
+  }
 
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
 
       final response = await http.put(
-        Uri.parse('http://10.248.133.182:8000/api/profile'),
+        Uri.parse("${AppConfig.baseUrl}/profile"),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

@@ -212,6 +212,7 @@ export default function AdminArticles() {
           <span style={styles.navLink} onClick={() => navigate("/admin/journals")}>Data Jurnal</span>
           <span style={{ ...styles.navLink, ...styles.navLinkActive }}>Artikel</span>
           <span style={styles.navLink} onClick={() => navigate("/profile")}>Profil</span>
+          <span style={styles.navLink} onClick={() => navigate('/api-tester')}>🧪 API</span>
           <button style={styles.logoutBtn} onClick={doLogout}>Keluar</button>
         </div>
       </nav>
