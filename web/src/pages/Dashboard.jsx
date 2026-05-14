@@ -58,16 +58,16 @@ const mappedData = rawData.map((item) => ({
   };
 
   async function doLogout() {
-    try {
-      await API.post('/logout');
-    } catch (err) {
-      console.error("Logout error:", err);
-    } finally {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      navigate('/');
-    }
+  try {
+    await API.post('/logout');
+  } catch (err) {
+    console.error(err);
   }
+
+  localStorage.removeItem('token');
+  localStorage.removeItem('user');
+  navigate('/');
+}
 
   const moodColors = {
     Burnout: { bg: '#FEF3C7', color: '#92400E', emoji: '😤', lightBg: '#FFFBEB', borderLeft: '#F59E0B' },
