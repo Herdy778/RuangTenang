@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
+import '../theme/language_notifier.dart';
 
 const _kBaseUrl = 'http://10.248.133.182:8000/api';
 
@@ -46,38 +48,38 @@ class _JournalPageState extends State<JournalPage>
   late final AnimationController _staggerController;
 
   // ── Data ────────────────────────────────────────────────────
-  static const _scaleLabels = [
-    'Tidak pernah',
-    'Beberapa hari',
-    'Lebih dari seminggu',
-    'Hampir setiap hari',
+  List<String> _getScaleLabels(LanguageNotifier lang) => [
+    lang.translate('scale_0'),
+    lang.translate('scale_1'),
+    lang.translate('scale_2'),
+    lang.translate('scale_3'),
   ];
 
-  static const _questions = [
+  List<_Question> _getQuestions(LanguageNotifier lang) => [
     _Question(
       '💧',
-      'Perasaan Sedih',
-      'Merasa sedih, murung, atau tidak punya harapan',
+      lang.translate('q1_title'),
+      lang.translate('q1_desc'),
     ),
     _Question(
       '🌱',
-      'Minat & Kegiatan',
-      'Kurang tertarik atau tidak menikmati aktivitas seperti biasa',
+      lang.translate('q2_title'),
+      lang.translate('q2_desc'),
     ),
     _Question(
       '🌙',
-      'Kualitas Tidur',
-      'Sulit tidur, terlalu banyak tidur, atau tidur tidak nyenyak',
+      lang.translate('q3_title'),
+      lang.translate('q3_desc'),
     ),
     _Question(
       '⚡',
-      'Tingkat Kelelahan',
-      'Merasa lelah atau tidak punya energi untuk beraktivitas',
+      lang.translate('q4_title'),
+      lang.translate('q4_desc'),
     ),
     _Question(
       '🧠',
-      'Konsentrasi',
-      'Sulit fokus saat membaca, menonton, atau melakukan pekerjaan',
+      lang.translate('q5_title'),
+      lang.translate('q5_desc'),
     ),
   ];
 
@@ -169,9 +171,10 @@ class _JournalPageState extends State<JournalPage>
 
   // ── API ──────────────────────────────────────────────────────
   Future<void> _analyzeJournal() async {
+    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
     _textFocus.unfocus();
     if (_textController.text.trim().isEmpty) {
-      _showSnack('Yuk tuliskan dulu perasaanmu 💜');
+      _showSnack(langNotifier.translate('journal_input_hint'));
       return;
     }
     HapticFeedback.mediumImpact();
@@ -323,7 +326,7 @@ class _JournalPageState extends State<JournalPage>
         ),
       ),
       title: Text(
-        'Jurnal Harian',
+        Provider.of<LanguageNotifier>(context).translate('journal_title'),
         style: AppTextStyles.titleMD.copyWith(
           color: Theme.of(context).brightness == Brightness.dark
               ? AppColors.textPrimaryDark
@@ -405,33 +408,19 @@ class _JournalPageState extends State<JournalPage>
   Widget _buildHeader() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final now = DateTime.now();
-    const weekdays = [
-      '',
-      'Senin',
-      'Selasa',
-      'Rabu',
-      'Kamis',
-      'Jumat',
-      'Sabtu',
-      'Minggu',
-    ];
-    const months = [
-      '',
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    final dateLabel =
-        '${weekdays[now.weekday]}, ${now.day} ${months[now.month]}';
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+    final isEn = langNotifier.currentLanguage == 'en';
+
+    const weekdaysId = ['', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+    const weekdaysEn = ['', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    
+    const monthsId = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+    const monthsEn = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    final weekdays = isEn ? weekdaysEn : weekdaysId;
+    final months = isEn ? monthsEn : monthsId;
+
+    final dateLabel = '${weekdays[now.weekday]}, ${now.day} ${months[now.month]}';
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
@@ -463,20 +452,18 @@ class _JournalPageState extends State<JournalPage>
               style: AppTextStyles.headingMD.copyWith(
                 color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
               ),
-              children: const [
-                TextSpan(text: 'Bagaimana\n'),
-                TextSpan(text: 'perasaanmu hari ini?'),
+              children: [
+                TextSpan(text: langNotifier.translate('how_feel_journal')),
               ],
             ),
           ),
           const SizedBox(height: 8),
 
           Text(
-            'Tidak ada jawaban yang salah. Ceritakan dengan jujur.',
+            langNotifier.translate('journal_hint'),
             style: AppTextStyles.bodyMD.copyWith(
               color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               height: 1.3,
-              
             ),
           ),
           const SizedBox(height: 28),
@@ -488,6 +475,7 @@ class _JournalPageState extends State<JournalPage>
   // ── Curhat Card ──────────────────────────────────────────────
   Widget _buildCurhatCard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedContainer(
@@ -545,15 +533,13 @@ class _JournalPageState extends State<JournalPage>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Tulis Perasaanmu', style: AppTextStyles.titleSM.copyWith(
+                      Text(langNotifier.translate('write_feeling'), style: AppTextStyles.titleSM.copyWith(
                         color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                        
                       )),
                       Text(
-                        'Ceritakan apa saja yang ada di pikiranmu',
+                        langNotifier.translate('write_feeling_desc'),
                         style: AppTextStyles.caption.copyWith(
                           color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
-                          
                         ),
                       ),
                     ],
@@ -576,10 +562,9 @@ class _JournalPageState extends State<JournalPage>
                 
               ),
               decoration: InputDecoration(
-                hintText: 'Hari ini aku merasa...',
+                hintText: langNotifier.translate('journal_input_hint'),
                 hintStyle: AppTextStyles.bodyMD.copyWith(
                   color: (isDark ? AppColors.textMutedDark : AppColors.textMuted).withOpacity(0.55),
-                  
                 ),
                 border: InputBorder.none,
                 isDense: true,
@@ -597,26 +582,25 @@ class _JournalPageState extends State<JournalPage>
   // ── Section Label ────────────────────────────────────────────
   Widget _buildSectionLabel() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'EVALUASI KONDISI',
+            langNotifier.translate('eval_condition'),
             style: AppTextStyles.caption.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.3,
-              
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'Pilih seberapa sering kamu merasakan hal-hal\nberikut dalam 2 minggu terakhir.',
+            langNotifier.translate('eval_desc'),
             style: AppTextStyles.bodySM.copyWith(
               color: isDark ? AppColors.textSecondaryDark : AppColors.textSecondary,
-              
             ),
           ),
         ],
@@ -627,9 +611,11 @@ class _JournalPageState extends State<JournalPage>
   // ── Question Card ────────────────────────────────────────────
   Widget _buildQuestionCard(int index) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final q = _questions[index];
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+    final q = _getQuestions(langNotifier)[index];
     final value = _getValue(index);
     final active = value > 0;
+    final labels = _getScaleLabels(langNotifier);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
@@ -738,7 +724,7 @@ class _JournalPageState extends State<JournalPage>
                 key: ValueKey(value),
                 alignment: Alignment.centerRight,
                 child: Text(
-                  _scaleLabels[value],
+                  labels[value],
                   style: AppTextStyles.caption.copyWith(
                     color: active ? AppColors.primary : (isDark ? AppColors.textMutedDark : AppColors.textMuted),
                     fontWeight: active ? FontWeight.w600 : FontWeight.w400,
@@ -756,6 +742,7 @@ class _JournalPageState extends State<JournalPage>
   // ── Score Row ────────────────────────────────────────────────
   Widget _buildScoreRow() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
       child: Container(
@@ -791,9 +778,8 @@ class _JournalPageState extends State<JournalPage>
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Total Skor PHQ-9', style: AppTextStyles.caption.copyWith(
+                Text(langNotifier.translate('total_score_phq9'), style: AppTextStyles.caption.copyWith(
                   color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
-                  
                 )),
                 RichText(
                   text: TextSpan(
@@ -845,6 +831,7 @@ class _JournalPageState extends State<JournalPage>
 
   // ── Analyze Button ───────────────────────────────────────────
   Widget _buildAnalyzeButton() {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: GestureDetector(
@@ -889,7 +876,7 @@ class _JournalPageState extends State<JournalPage>
                     ),
                     const SizedBox(width: 10),
                     Text(
-                      'Analisis Kondisiku',
+                      langNotifier.translate('analyze_my_condition'),
                       style: AppTextStyles.titleSM.copyWith(
                         color: Colors.white,
                         
@@ -1082,37 +1069,34 @@ class _ResultSheetState extends State<_ResultSheet>
     String desc,
     String cta,
   })
-  _getMeta(bool isDark) {
+  _getMeta(bool isDark, LanguageNotifier lang) {
     switch (widget.prediction.toLowerCase()) {
       case 'minimal':
         return (
           color: const Color(0xFF10B981),
           bgLight: isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5),
           emoji: '🌿',
-          title: 'Kondisi Minimal',
-          desc:
-              'Kondisi mentalmu cukup baik saat ini. Teruslah menjaga keseimbangan dan luangkan waktu untuk merawat diri.',
-          cta: 'Bagus sekali! Tetap jaga ya 💚',
+          title: lang.translate('res_minimal_title'),
+          desc: lang.translate('res_minimal_desc'),
+          cta: lang.translate('res_minimal_cta'),
         );
       case 'ringan':
         return (
           color: const Color(0xFFF59E0B),
           bgLight: isDark ? const Color(0xFF78350F) : const Color(0xFFFEF3C7),
           emoji: '🌤️',
-          title: 'Gejala Ringan',
-          desc:
-              'Ada sedikit tekanan yang kamu rasakan. Istirahat yang cukup dan olahraga ringan dapat sangat membantu.',
-          cta: 'Kamu tidak sendiri 💛',
+          title: lang.translate('res_ringan_title'),
+          desc: lang.translate('res_ringan_desc'),
+          cta: lang.translate('res_ringan_cta'),
         );
       case 'sedang':
         return (
           color: const Color(0xFFF97316),
           bgLight: isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5),
           emoji: '🌧️',
-          title: 'Gejala Sedang',
-          desc:
-              'Kamu mungkin membutuhkan dukungan lebih. Pertimbangkan untuk berbicara dengan konselor atau psikolog.',
-          cta: 'Minta bantuan adalah kekuatan 🧡',
+          title: lang.translate('res_sedang_title'),
+          desc: lang.translate('res_sedang_desc'),
+          cta: lang.translate('res_sedang_cta'),
         );
       case 'berat':
       default:
@@ -1120,10 +1104,9 @@ class _ResultSheetState extends State<_ResultSheet>
           color: const Color(0xFFEF4444),
           bgLight: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
           emoji: '🆘',
-          title: 'Gejala Berat',
-          desc:
-              'Kondisimu membutuhkan perhatian serius. Jangan ragu untuk segera menghubungi psikolog atau psikiater terdekat.',
-          cta: 'Segera cari bantuan profesional ❤️',
+          title: lang.translate('res_berat_title'),
+          desc: lang.translate('res_berat_desc'),
+          cta: lang.translate('res_berat_cta'),
         );
     }
   }
@@ -1131,7 +1114,8 @@ class _ResultSheetState extends State<_ResultSheet>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final m = _getMeta(isDark);
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+    final m = _getMeta(isDark, langNotifier);
 
     return Container(
       decoration: BoxDecoration(
@@ -1199,7 +1183,7 @@ class _ResultSheetState extends State<_ResultSheet>
           ),
           const SizedBox(height: 6),
           Text(
-            'Skor ${widget.skorTotal} / 15',
+            '${langNotifier.translate('score')} ${widget.skorTotal} / 15',
             style: AppTextStyles.caption.copyWith(
               color: Theme.of(context).brightness == Brightness.dark
                   ? AppColors.textMutedDark
@@ -1265,7 +1249,7 @@ class _ResultSheetState extends State<_ResultSheet>
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 6),
               child: Text(
-                'Tutup',
+                langNotifier.translate('close'),
                 style: AppTextStyles.caption.copyWith(
                   decoration: TextDecoration.underline,
                   color: Theme.of(context).brightness == Brightness.dark
