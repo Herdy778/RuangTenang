@@ -24,7 +24,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String _userEmail = "user@example.com";
   String? _profileImageUrl;
   bool _notifPush = true;
-  bool _notifEmail = false;
 
   @override
   void initState() {
@@ -39,7 +38,6 @@ class _ProfilePageState extends State<ProfilePage> {
       _userEmail = prefs.getString('email') ?? "user@example.com";
       _profileImageUrl = prefs.getString('profile_image_url');
       _notifPush = prefs.getBool('notif_push') ?? true;
-      _notifEmail = prefs.getBool('notif_email') ?? false;
     });
   }
 
@@ -66,9 +64,14 @@ class _ProfilePageState extends State<ProfilePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(langNotifier.translate('notif'), style: AppTextStyles.titleMD.copyWith(
-                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                      )),
+                      Text(
+                        langNotifier.translate('notif'),
+                        style: AppTextStyles.titleMD.copyWith(
+                          color: isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimary,
+                        ),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.close_rounded),
                         onPressed: () => Navigator.pop(context),
@@ -77,7 +80,7 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   const SizedBox(height: 16),
                   _buildSwitchTile(
-                    title: langNotifier.translate('notif'), // Or specific key if added
+                    title: langNotifier.translate('notif'),
                     subtitle: 'Terima pengingat harian untuk menulis jurnal.',
                     value: _notifPush,
                     onChanged: (val) async {
@@ -88,24 +91,28 @@ class _ProfilePageState extends State<ProfilePage> {
 
                       if (val) {
                         await NotificationService().requestPermissions();
-                        
-                        // Pick a random message
-                        final rand = Random().nextInt(5) + 1;
-                        final title = langNotifier.translate('notif_title_$rand');
-                        final body = langNotifier.translate('notif_body_$rand');
 
-                        // Schedule daily reminder at 20:00 (8 PM)
-                        await NotificationService().scheduleDailyReminder(1, 20, 0, title, body);
-                        
-                        // Send instant confirmation notification
+                        final rand = Random().nextInt(5) + 1;
+                        final title =
+                            langNotifier.translate('notif_title_$rand');
+                        final body =
+                            langNotifier.translate('notif_body_$rand');
+
+                        await NotificationService()
+                            .scheduleDailyReminder(1, 20, 0, title, body);
+
                         await NotificationService().showInstantNotification(
-                          langNotifier.translate('notif') + ' Aktif! 🔔',
-                          'Terima kasih! Kamu akan menerima pengingat harian setiap jam 20:00.'
+                          '${langNotifier.translate('notif')} Aktif! 🔔',
+                          'Terima kasih! Kamu akan menerima pengingat harian setiap jam 20:00.',
                         );
-                        
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text(langNotifier.translate('notif') + ' aktif (20:00)')),
+                            SnackBar(
+                              content: Text(
+                                '${langNotifier.translate('notif')} aktif (20:00)',
+                              ),
+                            ),
                           );
                         }
                       } else {
@@ -119,10 +126,13 @@ class _ProfilePageState extends State<ProfilePage> {
                     child: OutlinedButton.icon(
                       onPressed: () async {
                         final rand = Random().nextInt(5) + 1;
-                        final title = langNotifier.translate('notif_title_$rand');
-                        final body = langNotifier.translate('notif_body_$rand');
-                        
-                        await NotificationService().showInstantNotification(title, body);
+                        final title =
+                            langNotifier.translate('notif_title_$rand');
+                        final body =
+                            langNotifier.translate('notif_body_$rand');
+
+                        await NotificationService()
+                            .showInstantNotification(title, body);
                       },
                       icon: const Icon(Icons.notifications_active_outlined),
                       label: Text(langNotifier.translate('send_test_notif')),
@@ -145,7 +155,6 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  // Helper for switch tiles
   Widget _buildSwitchTile({
     required String title,
     required String subtitle,
@@ -155,15 +164,19 @@ class _ProfilePageState extends State<ProfilePage> {
   }) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: Text(title, style: AppTextStyles.bodyMD.copyWith(
-        fontWeight: FontWeight.bold,
-        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-      )),
+      title: Text(
+        title,
+        style: AppTextStyles.bodyMD.copyWith(
+          fontWeight: FontWeight.bold,
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
+      ),
       subtitle: Text(subtitle, style: AppTextStyles.caption),
       value: value,
       onChanged: onChanged,
       activeColor: AppColors.primary,
-      activeTrackColor: AppColors.primary.withOpacity(0.3),
+      // ✅ Ganti .withOpacity() → .withValues(alpha: ...)
+      activeTrackColor: AppColors.primary.withValues(alpha: 0.3),
     );
   }
 
@@ -180,18 +193,26 @@ class _ProfilePageState extends State<ProfilePage> {
               padding: const EdgeInsets.all(24.0),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.cardBackgroundDark : Colors.white,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(24)),
               ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(langNotifier.translate('lang'), style: AppTextStyles.titleMD.copyWith(
-                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-                  )),
+                  Text(
+                    langNotifier.translate('lang'),
+                    style: AppTextStyles.titleMD.copyWith(
+                      color: isDark
+                          ? AppColors.textPrimaryDark
+                          : AppColors.textPrimary,
+                    ),
+                  ),
                   const SizedBox(height: 16),
-                  _buildLanguageOption('Indonesia', 'id', '🇮🇩', setModalState, isDark),
-                  _buildLanguageOption('English', 'en', '🇺🇸', setModalState, isDark),
+                  _buildLanguageOption(
+                      'Indonesia', 'id', '🇮🇩', setModalState, isDark),
+                  _buildLanguageOption(
+                      'English', 'en', '🇺🇸', setModalState, isDark),
                   const SizedBox(height: 16),
                 ],
               ),
@@ -202,10 +223,16 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildLanguageOption(String langName, String langCode, String flag, StateSetter setModalState, bool isDark) {
+  Widget _buildLanguageOption(
+    String langName,
+    String langCode,
+    String flag,
+    StateSetter setModalState,
+    bool isDark,
+  ) {
     final langNotifier = Provider.of<LanguageNotifier>(context);
     final bool isSelected = langNotifier.currentLanguage == langCode;
-    
+
     return GestureDetector(
       onTap: () {
         langNotifier.changeLanguage(langCode);
@@ -215,22 +242,34 @@ class _ProfilePageState extends State<ProfilePage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          // ✅ Ganti .withOpacity() → .withValues(alpha: ...)
+          color: isSelected
+              ? AppColors.primary.withValues(alpha: 0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppColors.primary : (isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
+            color: isSelected
+                ? AppColors.primary
+                : (isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
           ),
         ),
         child: Row(
           children: [
             Text(flag, style: const TextStyle(fontSize: 20)),
             const SizedBox(width: 12),
-            Text(langName, style: AppTextStyles.bodyMD.copyWith(
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-            )),
+            Text(
+              langName,
+              style: AppTextStyles.bodyMD.copyWith(
+                fontWeight:
+                    isSelected ? FontWeight.bold : FontWeight.normal,
+                color: isDark
+                    ? AppColors.textPrimaryDark
+                    : AppColors.textPrimary,
+              ),
+            ),
             const Spacer(),
-            if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+            if (isSelected)
+              const Icon(Icons.check_circle_rounded, color: AppColors.primary),
           ],
         ),
       ),
@@ -275,9 +314,13 @@ class _ProfilePageState extends State<ProfilePage> {
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
-        title: Text(langNotifier.translate('profile_title'), style: AppTextStyles.headingMD),
+        title: Text(
+          langNotifier.translate('profile_title'),
+          style: AppTextStyles.headingMD,
+        ),
         centerTitle: true,
-        backgroundColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
+        backgroundColor:
+            isDark ? AppColors.cardBackgroundDark : Colors.white,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -302,8 +345,8 @@ class _ProfilePageState extends State<ProfilePage> {
           backgroundColor: AppColors.primaryBorder,
           backgroundImage:
               _profileImageUrl != null && _profileImageUrl!.isNotEmpty
-              ? NetworkImage(_profileImageUrl!) as ImageProvider
-              : null,
+                  ? NetworkImage(_profileImageUrl!) as ImageProvider
+                  : null,
           child: _profileImageUrl == null || _profileImageUrl!.isEmpty
               ? const Icon(Icons.person, size: 50, color: AppColors.primary)
               : null,
@@ -312,7 +355,9 @@ class _ProfilePageState extends State<ProfilePage> {
         Text(
           _userName,
           style: AppTextStyles.headingMD.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+            color:
+                isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
@@ -324,10 +369,9 @@ class _ProfilePageState extends State<ProfilePage> {
           onPressed: () async {
             await Navigator.push(
               context,
-              MaterialPageRoute(builder: (context) => const EditProfilePage()),
+              MaterialPageRoute(
+                  builder: (context) => const EditProfilePage()),
             );
-            // Always reload data when returning from EditProfilePage
-            // Because user might upload a photo and press the hardware back button
             if (mounted) {
               _loadProfile();
             }
@@ -339,7 +383,10 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.circular(20),
             ),
           ),
-          child: Text(Provider.of<LanguageNotifier>(context).translate('edit_profile')),
+          child: Text(
+            Provider.of<LanguageNotifier>(context)
+                .translate('edit_profile'),
+          ),
         ),
       ],
     );
@@ -358,7 +405,8 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             langNotifier.translate('app_settings'),
             style: AppTextStyles.titleMD.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              color:
+                  isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -384,7 +432,9 @@ class _ProfilePageState extends State<ProfilePage> {
           _buildSettingsTile(
             icon: Icons.language_outlined,
             title: langNotifier.translate('lang'),
-            subtitle: langNotifier.currentLanguage == 'id' ? 'Indonesia' : 'English',
+            subtitle: langNotifier.currentLanguage == 'id'
+                ? 'Indonesia'
+                : 'English',
             onTap: _showLanguageSettings,
           ),
           _buildSettingsTile(
@@ -396,7 +446,8 @@ class _ProfilePageState extends State<ProfilePage> {
           Text(
             langNotifier.translate('help_info'),
             style: AppTextStyles.titleMD.copyWith(
-              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+              color:
+                  isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
           ),
           const SizedBox(height: 16),
@@ -448,8 +499,9 @@ class _ProfilePageState extends State<ProfilePage> {
               icon: const Icon(Icons.logout),
               label: Text(langNotifier.translate('logout')),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.red.shade100,
-                foregroundColor: Colors.red.shade700,
+                // ✅ Ganti Colors.red.shade100 / .shade700 → Color langsung
+                backgroundColor: const Color(0xFFFFCDD2),
+                foregroundColor: const Color(0xFFC62828),
                 elevation: 0,
                 padding: const EdgeInsets.symmetric(vertical: 16),
                 shape: RoundedRectangleBorder(
@@ -477,7 +529,8 @@ class _ProfilePageState extends State<ProfilePage> {
       leading: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.primary.withOpacity(0.1),
+          // ✅ Ganti .withOpacity() → .withValues(alpha: ...)
+          color: AppColors.primary.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
         child: Icon(icon, color: AppColors.primary, size: 20),
@@ -485,14 +538,17 @@ class _ProfilePageState extends State<ProfilePage> {
       title: Text(
         title,
         style: AppTextStyles.titleSM.copyWith(
-          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          color:
+              isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
         ),
       ),
       subtitle: subtitle != null
           ? Text(
               subtitle,
               style: AppTextStyles.caption.copyWith(
-                color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                color: isDark
+                    ? AppColors.textMutedDark
+                    : AppColors.textMuted,
               ),
             )
           : null,

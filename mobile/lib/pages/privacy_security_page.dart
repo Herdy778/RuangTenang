@@ -4,7 +4,7 @@ import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
-import 'dart:convert';
+import 'package:ruangtenang_mobile/config/app_config.dart'; // FIX 1: Tambah import AppConfig
 
 class PrivacySecurityPage extends StatelessWidget {
   const PrivacySecurityPage({super.key});
@@ -17,13 +17,21 @@ class PrivacySecurityPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
-        title: Text(langNotifier.translate('privacy_title'), style: AppTextStyles.headingMD),
+        title: Text(
+          langNotifier.translate('privacy_title'),
+          style: AppTextStyles.headingMD,
+        ),
         centerTitle: true,
-        backgroundColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
+        backgroundColor:
+            isDark ? AppColors.cardBackgroundDark : Colors.white,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back_ios_new_rounded, 
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+          icon: Icon(
+            Icons.arrow_back_ios_new_rounded,
+            color: isDark
+                ? AppColors.textPrimaryDark
+                : AppColors.textPrimary,
+          ),
           onPressed: () => Navigator.pop(context),
         ),
       ),
@@ -32,7 +40,8 @@ class PrivacySecurityPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildSectionHeader(langNotifier.translate('data_privacy'), isDark),
+            _buildSectionHeader(
+                langNotifier.translate('data_privacy'), isDark),
             _buildInfoCard(
               icon: Icons.delete_forever_outlined,
               title: langNotifier.translate('delete_data'),
@@ -45,8 +54,14 @@ class PrivacySecurityPage extends StatelessWidget {
             _buildSectionHeader(langNotifier.translate('legal'), isDark),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(langNotifier.translate('tos'), 
-                style: AppTextStyles.bodyMD.copyWith(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
+              title: Text(
+                langNotifier.translate('tos'),
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
+                ),
+              ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 showDialog(
@@ -56,10 +71,16 @@ class PrivacySecurityPage extends StatelessWidget {
                     content: SingleChildScrollView(
                       child: Text(
                         langNotifier.translate('tos_content'),
-                        style: const TextStyle(fontSize: 14, height: 1.5),
+                        style:
+                            const TextStyle(fontSize: 14, height: 1.5),
                       ),
                     ),
-                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -67,8 +88,14 @@ class PrivacySecurityPage extends StatelessWidget {
             const Divider(),
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(langNotifier.translate('privacy_policy'), 
-                style: AppTextStyles.bodyMD.copyWith(color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary)),
+              title: Text(
+                langNotifier.translate('privacy_policy'),
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
+                ),
+              ),
               trailing: const Icon(Icons.chevron_right_rounded),
               onTap: () {
                 showDialog(
@@ -78,10 +105,16 @@ class PrivacySecurityPage extends StatelessWidget {
                     content: SingleChildScrollView(
                       child: Text(
                         langNotifier.translate('privacy_content'),
-                        style: const TextStyle(fontSize: 14, height: 1.5),
+                        style:
+                            const TextStyle(fontSize: 14, height: 1.5),
                       ),
                     ),
-                    actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('OK'),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -121,10 +154,13 @@ class PrivacySecurityPage extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 16),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: isDark ? AppColors.cardBackgroundDark : AppColors.cardBackground,
+          color: isDark
+              ? AppColors.cardBackgroundDark
+              : AppColors.cardBackground,
           borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: isDark ? AppColors.cardBorderDark : AppColors.cardBorder,
+            color:
+                isDark ? AppColors.cardBorderDark : AppColors.cardBorder,
           ),
         ),
         child: Row(
@@ -146,7 +182,10 @@ class PrivacySecurityPage extends StatelessWidget {
                   Text(
                     title,
                     style: AppTextStyles.titleSM.copyWith(
-                      color: textColor ?? (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+                      color: textColor ??
+                          (isDark
+                              ? AppColors.textPrimaryDark
+                              : AppColors.textPrimary),
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -154,7 +193,9 @@ class PrivacySecurityPage extends StatelessWidget {
                   Text(
                     description,
                     style: AppTextStyles.caption.copyWith(
-                      color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
                       height: 1.4,
                     ),
                   ),
@@ -167,12 +208,14 @@ class PrivacySecurityPage extends StatelessWidget {
     );
   }
 
-  void _showDeleteConfirmation(BuildContext context, LanguageNotifier lang) {
+  void _showDeleteConfirmation(
+      BuildContext context, LanguageNotifier lang) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: Text(lang.translate('delete_data')),
-        content: const Text('Apakah Anda yakin ingin menghapus seluruh riwayat jurnal? Tindakan ini tidak dapat dibatalkan.'),
+        // FIX 2: Pakai langNotifier untuk teks konfirmasi
+        content: Text(lang.translate('delete_data_confirm')),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -183,20 +226,25 @@ class PrivacySecurityPage extends StatelessWidget {
               Navigator.pop(context);
               _deleteAllData(context, lang);
             },
-            child: const Text('Hapus', style: TextStyle(color: Colors.redAccent)),
+            child: Text(
+              lang.translate('delete'),
+              style: const TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
     );
   }
 
-  Future<void> _deleteAllData(BuildContext context, LanguageNotifier lang) async {
+  Future<void> _deleteAllData(
+      BuildContext context, LanguageNotifier lang) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('token') ?? '';
 
       final response = await http.delete(
-        Uri.parse('http://127.0.0.1:8000/api/journals/all'),
+        // FIX 1: Pakai AppConfig.baseUrl bukan hardcoded IP
+        Uri.parse('${AppConfig.baseUrl}/journals/all'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',
@@ -206,20 +254,34 @@ class PrivacySecurityPage extends StatelessWidget {
       if (response.statusCode == 200) {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Seluruh data berhasil dihapus')),
+            // FIX 2: Pakai langNotifier untuk snackbar
+            SnackBar(
+              content: Text(lang.translate('delete_data_success')),
+              backgroundColor: Colors.green,
+            ),
           );
         }
       } else {
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Gagal menghapus data: ${response.statusCode}')),
+            SnackBar(
+              // FIX 2: Pakai langNotifier untuk pesan gagal
+              content: Text(
+                '${lang.translate('delete_data_failed')}: ${response.statusCode}',
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
           );
         }
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Terjadi kesalahan koneksi')),
+          // FIX 2: Pakai langNotifier untuk pesan error koneksi
+          SnackBar(
+            content: Text(lang.translate('connection_error')),
+            backgroundColor: Colors.redAccent,
+          ),
         );
       }
     }

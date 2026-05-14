@@ -101,12 +101,18 @@ class AboutPage extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(langNotifier.translate('follow_us') ?? 'Ikuti Kami', isDark),
+                  _buildSectionHeader(langNotifier.translate('follow_us'), isDark),
                   Row(
                     children: [
-                      _buildSocialIcon(Icons.language_rounded, Colors.blue),
-                      _buildSocialIcon(Icons.camera_alt_outlined, Colors.purple),
-                      _buildSocialIcon(Icons.facebook_rounded, Colors.blueAccent),
+                      _buildSocialIcon(Icons.language_rounded, Colors.blue, onTap: () {
+                        // TODO: launchUrl('https://ruangtenang.id')
+                      }),
+                      _buildSocialIcon(Icons.camera_alt_outlined, Colors.purple, onTap: () {
+                        // TODO: launchUrl instagram
+                      }),
+                      _buildSocialIcon(Icons.facebook_rounded, Colors.blueAccent, onTap: () {
+                        // TODO: launchUrl facebook
+                      }),
                     ],
                   ),
                   const SizedBox(height: 40),
@@ -126,15 +132,18 @@ class AboutPage extends StatelessWidget {
     );
   }
 
-  Widget _buildSocialIcon(IconData icon, Color color) {
-    return Container(
-      margin: const EdgeInsets.only(right: 16),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        shape: BoxShape.circle,
+  Widget _buildSocialIcon(IconData icon, Color color, {VoidCallback? onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(right: 16),
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: color, size: 24),
       ),
-      child: Icon(icon, color: color, size: 24),
     );
   }
 

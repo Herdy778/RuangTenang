@@ -12,8 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
+import 'package:ruangtenang_mobile/config/app_config.dart';
 
-const _kBaseUrl = 'http://10.248.133.182:8000/api';
+final _kBaseUrl = AppConfig.baseUrl;
 
 // ═════════════════════════════════════════════════════════════
 //  PAGE

@@ -8,7 +8,8 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
 import 'journal_page.dart';
-import '../services/api_service.dart';
+import 'package:ruangtenang_mobile/config/app_config.dart';
+
 
 class ChatAiPage extends StatefulWidget {
   const ChatAiPage({super.key});
@@ -252,8 +253,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 
   // --- PERHATIAN UNTUK URL API BACKEND ---
   // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
-  final String apiUrl = "http://10.248.133.182:8000/api/test-ai";
-final String historyUrl = "http://10.248.133.182:8000/api/chat-history";
+  final String apiUrl = "${AppConfig.baseUrl}/test-ai";
+  final String historyUrl = "${AppConfig.baseUrl}/chat-history";
 
 @override
 void initState() {

@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:ui';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ruangtenang_mobile/config/app_config.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -73,7 +74,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
 
     try {
       var response = await http.post(
-        Uri.parse("http://10.248.133.182:8000/api/register"),
+  Uri.parse("${AppConfig.baseUrl}/register"),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
