@@ -68,17 +68,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     }
 
     try {
-      var response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/login"),
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "email": emailController.text,
-          "password": passwordController.text,
-        }),
-      );
+      var response = await http
+    .post(
+      Uri.parse("http://10.248.133.182:8000/api/login"),
+      headers: {
+        "Accept": "application/json",
+        "Content-Type": "application/json",
+      },
+      body: jsonEncode({
+        "email": emailController.text,
+        "password": passwordController.text,
+      }),
+    )
+    .timeout(const Duration(seconds: 5));
 
       var data;
       try {
@@ -86,6 +88,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       } catch (e) {
         data = {};
       }
+
+      print("STATUS CODE: ${response.statusCode}");
+print("RESPONSE BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
@@ -111,7 +116,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               .last
               .split('\\')
               .last;
-          final fullUrl = "http://127.0.0.1:8000/api/photo/$filename";
+          final fullUrl = "http://10.248.133.182:8000/api/photo/$filename";
           await prefs.setString('profile_image_url', fullUrl);
         } else {
           // If no photo in backend, clear the old locally cached photo
@@ -129,10 +134,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         ).showSnackBar(SnackBar(content: Text(data['pesan'] ?? "Login gagal")));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tidak bisa connect ke server")),
-      );
-    }
+  print("LOGIN ERROR: $e");
+
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text("Error: $e")),
+  );
+}
 
     setState(() => isLoading = false);
   }

@@ -4,8 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import 'journal_page.dart'; // Untuk navigasi ke halaman Jurnal AI
+import '../theme/language_notifier.dart';
+import 'journal_page.dart';
+import '../services/api_service.dart';
 
 class ChatAiPage extends StatefulWidget {
   const ChatAiPage({super.key});
@@ -22,120 +25,120 @@ const Map<String, List<Map<String, String>>> _articlesByMood = {
   'stres': [
     {
       'emoji': '🧘',
-      'title': 'Teknik Napas 4-7-8',
-      'sub': 'Redakan stres dalam 1 menit',
+      'title': 'art_stres_1_t',
+      'sub': 'art_stres_1_s',
     },
     {
       'emoji': '🌿',
-      'title': 'Jalan Kaki & Stres',
-      'sub': 'Olahraga ringan yang ampuh',
+      'title': 'art_stres_2_t',
+      'sub': 'art_stres_2_s',
     },
     {
       'emoji': '📓',
-      'title': 'Journaling untuk Stres',
-      'sub': 'Tulis, lepaskan, lega',
+      'title': 'art_stres_3_t',
+      'sub': 'art_stres_3_s',
     },
   ],
   'cemas': [
     {
       'emoji': '💆',
-      'title': 'Mindfulness 5 Menit',
-      'sub': 'Hadirkan dirimu saat ini',
+      'title': 'art_cemas_1_t',
+      'sub': 'art_cemas_1_s',
     },
     {
       'emoji': '🎵',
-      'title': 'Musik & Kecemasan',
-      'sub': 'Playlist yang menenangkan jiwa',
+      'title': 'art_cemas_2_t',
+      'sub': 'art_cemas_2_s',
     },
     {
       'emoji': '🔋',
-      'title': 'Kelola Energi Mental',
-      'sub': 'Jaga batas agar tidak overwhelmed',
+      'title': 'art_cemas_3_t',
+      'sub': 'art_cemas_3_s',
     },
   ],
   'sedih': [
     {
       'emoji': '💜',
-      'title': 'Validasi Perasaanmu',
-      'sub': 'Boleh sedih, itu manusiawi',
+      'title': 'art_sedih_1_t',
+      'sub': 'art_sedih_1_s',
     },
     {
       'emoji': '🤝',
-      'title': 'Cerita ke Orang Terdekat',
-      'sub': 'Kamu tidak harus sendiri',
+      'title': 'art_sedih_2_t',
+      'sub': 'art_sedih_2_s',
     },
     {
       'emoji': '🌅',
-      'title': 'Rutinitas Penyembuh',
-      'sub': 'Kebiasaan kecil yang membantu',
+      'title': 'art_sedih_3_t',
+      'sub': 'art_sedih_3_s',
     },
   ],
   'lelah': [
     {
       'emoji': '😴',
-      'title': 'Pentingnya Tidur Cukup',
-      'sub': 'Otak butuh rehat yang berkualitas',
+      'title': 'art_lelah_1_t',
+      'sub': 'art_lelah_1_s',
     },
     {
       'emoji': '🍵',
-      'title': 'Istirahat Aktif',
-      'sub': 'Bukan rebahan, tapi recharge',
+      'title': 'art_lelah_2_t',
+      'sub': 'art_lelah_2_s',
     },
     {
       'emoji': '🚿',
-      'title': 'Self-Care Sederhana',
-      'sub': 'Me-time yang efektif',
+      'title': 'art_lelah_3_t',
+      'sub': 'art_lelah_3_s',
     },
   ],
   'marah': [
     {
       'emoji': '🥊',
-      'title': 'Kelola Amarah dengan Sehat',
-      'sub': 'Emosi valid, ekspresi bisa dipilih',
+      'title': 'art_marah_1_t',
+      'sub': 'art_marah_1_s',
     },
     {
       'emoji': '🌊',
-      'title': 'Teknik Grounding',
-      'sub': 'Kembali tenang dalam 5 langkah',
+      'title': 'art_marah_2_t',
+      'sub': 'art_marah_2_s',
     },
     {
       'emoji': '✍️',
-      'title': 'Ekspresikan lewat Tulisan',
-      'sub': 'Tuangkan ke kertas, bukan orang',
+      'title': 'art_marah_3_t',
+      'sub': 'art_marah_3_s',
     },
   ],
   'burnout': [
     {
       'emoji': '🛑',
-      'title': 'Kenali Tanda Burnout',
-      'sub': 'Sebelum terlambat, sadari sekarang',
+      'title': 'art_burnout_1_t',
+      'sub': 'art_burnout_1_s',
     },
     {
       'emoji': '📵',
-      'title': 'Digital Detox',
-      'sub': 'Istirahat dari layar secara berkala',
+      'title': 'art_burnout_2_t',
+      'sub': 'art_burnout_2_s',
     },
     {
       'emoji': '🧠',
-      'title': 'Cari Bantuan Profesional',
-      'sub': 'Psikolog bisa membantumu pulih',
+      'title': 'art_burnout_3_t',
+      'sub': 'art_burnout_3_s',
     },
   ],
   'default': [
     {
       'emoji': '💙',
-      'title': 'Menjaga Kesehatan Mental',
-      'sub': 'Panduan dasar untuk setiap hari',
+      'title': 'art_default_1_t',
+      'sub': 'art_default_1_s',
     },
     {
       'emoji': '🌱',
-      'title': 'Tumbuh dari Tantangan',
-      'sub': 'Resiliensi yang bisa dipelajari',
+      'title': 'art_default_2_t',
+      'sub': 'art_default_2_s',
     },
     {
       'emoji': '☀️',
-      'title': 'Mulai Hari dengan Positif',
-      'sub': 'Rutinitas pagi yang menyehatkan',
+      'title': 'art_default_3_t',
+      'sub': 'art_default_3_s',
     },
   ],
 };
@@ -234,14 +237,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 }
 
   // Setiap pesan: role (user/ai), text, dan opsional moodCategory untuk artikel
-  final List<Map<String, String?>> _messages = [
-    {
-      "role": "ai",
-      "text":
-          "Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.",
-      "moodCategory": null, // pesan sambutan tidak tampilkan artikel
-    },
-  ];
+  List<Map<String, String?>> _messages = [];
+  bool _initialized = false;
   bool _isLoading = false;
   double _sendButtonScale = 1.0;
 
@@ -255,8 +252,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 
   // --- PERHATIAN UNTUK URL API BACKEND ---
   // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
-  final String apiUrl = "http://127.0.0.1:8000/api/test-ai";
-final String historyUrl = "http://127.0.0.1:8000/api/chat-history";
+  final String apiUrl = "http://10.248.133.182:8000/api/test-ai";
+final String historyUrl = "http://10.248.133.182:8000/api/chat-history";
 
 @override
 void initState() {
@@ -291,6 +288,7 @@ void initState() {
   }
 
   Future<void> kirimCurhat() async {
+    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
     final text = _controller.text.trim();
     if (text.isEmpty) return;
 
@@ -307,20 +305,17 @@ void initState() {
     _scrollToBottom();
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-final token = prefs.getString('token');
-
-final response = await http.post(
-  Uri.parse(apiUrl),
-  headers: {
-    "Content-Type": "application/json",
-    "Accept": "application/json",
-    "Authorization": "Bearer $token",
-  },
-  body: jsonEncode({
-    "message": text,
-  }),
-);
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+        },
+        body: jsonEncode({
+          "message": text,
+          "lang": langNotifier.currentLanguage
+        }),
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -328,7 +323,7 @@ final response = await http.post(
           // Simpan moodCategory di pesan AI agar artikel bisa ditampilkan di bawahnya
           _messages.add({
             "role": "ai",
-            "text": data['reply'] ?? "Maaf, tidak ada balasan dari AI.",
+            "text": data['reply'] ?? langNotifier.translate('chat_error_empty') ?? "Maaf, tidak ada balasan dari AI.",
             "moodCategory": detectedMood,
           });
 
@@ -348,7 +343,7 @@ final response = await http.post(
           _messages.add({
             "role": "ai",
             "text":
-                "Gagal terhubung ke server. Pastikan backend jalan. (Status: ${response.statusCode})",
+                "${langNotifier.translate('chat_error_conn')} (Status: ${response.statusCode})",
             "moodCategory": null,
           });
         });
@@ -358,7 +353,7 @@ final response = await http.post(
         _messages.add({
           "role": "ai",
           "text":
-              "Error koneksi: Pastikan Backend Laravel sudah di-serve dan URL API sudah benar.\n\nDetail: $e",
+              "${langNotifier.translate('chat_error_detail')}\n\nDetail: $e",
           "moodCategory": null,
         });
       });
@@ -372,6 +367,19 @@ final response = await http.post(
 
   @override
   Widget build(BuildContext context) {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+    
+    if (!_initialized) {
+      _messages = [
+        {
+          "role": "ai",
+          "text": langNotifier.translate('chat_welcome'),
+          "moodCategory": null,
+        },
+      ];
+      _initialized = true;
+    }
+
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
@@ -489,6 +497,7 @@ final response = await http.post(
   }
 
   Widget _buildAppBar() {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -508,7 +517,7 @@ final response = await http.post(
           Expanded(
             child: Center(
               child: Text(
-                'RuangTenang AI',
+                langNotifier.translate('chat_title'),
                 style: AppTextStyles.titleLG.copyWith(
                   color: AppColors.primary,
                   letterSpacing: 0.5,
@@ -650,6 +659,7 @@ final response = await http.post(
   }
 
   Widget _buildTypingIndicator() {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return TweenAnimationBuilder<double>(
       key: const ValueKey('typing_indicator'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -705,7 +715,7 @@ final response = await http.post(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "RuangTenang sedang mengetik",
+                    langNotifier.translate('chat_typing'),
                     style: AppTextStyles.bodySM.copyWith(
                       color: AppColors.textMuted,
                       fontStyle: FontStyle.italic,
@@ -723,6 +733,7 @@ final response = await http.post(
   }
 
   Widget _buildInputArea() {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -754,7 +765,7 @@ final response = await http.post(
                   enabled: !_isLoading,
                   style: AppTextStyles.bodyMD,
                   decoration: InputDecoration(
-                    hintText: "Ketik pesan...",
+                    hintText: langNotifier.translate('chat_hint'),
                     hintStyle: AppTextStyles.bodyMD.copyWith(
                       color: AppColors.textMuted,
                     ),
@@ -852,6 +863,7 @@ final response = await http.post(
   // ===========================================================================
 
   Widget _buildJournalTriggerCard(int index) {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     return TweenAnimationBuilder<double>(
       key: ValueKey('trigger_$index'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -909,7 +921,7 @@ final response = await http.post(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Cek Kondisi Mentalmu',
+                              langNotifier.translate('chat_trigger_title'),
                               style: AppTextStyles.titleSM.copyWith(
                                 color: Colors.white,
                                 fontWeight: FontWeight.w700,
@@ -917,7 +929,7 @@ final response = await http.post(
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'Sudah beberapa saat kita ngobrol',
+                              langNotifier.translate('chat_trigger_sub'),
                               style: AppTextStyles.caption.copyWith(
                                 color: Colors.white.withOpacity(0.75),
                               ),
@@ -932,7 +944,7 @@ final response = await http.post(
 
                   // Deskripsi
                   Text(
-                    'Yuk, lakukan pengecekan kondisi mental lebih mendalam dengan Jurnal AI. Hanya 2 menit, dan kamu akan mendapatkan analisis serta rekomendasi yang lebih personal. 💜',
+                    langNotifier.translate('chat_trigger_desc'),
                     style: AppTextStyles.bodySM.copyWith(
                       color: Colors.white.withOpacity(0.9),
                       height: 1.5,
@@ -997,7 +1009,7 @@ final response = await http.post(
                                 ),
                                 const SizedBox(width: 8),
                                 Text(
-                                  'Mulai Cek Kondisi Mental',
+                                  langNotifier.translate('chat_trigger_cta'),
                                   style: AppTextStyles.label.copyWith(
                                     color: const Color(0xFF7C3AED),
                                     fontWeight: FontWeight.w700,
@@ -1024,6 +1036,7 @@ final response = await http.post(
   // ===========================================================================
 
   Widget _buildArticleRecommendations(String moodCategory, int msgIndex) {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     final articles =
         _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
 
@@ -1058,7 +1071,7 @@ final response = await http.post(
                   ),
                   const SizedBox(width: 5),
                   Text(
-                    'Artikel untukmu',
+                    langNotifier.translate('chat_articles_label'),
                     style: AppTextStyles.caption.copyWith(
                       color: AppColors.primary,
                       fontWeight: FontWeight.w600,
@@ -1079,8 +1092,8 @@ final response = await http.post(
                   final article = articles[i];
                   return _buildArticleCard(
                     emoji: article['emoji']!,
-                    title: article['title']!,
-                    subtitle: article['sub']!,
+                    title: langNotifier.translate(article['title']!),
+                    subtitle: langNotifier.translate(article['sub']!),
                   );
                 },
               ),
@@ -1144,6 +1157,7 @@ final response = await http.post(
       ),
     );
   }
+
 }
 
 class BouncingDotsIndicator extends StatefulWidget {

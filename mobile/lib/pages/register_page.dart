@@ -73,7 +73,7 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
 
     try {
       var response = await http.post(
-        Uri.parse("http://127.0.0.1:8000/api/register"),
+        Uri.parse("http://10.248.133.182:8000/api/register"),
         headers: {
           "Accept": "application/json",
           "Content-Type": "application/json",
