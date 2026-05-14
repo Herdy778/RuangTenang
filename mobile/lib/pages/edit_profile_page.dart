@@ -91,7 +91,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       final request = http.MultipartRequest(
         'POST',
-        Uri.parse('http://127.0.0.1:8000/api/profile/upload-photo'),
+        Uri.parse('http://10.248.133.182:8000/api/profile/upload-photo'),
       );
 
       request.headers['Authorization'] = 'Bearer $token';
@@ -146,7 +146,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               .last;
 
           // Use the API route that provides CORS headers
-          final fullUrl = "http://127.0.0.1:8000/api/photo/$filename";
+          final fullUrl = "http://10.248.133.182:8000/api/photo/$filename";
 
           await prefs.setString('profile_image_url', fullUrl);
           setState(() {
@@ -249,7 +249,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final token = prefs.getString('token') ?? '';
 
       final response = await http.put(
-        Uri.parse('http://127.0.0.1:8000/api/profile'),
+        Uri.parse('http://10.248.133.182:8000/api/profile'),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',

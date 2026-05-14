@@ -255,8 +255,8 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
 
   // --- PERHATIAN UNTUK URL API BACKEND ---
   // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
-  final String apiUrl = "http://127.0.0.1:8000/api/test-ai";
-final String historyUrl = "http://127.0.0.1:8000/api/chat-history";
+  final String apiUrl = "http://10.248.133.182:8000/api/test-ai";
+final String historyUrl = "http://10.248.133.182:8000/api/chat-history";
 
 @override
 void initState() {

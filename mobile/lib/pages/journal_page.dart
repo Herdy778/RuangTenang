@@ -11,7 +11,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 
-const _kBaseUrl = 'http://127.0.0.1:8000/api';
+const _kBaseUrl = 'http://10.248.133.182:8000/api';
 
 // ═════════════════════════════════════════════════════════════
 //  PAGE
