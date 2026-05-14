@@ -72,16 +72,43 @@ export default function AdminJournals() {
   };
 
   async function fetchJournals() {
-    try {
-      const res = await API.get("/admin/journals");
-      setJournals(res.data.data || []);
-    } catch (err) {
-      console.error(err);
-      toast.error("Gagal memuat data jurnal");
-    } finally {
-      setLoading(false);
-    }
+  try {
+    const res = await API.get("/admin/journals");
+    const rawData = res.data.data || [];
+    
+    // 🔍 Debug: lihat data dari backend
+    console.log("📦 Data dari backend:", rawData);
+    
+    // Pastikan data memiliki user_nama
+    const mappedData = rawData.map((item) => {
+      // Jika user_nama kosong atau "User Tidak Diketahui", coba ambil dari field lain
+      let userName = item.user_nama;
+      
+      if (!userName || userName === "User Tidak Diketahui") {
+        // Coba dari field lain jika ada
+        if (item.nama_lengkap) userName = item.nama_lengkap;
+        else if (item.user?.nama_lengkap) userName = item.user.nama_lengkap;
+        else if (item.user_id?.nama_lengkap) userName = item.user_id.nama_lengkap;
+        else userName = "User";
+      }
+      
+      return {
+        ...item,
+        user_nama: userName,
+        display_name: userName
+      };
+    });
+    
+    console.log("✅ Data setelah mapping:", mappedData);
+    setJournals(mappedData);
+    
+  } catch (err) {
+    console.error(err);
+    toast.error("Gagal memuat data jurnal");
+  } finally {
+    setLoading(false);
   }
+}
 
   async function updateStatus(id, status) {
     try {
@@ -397,12 +424,18 @@ export default function AdminJournals() {
                   </p>
 
                   <div style={styles.journalFooter}>
-                    <div style={styles.userInfo}>
-                      <span style={styles.userAvatar}>
-                        {j.user_nama?.charAt(0)?.toUpperCase() || "U"}
-                      </span>
-                      <span style={styles.userName}>{j.user_nama || "User"}</span>
-                    </div>
+                   <div style={styles.userInfo}>
+                    <span style={styles.userAvatar}>
+                      {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
+                        ? j.user_nama.charAt(0).toUpperCase() 
+                        : "U"}
+                    </span>
+                    <span style={styles.userName}>
+                      {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
+                        ? j.user_nama 
+                        : "User"}
+                    </span>
+                  </div>
                     
                     <button 
                       style={styles.recommendBtn}

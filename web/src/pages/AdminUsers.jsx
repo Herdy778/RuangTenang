@@ -18,7 +18,8 @@ export default function AdminUsers() {
 
   // State untuk pagination card role
   const [roleCardPage, setRoleCardPage] = useState(1);
-  const CARDS_PER_PAGE = 5; // Maksimal 5 card per halaman
+  // Total card yang tampil = 5 (1 total card + 4 role card)
+  const ROLES_PER_PAGE = 4; // Maksimal 4 card role per halaman
 
   const [sortConfig, setSortConfig] = useState({
     key: "nama_lengkap",
@@ -125,10 +126,10 @@ export default function AdminUsers() {
 
   // Konversi roleStats ke array untuk pagination
   const roleStatsArray = Object.entries(roleStats);
-  const totalRolePages = Math.ceil(roleStatsArray.length / CARDS_PER_PAGE);
+  const totalRolePages = Math.ceil(roleStatsArray.length / ROLES_PER_PAGE);
   const paginatedRoleStats = roleStatsArray.slice(
-    (roleCardPage - 1) * CARDS_PER_PAGE,
-    roleCardPage * CARDS_PER_PAGE
+    (roleCardPage - 1) * ROLES_PER_PAGE,
+    roleCardPage * ROLES_PER_PAGE
   );
 
   const getRoleBadgeStyle = (role) => {
@@ -165,7 +166,7 @@ export default function AdminUsers() {
         content: (
           <div>
             <p style={{ marginBottom: 12 }}>Seluruh pengguna yang terdaftar di RuangTenang:</p>
-            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#0D9488' }}>{totalUsers}</p>
+            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#4F46E5' }}>{totalUsers}</p>
             <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
             <div style={{ marginTop: 16 }}>
               <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
@@ -272,30 +273,30 @@ export default function AdminUsers() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>👥 Data Pengguna</h1>
-            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang (semua role)</p>
+            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang </p>
           </div>
           <div style={styles.dateBadge}>
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
 
-        {/* STATS CARDS - dengan pagination untuk role cards */}
+        {/* STATS CARDS - Total 5 card (1 total card + maksimal 4 role card) */}
         <div style={styles.statsGrid}>
-          {/* Total Card - selalu di halaman 1 */}
+          {/* Total Card - SELALU ADA di posisi pertama */}
           <div 
-            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #0D9488, #0F766E)', color: 'white' }}
+            style={{ ...styles.statCard, cursor: 'pointer' }}
             onClick={() => handleCardClick('total_users')}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={styles.statIcon}>👥</div>
-            <div style={{ ...styles.statNum, color: 'white' }}>{totalUsers}</div>
-            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>Total Pengguna</div>
-            <div style={{ ...styles.statTrend, color: 'rgba(255,255,255,0.6)' }}>Semua role</div>
-            <div style={{ ...styles.clickHint, color: 'rgba(255,255,255,0.6)' }}>✨ Klik untuk detail</div>
+            <div style={styles.statNum}>{totalUsers}</div>
+            <div style={styles.statLabel}>Total Pengguna</div>
+            <div style={styles.statTrend}>Semua role</div>
+            <div style={styles.clickHint}>✨ Klik untuk detail</div>
           </div>
           
-          {/* Role Cards dengan Pagination */}
+          {/* Role Cards - Maksimal 4 card per halaman */}
           {paginatedRoleStats.map(([role, count]) => {
             const roleStyle = getRoleBadgeStyle(role);
             return (
@@ -315,8 +316,8 @@ export default function AdminUsers() {
           })}
         </div>
 
-        {/* Tombol Navigasi Card Role (Next/Prev) - Hanya muncul jika total role > 5 */}
-        {roleStatsArray.length > CARDS_PER_PAGE && (
+        {/* Tombol Navigasi Card Role - Muncul jika total role > 4 */}
+        {roleStatsArray.length > ROLES_PER_PAGE && (
           <div style={styles.cardPagination}>
             <button 
               onClick={() => setRoleCardPage(prev => Math.max(prev - 1, 1))}
@@ -454,7 +455,7 @@ export default function AdminUsers() {
 const modalButtonStyle = {
   marginTop: 20,
   padding: '10px 20px',
-  background: '#0D9488',
+  background: '#4F46E5',
   color: 'white',
   border: 'none',
   borderRadius: 40,
@@ -477,9 +478,9 @@ const styles = {
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#14B8A6",
+    background: "#818CF8",
     filter: "blur(120px)",
-    opacity: 0.1,
+    opacity: 0.12,
     top: "-20vh",
     right: "-10vw",
     zIndex: 0,
@@ -490,7 +491,7 @@ const styles = {
     width: "40vw",
     height: "40vw",
     borderRadius: "50%",
-    background: "#0D9488",
+    background: "#34D399",
     filter: "blur(100px)",
     opacity: 0.08,
     bottom: "-10vh",
@@ -678,7 +679,7 @@ const styles = {
     cursor: "pointer",
     fontSize: 13,
     fontWeight: 500,
-    color: "#0D9488",
+    color: "#4F46E5",
     transition: "all 0.2s ease",
   },
   cardPageInfo: {
@@ -726,7 +727,7 @@ const styles = {
   },
   exportBtn: {
     padding: "12px 28px",
-    background: "linear-gradient(135deg, #0D9488, #0F766E)",
+    background: "linear-gradient(135deg, #3B82F6, #2563EB)",
     color: "white",
     border: "none",
     borderRadius: 48,
@@ -806,7 +807,7 @@ const styles = {
     width: 32,
     height: 32,
     borderRadius: 32,
-    background: "linear-gradient(135deg, #0D9488, #0F766E)",
+    background: "linear-gradient(135deg, #6366F1, #A855F7)",
     color: "white",
     display: "flex",
     alignItems: "center",
@@ -840,7 +841,7 @@ const styles = {
     width: 40,
     height: 40,
     border: "3px solid #E2E8F0",
-    borderTop: "3px solid #0D9488",
+    borderTop: "3px solid #6366F1",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto 16px",
