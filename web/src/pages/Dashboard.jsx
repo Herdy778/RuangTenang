@@ -6,7 +6,6 @@ import MoodChart from '../components/MoodChart';
 export default function Dashboard() {
   const navigate = useNavigate();
 
-  const [user, setUser] = useState(null);
   const [journals, setJournals] = useState([]);
   const [loading, setLoading] = useState(true);
   
@@ -15,15 +14,35 @@ export default function Dashboard() {
   const [modalData, setModalData] = useState({ title: '', content: null });
 
   useEffect(() => {
-    fetchJournals();
-  }, []);
+  fetchJournals();
+
+  // Tambahkan CSS spinner hanya sekali
+  const styleSheet = document.createElement("style");
+  styleSheet.textContent = `
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  `;
+
+  document.head.appendChild(styleSheet);
+
+  return () => {
+    document.head.removeChild(styleSheet);
+  };
+}, []);
 
   const fetchJournals = async () => {
     try {
       const res = await API.get("/admin/journals");
 console.log("Response journals:", res.data);
-      const rawData = res.data.data || res.data || [];
-      const mappedData = rawData.map((item) => ({
+      const rawData = Array.isArray(res.data.data)
+  ? res.data.data
+  : Array.isArray(res.data)
+  ? res.data
+  : [];
+
+const mappedData = rawData.map((item) => ({
         _id: item.id || item._id,
         hasil_mood: item.mood || item.hasil_mood || "Netral",
         teks_curhat: item.isi || item.teks_curhat || item.content || "",
@@ -348,19 +367,23 @@ console.log("Response journals:", res.data);
             </div>
           )}
           
-          {journals.length > 5 && (
-            <div style={styles.viewAllContainer}>
-              <button style={styles.viewAllBtn} onClick={() => navigate('/admin/journals')}>
-                Lihat Semua Jurnal ({journals.length})
-              </button>
+          <div style={styles.viewAllContainer}>
+  {journals.length > 5 && (
+    <button
+      style={styles.viewAllBtn}
+      onClick={() => navigate('/admin/journals')}
+    >
+      Lihat Semua Jurnal ({journals.length})
+    </button>
+  )}
 
-              <button
-                onClick={() => navigate("/admin/manajemen")}
-              >
-                Manajemen Admin
-              </button>
-            </div>
-          )}
+  <button
+    style={styles.viewAllBtn}
+    onClick={() => navigate('/admin/manajemen')}
+  >
+    Manajemen Admin
+  </button>
+</div>
         </div>
       </div>
     </div>
@@ -871,12 +894,3 @@ const styles = {
   },
 };
 
-// CSS untuk animasi spinner
-const styleSheet = document.createElement("style");
-styleSheet.textContent = `
-  @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-`;
-document.head.appendChild(styleSheet);
