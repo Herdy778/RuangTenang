@@ -14,11 +14,13 @@ class MoodController extends Controller
      * Mengambil data mood terbaru.
      * Mengambil 7 data terakhir.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            // Mengambil 7 data mood terbaru berdasarkan tanggal pembuatan
-            $moods = Mood::latest()->take(7)->get();
+            $userId = (string) $request->auth_user->_id;
+
+            // Mengambil 7 data mood terbaru milik user yang sedang login
+            $moods = Mood::where('user_id', $userId)->latest()->take(7)->get();
 
             return response()->json([
                 'success' => true,
