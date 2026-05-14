@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../theme/language_notifier.dart';
 import '../theme/app_theme.dart';
 import 'dashboard_page.dart';
 import 'journal_page.dart';
@@ -92,22 +94,22 @@ class _MainWrapperState extends State<MainWrapper> {
                 fontSize: 12,
                 color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
               ),
-              items: const [
+              items: [
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.grid_view_rounded),
-                  label: "Beranda",
+                  icon: const Icon(Icons.grid_view_rounded),
+                  label: Provider.of<LanguageNotifier>(context).translate('tab_home'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.book_rounded),
-                  label: "Jurnal",
+                  icon: const Icon(Icons.book_rounded),
+                  label: Provider.of<LanguageNotifier>(context).translate('tab_journal'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.chat_bubble_rounded),
-                  label: "Curhat",
+                  icon: const Icon(Icons.chat_bubble_rounded),
+                  label: Provider.of<LanguageNotifier>(context).translate('tab_chat'),
                 ),
                 BottomNavigationBarItem(
-                  icon: Icon(Icons.person_rounded),
-                  label: "Profil",
+                  icon: const Icon(Icons.person_rounded),
+                  label: Provider.of<LanguageNotifier>(context).translate('tab_profile'),
                 ),
               ],
             ),

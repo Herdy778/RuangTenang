@@ -4,6 +4,13 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/theme_notifier.dart';
 import 'edit_profile_page.dart';
+import 'privacy_security_page.dart';
+import 'help_center_page.dart';
+import 'about_page.dart';
+
+import '../theme/language_notifier.dart';
+import '../services/notification_service.dart';
+import 'dart:math';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -18,7 +25,6 @@ class _ProfilePageState extends State<ProfilePage> {
   String? _profileImageUrl;
   bool _notifPush = true;
   bool _notifEmail = false;
-  String _selectedLanguage = "Indonesia";
 
   @override
   void initState() {
@@ -34,106 +40,159 @@ class _ProfilePageState extends State<ProfilePage> {
       _profileImageUrl = prefs.getString('profile_image_url');
       _notifPush = prefs.getBool('notif_push') ?? true;
       _notifEmail = prefs.getBool('notif_email') ?? false;
-      _selectedLanguage = prefs.getString('language') ?? "Indonesia";
     });
   }
 
   void _showNotificationSettings() {
+    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            return Padding(
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
               padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.cardBackgroundDark : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Pengaturan Notifikasi', style: AppTextStyles.titleMD),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(langNotifier.translate('notif'), style: AppTextStyles.titleMD.copyWith(
+                        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                      )),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded),
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                    ],
+                  ),
                   const SizedBox(height: 16),
-                  SwitchListTile(
-                    title: const Text('Notifikasi Push'),
+                  _buildSwitchTile(
+                    title: langNotifier.translate('notif'), // Or specific key if added
+                    subtitle: 'Terima pengingat harian untuk menulis jurnal.',
                     value: _notifPush,
                     onChanged: (val) async {
                       setModalState(() => _notifPush = val);
                       setState(() => _notifPush = val);
                       final prefs = await SharedPreferences.getInstance();
                       await prefs.setBool('notif_push', val);
+
+                      if (val) {
+                        await NotificationService().requestPermissions();
+                        
+                        // Pick a random message
+                        final rand = Random().nextInt(5) + 1;
+                        final title = langNotifier.translate('notif_title_$rand');
+                        final body = langNotifier.translate('notif_body_$rand');
+
+                        // Schedule daily reminder at 20:00 (8 PM)
+                        await NotificationService().scheduleDailyReminder(1, 20, 0, title, body);
+                        
+                        // Send instant confirmation notification
+                        await NotificationService().showInstantNotification(
+                          langNotifier.translate('notif') + ' Aktif! 🔔',
+                          'Terima kasih! Kamu akan menerima pengingat harian setiap jam 20:00.'
+                        );
+                        
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text(langNotifier.translate('notif') + ' aktif (20:00)')),
+                          );
+                        }
+                      } else {
+                        await NotificationService().cancelAllNotifications();
+                      }
                     },
-                    activeThumbColor: AppColors.primary,
-                  ),
-                  SwitchListTile(
-                    title: const Text('Notifikasi Email'),
-                    value: _notifEmail,
-                    onChanged: (val) async {
-                      setModalState(() => _notifEmail = val);
-                      setState(() => _notifEmail = val);
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setBool('notif_email', val);
-                    },
-                    activeThumbColor: AppColors.primary,
+                    isDark: isDark,
                   ),
                   const SizedBox(height: 16),
+                  Center(
+                    child: OutlinedButton.icon(
+                      onPressed: () async {
+                        final rand = Random().nextInt(5) + 1;
+                        final title = langNotifier.translate('notif_title_$rand');
+                        final body = langNotifier.translate('notif_body_$rand');
+                        
+                        await NotificationService().showInstantNotification(title, body);
+                      },
+                      icon: const Icon(Icons.notifications_active_outlined),
+                      label: Text(langNotifier.translate('send_test_notif')),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.primary,
+                        side: const BorderSide(color: AppColors.primary),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
                 ],
               ),
             );
           },
         );
       },
+    );
+  }
+
+  // Helper for switch tiles
+  Widget _buildSwitchTile({
+    required String title,
+    required String subtitle,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+    required bool isDark,
+  }) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(title, style: AppTextStyles.bodyMD.copyWith(
+        fontWeight: FontWeight.bold,
+        color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+      )),
+      subtitle: Text(subtitle, style: AppTextStyles.caption),
+      value: value,
+      onChanged: onChanged,
+      activeColor: AppColors.primary,
+      activeTrackColor: AppColors.primary.withOpacity(0.3),
     );
   }
 
   void _showLanguageSettings() {
+    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) {
         return StatefulBuilder(
           builder: (BuildContext context, StateSetter setModalState) {
-            return Padding(
+            final isDark = Theme.of(context).brightness == Brightness.dark;
+            return Container(
               padding: const EdgeInsets.all(24.0),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.cardBackgroundDark : Colors.white,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Pilih Bahasa', style: AppTextStyles.titleMD),
+                  Text(langNotifier.translate('lang'), style: AppTextStyles.titleMD.copyWith(
+                    color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                  )),
                   const SizedBox(height: 16),
-                  RadioListTile<String>(
-                    title: const Text('Indonesia'),
-                    value: 'Indonesia',
-                    groupValue: _selectedLanguage,
-                    onChanged: (val) async {
-                      if (val != null) {
-                        setModalState(() => _selectedLanguage = val);
-                        setState(() => _selectedLanguage = val);
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('language', val);
-                        if (context.mounted) Navigator.pop(context);
-                      }
-                    },
-                    activeColor: AppColors.primary,
-                  ),
-                  RadioListTile<String>(
-                    title: const Text('English'),
-                    value: 'English',
-                    groupValue: _selectedLanguage,
-                    onChanged: (val) async {
-                      if (val != null) {
-                        setModalState(() => _selectedLanguage = val);
-                        setState(() => _selectedLanguage = val);
-                        final prefs = await SharedPreferences.getInstance();
-                        await prefs.setString('language', val);
-                        if (context.mounted) Navigator.pop(context);
-                      }
-                    },
-                    activeColor: AppColors.primary,
-                  ),
+                  _buildLanguageOption('Indonesia', 'id', '🇮🇩', setModalState, isDark),
+                  _buildLanguageOption('English', 'en', '🇺🇸', setModalState, isDark),
+                  const SizedBox(height: 16),
                 ],
               ),
             );
@@ -143,57 +202,59 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  void _showPrivacySettings() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Privasi & Keamanan', style: AppTextStyles.titleMD),
-        content: const Text(
-          'Tidak ada pengaturan tambahan tingkat lanjut untuk saat ini.\nSemua data pribadi Anda tersimpan secara lokal dan aman.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+  Widget _buildLanguageOption(String langName, String langCode, String flag, StateSetter setModalState, bool isDark) {
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+    final bool isSelected = langNotifier.currentLanguage == langCode;
+    
+    return GestureDetector(
+      onTap: () {
+        langNotifier.changeLanguage(langCode);
+        Navigator.pop(context);
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: isSelected ? AppColors.primary.withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? AppColors.primary : (isDark ? AppColors.cardBorderDark : AppColors.cardBorder),
           ),
-        ],
+        ),
+        child: Row(
+          children: [
+            Text(flag, style: const TextStyle(fontSize: 20)),
+            const SizedBox(width: 12),
+            Text(langName, style: AppTextStyles.bodyMD.copyWith(
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+            )),
+            const Spacer(),
+            if (isSelected) const Icon(Icons.check_circle_rounded, color: AppColors.primary),
+          ],
+        ),
       ),
+    );
+  }
+
+  void _showPrivacySettings() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PrivacySecurityPage()),
     );
   }
 
   void _showHelpCenter() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Pusat Bantuan', style: AppTextStyles.titleMD),
-        content: const Text(
-          'Butuh bantuan? Silakan hubungi administrator di:\n\n📧 support@ruangtenang.com\n📞 0812-3456-7890',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
-          ),
-        ],
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const HelpCenterPage()),
     );
   }
 
   void _showAbout() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Tentang Ruang Tenang', style: AppTextStyles.titleMD),
-        content: const Text(
-          'Versi 1.0.0\n\nAplikasi ini dikembangkan untuk membantu melacak mood harian Anda dan memberikan fasilitas relaksasi agar hari menjadi lebih baik.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Tutup'),
-          ),
-        ],
-      ),
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const AboutPage()),
     );
   }
 
@@ -208,12 +269,13 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     final isDark = themeNotifier.isDarkMode;
 
     return Scaffold(
       backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
       appBar: AppBar(
-        title: Text('Profil & Pengaturan', style: AppTextStyles.headingMD),
+        title: Text(langNotifier.translate('profile_title'), style: AppTextStyles.headingMD),
         centerTitle: true,
         backgroundColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
         elevation: 0,
@@ -277,7 +339,7 @@ class _ProfilePageState extends State<ProfilePage> {
               borderRadius: BorderRadius.circular(20),
             ),
           ),
-          child: const Text('Edit Profil'),
+          child: Text(Provider.of<LanguageNotifier>(context).translate('edit_profile')),
         ),
       ],
     );
@@ -285,6 +347,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildSettingsSection() {
     final themeNotifier = Provider.of<ThemeNotifier>(context);
+    final langNotifier = Provider.of<LanguageNotifier>(context);
     final isDark = themeNotifier.isDarkMode;
 
     return Container(
@@ -293,7 +356,7 @@ class _ProfilePageState extends State<ProfilePage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Pengaturan Aplikasi',
+            langNotifier.translate('app_settings'),
             style: AppTextStyles.titleMD.copyWith(
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
@@ -301,7 +364,7 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 16),
           _buildSettingsTile(
             icon: isDark ? Icons.dark_mode : Icons.light_mode,
-            title: 'Mode Gelap',
+            title: langNotifier.translate('dark_mode'),
             trailing: Switch(
               value: isDark,
               onChanged: (val) {
@@ -315,23 +378,23 @@ class _ProfilePageState extends State<ProfilePage> {
           ),
           _buildSettingsTile(
             icon: Icons.notifications_outlined,
-            title: 'Notifikasi',
+            title: langNotifier.translate('notif'),
             onTap: _showNotificationSettings,
           ),
           _buildSettingsTile(
             icon: Icons.language_outlined,
-            title: 'Bahasa',
-            subtitle: _selectedLanguage,
+            title: langNotifier.translate('lang'),
+            subtitle: langNotifier.currentLanguage == 'id' ? 'Indonesia' : 'English',
             onTap: _showLanguageSettings,
           ),
           _buildSettingsTile(
             icon: Icons.security_outlined,
-            title: 'Privasi & Keamanan',
+            title: langNotifier.translate('privacy'),
             onTap: _showPrivacySettings,
           ),
           const SizedBox(height: 24),
           Text(
-            'Bantuan & Info',
+            langNotifier.translate('help_info'),
             style: AppTextStyles.titleMD.copyWith(
               color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
@@ -339,12 +402,12 @@ class _ProfilePageState extends State<ProfilePage> {
           const SizedBox(height: 16),
           _buildSettingsTile(
             icon: Icons.help_outline,
-            title: 'Pusat Bantuan',
+            title: langNotifier.translate('help_center'),
             onTap: _showHelpCenter,
           ),
           _buildSettingsTile(
             icon: Icons.info_outline,
-            title: 'Tentang Aplikasi',
+            title: langNotifier.translate('about_app'),
             onTap: _showAbout,
           ),
           const SizedBox(height: 32),
@@ -355,14 +418,14 @@ class _ProfilePageState extends State<ProfilePage> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    title: const Text("Logout"),
-                    content: const Text("Yakin ingin keluar?"),
+                    title: Text(langNotifier.translate('logout')),
+                    content: Text(langNotifier.translate('logout_confirm')),
                     actions: [
                       TextButton(
                         onPressed: () => Navigator.pop(context),
-                        child: const Text(
-                          "Batal",
-                          style: TextStyle(color: Colors.grey),
+                        child: Text(
+                          langNotifier.translate('cancel'),
+                          style: const TextStyle(color: Colors.grey),
                         ),
                       ),
                       ElevatedButton(
@@ -373,9 +436,9 @@ class _ProfilePageState extends State<ProfilePage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.redAccent,
                         ),
-                        child: const Text(
-                          "Keluar",
-                          style: TextStyle(color: Colors.white),
+                        child: Text(
+                          langNotifier.translate('logout'),
+                          style: const TextStyle(color: Colors.white),
                         ),
                       ),
                     ],
@@ -383,7 +446,7 @@ class _ProfilePageState extends State<ProfilePage> {
                 );
               },
               icon: const Icon(Icons.logout),
-              label: const Text('Keluar'),
+              label: Text(langNotifier.translate('logout')),
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.red.shade100,
                 foregroundColor: Colors.red.shade700,
