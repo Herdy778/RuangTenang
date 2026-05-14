@@ -370,7 +370,7 @@ class _ProfilePageState extends State<ProfilePage> {
               onChanged: (val) {
                 themeNotifier.toggleTheme(val);
               },
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
             ),
             onTap: () {
               themeNotifier.toggleTheme(!isDark);
