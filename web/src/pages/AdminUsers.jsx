@@ -273,7 +273,7 @@ export default function AdminUsers() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>👥 Data Pengguna</h1>
-            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang (semua role)</p>
+            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang </p>
           </div>
           <div style={styles.dateBadge}>
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}

@@ -14,22 +14,23 @@ use Illuminate\Support\Facades\DB;
 class JournalController extends Controller
 {
     private function getAuthenticatedUserId(Request $request)
-{
-    if (!isset($request->auth_user) || !$request->auth_user) {
-        throw new \Exception('Unauthorized: auth_user tidak ditemukan');
+    {
+        if (!isset($request->auth_user) || !$request->auth_user) {
+            throw new \Exception('Unauthorized: auth_user tidak ditemukan');
+        }
+
+        $userId = DB::connection('mongodb')
+            ->collection('users')
+            ->where('email', $request->auth_user->email)
+            ->value('_id');
+
+        if (!$userId) {
+            throw new \Exception('User tidak ditemukan di database');
+        }
+
+        return (string) $userId;
     }
 
-    $userId = DB::connection('mongodb')
-        ->collection('users')
-        ->where('email', $request->auth_user->email)
-        ->value('_id');
-
-    if (!$userId) {
-        throw new \Exception('User tidak ditemukan di database');
-    }
-
-    return (string) $userId;
-}
     public function store(Request $request)
     {
         $request->validate([
@@ -81,14 +82,14 @@ class JournalController extends Controller
             $hasilMood = trim($aiResult['choices'][0]['message']['content'] ?? 'Netral');
             $hasilMood = preg_replace('/[^a-zA-Z]/', '', $hasilMood);
 
-$userId = $this->getAuthenticatedUserId($request);
+            $userId = $this->getAuthenticatedUserId($request);
 
             $journal = Journal::create([
                 'user_id' => $userId,
                 'teks_curhat' => $curhatan,
                 'hasil_mood' => $hasilMood,
                 'tanggal' => now(),
-                'status' => 'normal' // ✅ DEFAULT
+                'status' => 'normal'
             ]);
 
             $semuaArtikel = Article::where('kategori_tag', $hasilMood)->get();
@@ -115,7 +116,7 @@ $userId = $this->getAuthenticatedUserId($request);
 
     public function index(Request $request)
     {
- $userId = $this->getAuthenticatedUserId($request);
+        $userId = $this->getAuthenticatedUserId($request);
 
         $journals = Journal::where('user_id', $userId)
             ->orderBy('created_at', 'desc')
@@ -128,234 +129,254 @@ $userId = $this->getAuthenticatedUserId($request);
     }
 
     // =========================
-    // ADMIN LIHAT SEMUA JURNAL
+    // ✅ ADMIN LIHAT SEMUA JURNAL (FINAL FIX - DENGAN NAMA USER)
     // =========================
     public function adminJournals()
     {
-        $journals = Journal::orderBy('created_at', 'desc')->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => $journals
-        ]);
+        try {
+            // Ambil semua jurnal
+            $journals = Journal::orderBy('created_at', 'desc')->get();
+            
+            // Siapkan array untuk hasil yang sudah diformat
+            $formattedJournals = [];
+            
+            // Loop satu per satu jurnal
+            foreach ($journals as $journal) {
+                // Ambil data user berdasarkan user_id dari jurnal
+                $user = DB::connection('mongodb')
+                    ->collection('users')
+                    ->where('_id', $journal->user_id)
+                    ->first();
+                
+                // Ambil nama user, jika tidak ada kasih "User Tidak Diketahui"
+                $userName = $user['nama_lengkap'] ?? 'User Tidak Diketahui';
+                
+                // Masukkan ke array hasil
+                $formattedJournals[] = [
+                    '_id' => (string) $journal->_id,
+                    'teks_curhat' => $journal->teks_curhat,
+                    'hasil_mood' => $journal->hasil_mood,
+                    'status' => $journal->status,
+                    'created_at' => $journal->created_at,
+                    'tanggal' => $journal->tanggal,
+                    'user_nama' => $userName,  // 🔴 INI YANG MEMBUAT NAMA USER MUNCUL
+                ];
+            }
+            
+            // Kirim response JSON
+            return response()->json([
+                'status' => 'success',
+                'data' => $formattedJournals
+            ]);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memuat data jurnal: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     // =========================
-// ADMIN AMBIL ARTIKEL REKOMENDASI
-// =========================
-public function recommendedArticles($id)
-{
-    $journal = Journal::where('_id', $id)->first();
+    // ADMIN AMBIL ARTIKEL REKOMENDASI
+    // =========================
+    public function recommendedArticles($id)
+    {
+        try {
+            $journal = Journal::where('_id', $id)->first();
 
-    if (!$journal) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Jurnal tidak ditemukan'
-        ], 404);
+            if (!$journal) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Jurnal tidak ditemukan'
+                ], 404);
+            }
+
+            $mood = $journal->hasil_mood;
+
+            $articles = Article::where('kategori_tag', $mood)->limit(5)->get();
+
+            return response()->json([
+                'status' => 'success',
+                'data' => $articles
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memuat artikel: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
-    $mood = $journal->hasil_mood;
+    // =========================
+    // ADMIN KIRIM ARTIKEL KE USER
+    // =========================
+    public function sendRecommendedArticle(Request $request)
+    {
+        try {
+            $request->validate([
+                'journal_id' => 'required',
+                'article_id' => 'required'
+            ]);
 
-    $articles = Article::where(
-        'kategori_tag',
-        $mood
-    )->limit(5)->get();
+            $journal = Journal::where('_id', $request->journal_id)->first();
 
-    return response()->json([
-        'status' => 'success',
-        'data' => $articles
-    ]);
-}
+            if (!$journal) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'Jurnal tidak ditemukan'
+                ], 404);
+            }
 
+            ArticleRecommendation::create([
+                'user_id' => $journal->user_id,
+                'journal_id' => $journal->_id,
+                'article_id' => $request->article_id,
+                'admin_id' => $request->auth_user->_id ?? null,
+                'is_read' => false,
+                'created_at' => now()
+            ]);
 
-// =========================
-// ADMIN KIRIM ARTIKEL KE USER
-// =========================
-public function sendRecommendedArticle(Request $request)
-{
-    $request->validate([
-        'journal_id' => 'required',
-        'article_id' => 'required'
-    ]);
-
-    $journal = Journal::where(
-        '_id',
-        $request->journal_id
-    )->first();
-
-    if (!$journal) {
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Jurnal tidak ditemukan'
-        ], 404);
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Artikel berhasil dikirim'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal mengirim artikel: ' . $e->getMessage()
+            ], 500);
+        }
     }
-
-    ArticleRecommendation::create([
-        'user_id' => $journal->user_id,
-        'journal_id' => $journal->_id,
-        'article_id' => $request->article_id,
-        'admin_id' => $request->auth_user->_id ?? null,
-        'is_read' => false,
-        'created_at' => now()
-    ]);
-
-    return response()->json([
-        'status' => 'success',
-        'message' => 'Artikel berhasil dikirim'
-    ]);
-}
 
     // =========================
     // ADMIN DELETE JURNAL
     // =========================
     public function deleteJournal($id)
     {
-        $journal = Journal::where('_id', $id)->first();
+        try {
+            $journal = Journal::where('_id', $id)->first();
 
-        if (!$journal) {
+            if (!$journal) {
+                return response()->json([
+                    'status' => 'error',
+                    'pesan' => 'Jurnal tidak ditemukan'
+                ], 404);
+            }
+
+            $journal->delete();
+
+            return response()->json([
+                'status' => 'success',
+                'pesan' => 'Jurnal berhasil dihapus'
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'pesan' => 'Jurnal tidak ditemukan'
-            ], 404);
+                'message' => 'Gagal menghapus jurnal: ' . $e->getMessage()
+            ], 500);
         }
-
-        $journal->delete();
-
-        return response()->json([
-            'status' => 'success',
-            'pesan' => 'Jurnal berhasil dihapus'
-        ]);
     }
 
     // =========================
-    // ✅ UPDATE STATUS (FITUR BARU)
+    // UPDATE STATUS (FITUR BARU)
     // =========================
     public function updateStatus(Request $request, $id)
     {
-        $request->validate([
-            'status' => 'required|in:normal,perhatian,darurat'
-        ]);
+        try {
+            $request->validate([
+                'status' => 'required|in:normal,perhatian,darurat'
+            ]);
 
-        $journal = Journal::where('_id', $id)->first();
+            $journal = Journal::where('_id', $id)->first();
 
-        if (!$journal) {
+            if (!$journal) {
+                return response()->json([
+                    'status' => 'error',
+                    'pesan' => 'Jurnal tidak ditemukan'
+                ], 404);
+            }
+
+            $journal->status = $request->status;
+            $journal->save();
+
+            return response()->json([
+                'status' => 'success',
+                'pesan' => 'Status berhasil diupdate',
+                'data' => $journal
+            ]);
+        } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'pesan' => 'Jurnal tidak ditemukan'
-            ], 404);
+                'message' => 'Gagal update status: ' . $e->getMessage()
+            ], 500);
         }
-
-        $journal->status = $request->status;
-        $journal->save();
-
-        return response()->json([
-            'status' => 'success',
-            'pesan' => 'Status berhasil diupdate',
-            'data' => $journal
-        ]);
     }
 
     public function tesAi(Request $request)
-{
-    $userMessage = $request->input('message', '');
+    {
+        $userMessage = $request->input('message', '');
 
-    if (empty(trim($userMessage))) {
-        return response()->json([
-            'reply' => 'Silakan tuliskan pesan terlebih dahulu 😊'
-        ]);
-    }
-
-    // =========================
-    // 🔍 AMBIL USER ID
-    // =========================
-$userId = $this->getAuthenticatedUserId($request);
-
-    // =========================
-    // 🔥 FILTER TOPIK
-    // =========================
-    $allowedKeywords = [
-        'stres',
-        'cemas',
-        'depresi',
-        'sedih',
-        'overthinking',
-        'mental',
-        'emosi',
-        'burnout',
-        'trauma',
-        'hubungan',
-        'capek',
-        'lelah',
-        'bingung',
-        'takut',
-        'khawatir',
-        'gelisah',
-        'kesepian'
-    ];
-
-    $isValid = false;
-
-    foreach ($allowedKeywords as $keyword) {
-        if (str_contains(strtolower($userMessage), $keyword)) {
-            $isValid = true;
-            break;
+        if (empty(trim($userMessage))) {
+            return response()->json([
+                'reply' => 'Silakan tuliskan pesan terlebih dahulu 😊'
+            ]);
         }
-    }
 
-    // =========================
-    // ❌ TOPIK DI LUAR MENTAL HEALTH
-    // =========================
-    if (!$isValid) {
+        $userId = $this->getAuthenticatedUserId($request);
 
-        $reply =
-            'Sepertinya itu di luar topik kesehatan mental. '
-            . 'Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊';
+        $allowedKeywords = [
+            'stres', 'cemas', 'depresi', 'sedih', 'overthinking',
+            'mental', 'emosi', 'burnout', 'trauma', 'hubungan',
+            'capek', 'lelah', 'bingung', 'takut', 'khawatir', 'gelisah', 'kesepian'
+        ];
 
-        // Simpan pesan user
-        ChatMessage::create([
-         'user_id' => $userId,
-            'sender' => 'user',
-            'message' => $userMessage,
-        ]);
+        $isValid = false;
 
-        // Simpan balasan AI
-        ChatMessage::create([
-'user_id' => $userId,
-            'sender' => 'ai',
-            'message' => $reply,
-        ]);
+        foreach ($allowedKeywords as $keyword) {
+            if (str_contains(strtolower($userMessage), $keyword)) {
+                $isValid = true;
+                break;
+            }
+        }
 
-        return response()->json([
-            'reply' => $reply
-        ]);
-    }
+        if (!$isValid) {
+            $reply = 'Sepertinya itu di luar topik kesehatan mental. '
+                . 'Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊';
 
-    // =========================
-    // 🔑 API KEY CHECK
-    // =========================
-    $apiKey = env('GROQ_API_KEY');
+            ChatMessage::create([
+                'user_id' => $userId,
+                'sender' => 'user',
+                'message' => $userMessage,
+            ]);
 
-    if (!$apiKey) {
-        return response()->json([
-            'reply' => 'Maaf, layanan AI sedang tidak tersedia.'
-        ], 500);
-    }
+            ChatMessage::create([
+                'user_id' => $userId,
+                'sender' => 'ai',
+                'message' => $reply,
+            ]);
 
-    try {
+            return response()->json([
+                'reply' => $reply
+            ]);
+        }
 
-        // =========================
-        // 💾 SIMPAN CHAT USER
-        // =========================
-        ChatMessage::create([
-          'user_id' => $userId,
-            'sender' => 'user',
-            'message' => $userMessage,
-        ]);
+        $apiKey = env('GROQ_API_KEY');
 
-        // =========================
-        // 🧠 SYSTEM PROMPT
-        // =========================
-        $systemPrompt = "
+        if (!$apiKey) {
+            return response()->json([
+                'reply' => 'Maaf, layanan AI sedang tidak tersedia.'
+            ], 500);
+        }
+
+        try {
+            ChatMessage::create([
+                'user_id' => $userId,
+                'sender' => 'user',
+                'message' => $userMessage,
+            ]);
+
+            $systemPrompt = "
 Kamu adalah asisten psikologi bernama RuangTenang.
 
 Tugasmu:
@@ -371,40 +392,51 @@ Aturan:
 - Gunakan bahasa hangat dan empatik
 ";
 
-        // =========================
-        // 🚀 HIT GROQ API
-        // =========================
-        $response = Http::timeout(30)->withHeaders([
-            'Authorization' => 'Bearer ' . trim($apiKey),
-            'Content-Type' => 'application/json',
-        ])->post('https://api.groq.com/openai/v1/chat/completions', [
-            'model' => 'llama-3.3-70b-versatile',
-            'messages' => [
-                [
-                    'role' => 'system',
-                    'content' => $systemPrompt
+            $response = Http::timeout(30)->withHeaders([
+                'Authorization' => 'Bearer ' . trim($apiKey),
+                'Content-Type' => 'application/json',
+            ])->post('https://api.groq.com/openai/v1/chat/completions', [
+                'model' => 'llama-3.3-70b-versatile',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userMessage]
                 ],
-                [
-                    'role' => 'user',
-                    'content' => $userMessage
-                ]
-            ],
-            'max_tokens' => 1024,
-            'temperature' => 0.7,
-        ]);
+                'max_tokens' => 1024,
+                'temperature' => 0.7,
+            ]);
 
-        // =========================
-        // ❌ HANDLE ERROR
-        // =========================
-        if ($response->failed()) {
+            if ($response->failed()) {
+                $reply = 'Maaf, saya sedang mengalami gangguan koneksi. Coba lagi ya 🙏';
 
-            $reply =
-                'Maaf, saya sedang mengalami gangguan koneksi. '
-                . 'Coba lagi ya 🙏';
+                ChatMessage::create([
+                    'user_id' => $userId,
+                    'sender' => 'ai',
+                    'message' => $reply,
+                ]);
 
-            // Simpan error response
+                return response()->json([
+                    'reply' => $reply
+                ], 500);
+            }
+
+            $aiResult = $response->json();
+            $hasilTeksAI = trim($aiResult['choices'][0]['message']['content'] ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.');
+
             ChatMessage::create([
-              'user_id' => $userId,
+                'user_id' => $userId,
+                'sender' => 'ai',
+                'message' => $hasilTeksAI,
+            ]);
+
+            return response()->json([
+                'reply' => $hasilTeksAI
+            ]);
+
+        } catch (\Exception $e) {
+            $reply = 'Maaf, terjadi kesalahan pada sistem AI.';
+
+            ChatMessage::create([
+                'user_id' => $userId,
                 'sender' => 'ai',
                 'message' => $reply,
             ]);
@@ -413,82 +445,45 @@ Aturan:
                 'reply' => $reply
             ], 500);
         }
-
-        // =========================
-        // ✅ HASIL AI
-        // =========================
-        $aiResult = $response->json();
-
-        $hasilTeksAI = trim(
-            $aiResult['choices'][0]['message']['content']
-            ?? 'Maaf, saya tidak dapat memproses pesanmu saat ini.'
-        );
-
-        // =========================
-        // 💾 SIMPAN BALASAN AI
-        // =========================
-        ChatMessage::create([
-          'user_id' => $userId,
-            'sender' => 'ai',
-            'message' => $hasilTeksAI,
-        ]);
-
-        return response()->json([
-            'reply' => $hasilTeksAI
-        ]);
-
-    } catch (\Exception $e) {
-
-        $reply = 'Maaf, terjadi kesalahan pada sistem AI.';
-
-        ChatMessage::create([
-           'user_id' => $userId,
-            'sender' => 'ai',
-            'message' => $reply,
-        ]);
-
-        return response()->json([
-            'reply' => $reply
-        ], 500);
     }
-}
 
-public function getChatHistory(Request $request)
-{
-    $userId = $this->getAuthenticatedUserId($request);
+    public function getChatHistory(Request $request)
+    {
+        try {
+            $userId = $this->getAuthenticatedUserId($request);
 
-    $messages = ChatMessage::where('user_id', $userId)
-    ->orderBy('created_at', 'asc')
-    ->get();
+            $messages = ChatMessage::where('user_id', $userId)
+                ->orderBy('created_at', 'asc')
+                ->get();
 
-    return response()->json([
-        'status' => 'success',
-        'data' => $messages
-    ]);
-}
+            return response()->json([
+                'status' => 'success',
+                'data' => $messages
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memuat chat history: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     public function analyzeMentalHealth(Request $request)
     {
-        // 1. Ambil semua data inputan dari user (Flutter)
         $dataUser = $request->all();
 
         try {
-            // 2. Kirim ke Flask ML Service
             $response = Http::post('http://127.0.0.1:5000/predict', $dataUser);
 
             if ($response->successful()) {
                 $hasilPrediksi = $response->json();
 
-                // 3. Simpan jurnal ke MongoDB
                 $userId = $this->getAuthenticatedUserId($request);
 
                 $kategoriML = $hasilPrediksi['prediction'] ?? 'Minimal';
                 $skorTotal = $hasilPrediksi['skor_total'] ?? 0;
                 $teksCurhat = $request->input('teks_curhat', '');
 
-                // ==========================================
-                // 🔥 DUAL-CHECK (MAX SEVERITY) LOGIC
-                // ==========================================
                 $kategoriGroq = 'Netral';
                 $apiKey = env('GROQ_API_KEY');
 
@@ -499,7 +494,6 @@ public function getChatHistory(Request $request)
                         "Teks: \"" . $teksCurhat . "\"";
 
                     try {
-                        // Timeout lebih cepat (10 detik) agar tidak memblokir user terlalu lama
                         $groqResponse = Http::timeout(10)->withHeaders([
                             'Authorization' => 'Bearer ' . trim($apiKey),
                             'Content-Type' => 'application/json',
@@ -520,22 +514,17 @@ public function getChatHistory(Request $request)
                     }
                 }
 
-                // 1. Skala Keparahan ML (Angka)
                 $mlSeverityMap = ['Minimal' => 1, 'Ringan' => 2, 'Sedang' => 3, 'Berat' => 4];
                 $mlSeverity = $mlSeverityMap[$kategoriML] ?? 1;
 
-                // 2. Skala Keparahan Groq (Teks)
                 $groqSeverityMap = ['Netral' => 1, 'Sedih' => 2, 'Cemas' => 3, 'Burnout' => 3, 'Krisis' => 4];
                 $groqSeverity = $groqSeverityMap[$kategoriGroq] ?? 1;
 
-                // 3. Ambil nilai yang Paling Parah (Max Severity)
                 $maxSeverity = max($mlSeverity, $groqSeverity);
 
-                // 4. Ubah kembali ke Kategori PHQ Final
                 $severityToCategory = [1 => 'Minimal', 2 => 'Ringan', 3 => 'Sedang', 4 => 'Berat'];
                 $kategoriFinal = $severityToCategory[$maxSeverity] ?? 'Minimal';
 
-                // 5. Tandai jika terjadi override oleh AI Teks
                 $isOverridden = ($maxSeverity > $mlSeverity);
                 $hasilPrediksi['prediction'] = $kategoriFinal;
                 $hasilPrediksi['override_by_text'] = $isOverridden;
@@ -545,17 +534,15 @@ public function getChatHistory(Request $request)
                     $hasilPrediksi['message'] = 'Kondisimu memerlukan perhatian khusus. Berdasarkan ceritamu, kamu tidak harus menghadapi ini sendirian.';
                 }
 
-                // Mapping kategori ke hasil_mood (konsisten dengan jurnal teks)
                 $moodMap = [
                     'Minimal' => 'Netral',
                     'Ringan' => 'Cemas',
                     'Sedang' => 'Cemas',
                     'Berat' => 'Krisis',
                 ];
-                // ==========================================
 
                 Journal::create([
-                  'user_id' => $userId,
+                    'user_id' => $userId,
                     'teks_curhat' => $teksCurhat,
                     'hasil_mood' => $moodMap[$kategoriFinal] ?? 'Netral',
                     'kategori_phq' => $kategoriFinal,
