@@ -28,7 +28,7 @@ class AuthController extends Controller
         $token = bin2hex(random_bytes(32));
 
         Token::create([
-            'user_id' => $user->_id,
+            'user_id' => (string) $user->_id,
             'token' => hash('sha256', $token),
             'name' => 'auth_token'
         ]);
@@ -61,7 +61,7 @@ class AuthController extends Controller
     $token = bin2hex(random_bytes(32));
 
     Token::create([
-        'user_id' => $user->_id,
+        'user_id' => (string) $user->_id,
         'token' => hash('sha256', $token),
         'name' => 'auth_token'
     ]);

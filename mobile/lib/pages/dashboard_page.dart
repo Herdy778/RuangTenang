@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
@@ -1063,7 +1064,7 @@ Widget _buildRecommendedArticles(BuildContext context) {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       );
     },
