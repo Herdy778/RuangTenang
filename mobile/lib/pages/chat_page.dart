@@ -306,11 +306,15 @@ void initState() {
     _scrollToBottom();
 
     try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
       final response = await http.post(
         Uri.parse(apiUrl),
         headers: {
           "Content-Type": "application/json",
           "Accept": "application/json",
+          "Authorization": "Bearer $token",
         },
         body: jsonEncode({
           "message": text,
