@@ -270,4 +270,59 @@ public function profile(Request $request)
             ], 500);
         }
     }
+
+    /**
+     * Step 1: Verifikasi apakah email terdaftar di database
+     * Route: POST /api/forgot-password/verify
+     */
+    public function resetPasswordVerify(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Email tidak terdaftar di sistem kami.'
+            ], 404);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'Email ditemukan. Silakan buat password baru.',
+            'email_verified' => true,
+        ]);
+    }
+
+    /**
+     * Step 2: Reset password setelah email terverifikasi
+     * Route: POST /api/forgot-password/reset
+     */
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+            'password' => 'required|string|min:6|confirmed',
+        ]);
+
+        $user = User::where('email', $request->email)->first();
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'pesan' => 'Email tidak ditemukan.'
+            ], 404);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        return response()->json([
+            'status' => 'success',
+            'pesan' => 'Password berhasil direset. Silakan login dengan password baru.',
+        ]);
+    }
 }

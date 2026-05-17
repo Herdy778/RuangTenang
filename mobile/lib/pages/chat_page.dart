@@ -392,7 +392,7 @@ void initState() {
     }
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           // Background Blobs Dekoratif dengan animasi diagonal dan pulse
