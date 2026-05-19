@@ -20,127 +20,42 @@ class ChatAiPage extends StatefulWidget {
 
 // ===========================================================================
 // DATA ARTIKEL REKOMENDASI PER KATEGORI MOOD
-// Digunakan untuk menampilkan artikel relevan setelah AI membalas
 // ===========================================================================
 const Map<String, List<Map<String, String>>> _articlesByMood = {
   'stres': [
-    {
-      'emoji': '🧘',
-      'title': 'art_stres_1_t',
-      'sub': 'art_stres_1_s',
-    },
-    {
-      'emoji': '🌿',
-      'title': 'art_stres_2_t',
-      'sub': 'art_stres_2_s',
-    },
-    {
-      'emoji': '📓',
-      'title': 'art_stres_3_t',
-      'sub': 'art_stres_3_s',
-    },
+    {'emoji': '🧘', 'title': 'art_stres_1_t', 'sub': 'art_stres_1_s'},
+    {'emoji': '🌿', 'title': 'art_stres_2_t', 'sub': 'art_stres_2_s'},
+    {'emoji': '📓', 'title': 'art_stres_3_t', 'sub': 'art_stres_3_s'},
   ],
   'cemas': [
-    {
-      'emoji': '💆',
-      'title': 'art_cemas_1_t',
-      'sub': 'art_cemas_1_s',
-    },
-    {
-      'emoji': '🎵',
-      'title': 'art_cemas_2_t',
-      'sub': 'art_cemas_2_s',
-    },
-    {
-      'emoji': '🔋',
-      'title': 'art_cemas_3_t',
-      'sub': 'art_cemas_3_s',
-    },
+    {'emoji': '💆', 'title': 'art_cemas_1_t', 'sub': 'art_cemas_1_s'},
+    {'emoji': '🎵', 'title': 'art_cemas_2_t', 'sub': 'art_cemas_2_s'},
+    {'emoji': '🔋', 'title': 'art_cemas_3_t', 'sub': 'art_cemas_3_s'},
   ],
   'sedih': [
-    {
-      'emoji': '💜',
-      'title': 'art_sedih_1_t',
-      'sub': 'art_sedih_1_s',
-    },
-    {
-      'emoji': '🤝',
-      'title': 'art_sedih_2_t',
-      'sub': 'art_sedih_2_s',
-    },
-    {
-      'emoji': '🌅',
-      'title': 'art_sedih_3_t',
-      'sub': 'art_sedih_3_s',
-    },
+    {'emoji': '💜', 'title': 'art_sedih_1_t', 'sub': 'art_sedih_1_s'},
+    {'emoji': '🤝', 'title': 'art_sedih_2_t', 'sub': 'art_sedih_2_s'},
+    {'emoji': '🌅', 'title': 'art_sedih_3_t', 'sub': 'art_sedih_3_s'},
   ],
   'lelah': [
-    {
-      'emoji': '😴',
-      'title': 'art_lelah_1_t',
-      'sub': 'art_lelah_1_s',
-    },
-    {
-      'emoji': '🍵',
-      'title': 'art_lelah_2_t',
-      'sub': 'art_lelah_2_s',
-    },
-    {
-      'emoji': '🚿',
-      'title': 'art_lelah_3_t',
-      'sub': 'art_lelah_3_s',
-    },
+    {'emoji': '😴', 'title': 'art_lelah_1_t', 'sub': 'art_lelah_1_s'},
+    {'emoji': '🍵', 'title': 'art_lelah_2_t', 'sub': 'art_lelah_2_s'},
+    {'emoji': '🚿', 'title': 'art_lelah_3_t', 'sub': 'art_lelah_3_s'},
   ],
   'marah': [
-    {
-      'emoji': '🥊',
-      'title': 'art_marah_1_t',
-      'sub': 'art_marah_1_s',
-    },
-    {
-      'emoji': '🌊',
-      'title': 'art_marah_2_t',
-      'sub': 'art_marah_2_s',
-    },
-    {
-      'emoji': '✍️',
-      'title': 'art_marah_3_t',
-      'sub': 'art_marah_3_s',
-    },
+    {'emoji': '🥊', 'title': 'art_marah_1_t', 'sub': 'art_marah_1_s'},
+    {'emoji': '🌊', 'title': 'art_marah_2_t', 'sub': 'art_marah_2_s'},
+    {'emoji': '✍️', 'title': 'art_marah_3_t', 'sub': 'art_marah_3_s'},
   ],
   'burnout': [
-    {
-      'emoji': '🛑',
-      'title': 'art_burnout_1_t',
-      'sub': 'art_burnout_1_s',
-    },
-    {
-      'emoji': '📵',
-      'title': 'art_burnout_2_t',
-      'sub': 'art_burnout_2_s',
-    },
-    {
-      'emoji': '🧠',
-      'title': 'art_burnout_3_t',
-      'sub': 'art_burnout_3_s',
-    },
+    {'emoji': '🛑', 'title': 'art_burnout_1_t', 'sub': 'art_burnout_1_s'},
+    {'emoji': '📵', 'title': 'art_burnout_2_t', 'sub': 'art_burnout_2_s'},
+    {'emoji': '🧠', 'title': 'art_burnout_3_t', 'sub': 'art_burnout_3_s'},
   ],
   'default': [
-    {
-      'emoji': '💙',
-      'title': 'art_default_1_t',
-      'sub': 'art_default_1_s',
-    },
-    {
-      'emoji': '🌱',
-      'title': 'art_default_2_t',
-      'sub': 'art_default_2_s',
-    },
-    {
-      'emoji': '☀️',
-      'title': 'art_default_3_t',
-      'sub': 'art_default_3_s',
-    },
+    {'emoji': '💙', 'title': 'art_default_1_t', 'sub': 'art_default_1_s'},
+    {'emoji': '🌱', 'title': 'art_default_2_t', 'sub': 'art_default_2_s'},
+    {'emoji': '☀️', 'title': 'art_default_3_t', 'sub': 'art_default_3_s'},
   ],
 };
 
@@ -189,84 +104,140 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
   final TextEditingController _controller = TextEditingController();
   final ScrollController _scrollController = ScrollController();
 
-  Future<void> loadChatHistory() async {
-  try {
+  // ===========================================================================
+  // FIX: Token helpers — satu sumber kebenaran untuk semua HTTP calls
+  // ===========================================================================
+  Future<String?> _getToken() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
-
-    if (token == null) return;
-
-    final response = await http.get(
-      Uri.parse(historyUrl),
-      headers: {
-        "Accept": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-
-      final List messages = data['data'];
-
-      setState(() {
-        _messages.clear();
-
-        if (messages.isEmpty) {
-          _messages.add({
-            "role": "ai",
-            "text":
-                "Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.",
-            "moodCategory": null,
-          });
-        } else {
-          for (var msg in messages) {
-            _messages.add({
-              "role": msg['sender'],
-              "text": msg['message'],
-              "moodCategory": null,
-            });
-          }
-        }
-      });
-
-      _scrollToBottom();
-    }
-  } catch (e) {
-    print("Load history gagal: $e");
+    return prefs.getString('token');
   }
-}
 
-  // Setiap pesan: role (user/ai), text, dan opsional moodCategory untuk artikel
+  Future<Map<String, String>> _authHeaders() async {
+    final token = await _getToken();
+    return {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json',
+      if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+    };
+  }
+
+  // ===========================================================================
+  // FIX: Load history — tidak lagi overwrite oleh build()
+  // Semua state awal diset di sini, bukan di build()
+  // ===========================================================================
+  Future<void> loadChatHistory() async {
+    try {
+      // FIX: Cek token sebelum request — jika null/kosong, langsung tampilkan welcome
+      final token = await _getToken();
+      if (token == null || token.isEmpty) {
+        _setWelcomeMessage();
+        return;
+      }
+
+      final headers = await _authHeaders();
+      final response = await http.get(
+        Uri.parse(historyUrl),
+        headers: headers,
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final List messages = data['data'] ?? [];
+
+        setState(() {
+          _messages.clear();
+          if (messages.isEmpty) {
+            _setWelcomeMessageInline();
+          } else {
+            for (var msg in messages) {
+              _messages.add({
+                'role': msg['sender'],
+                'text': msg['message'],
+                'moodCategory': null,
+              });
+            }
+          }
+        });
+
+        _scrollToBottom();
+
+      } else if (response.statusCode == 401) {
+        // Token expired — tampilkan pesan sesi berakhir, jangan crash
+        if (mounted) {
+          setState(() {
+            _messages = [
+              {
+                'role': 'ai',
+                'text': 'Sesi kamu telah berakhir. Silakan logout lalu login kembali untuk melanjutkan percakapan. 🙏',
+                'moodCategory': null,
+              }
+            ];
+          });
+        }
+      } else {
+        // Error lain — fallback ke welcome
+        _setWelcomeMessage();
+      }
+    } catch (e) {
+      debugPrint('Load history gagal: $e');
+      _setWelcomeMessage();
+    }
+  }
+
+  /// Set welcome message tanpa setState (dipanggil sebelum widget mount penuh)
+  void _setWelcomeMessageInline() {
+    _messages = [
+      {
+        'role': 'ai',
+        'text': 'Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.',
+        'moodCategory': null,
+      }
+    ];
+  }
+
+  /// Set welcome message dengan setState (dipanggil async)
+  void _setWelcomeMessage() {
+    if (mounted) {
+      setState(() {
+        _messages = [
+          {
+            'role': 'ai',
+            'text': 'Halo, apa yang sedang mengganggu pikiranmu hari ini? Ceritakan saja, aku siap mendengarkan.',
+            'moodCategory': null,
+          }
+        ];
+      });
+    }
+  }
+
   List<Map<String, String?>> _messages = [];
-  bool _initialized = false;
   bool _isLoading = false;
   double _sendButtonScale = 1.0;
 
-  // --- TRIGGER JURNAL AI ---
-  // Menghitung berapa kali user sudah mengirim pesan di sesi ini.
-  // Akan muncul banner ajakan cek Jurnal AI setiap kelipatan 3 pesan.
   int _userMessageCount = 0;
-  static const int _triggerEvery = 3; // Muncul setiap 3 pesan user
+  static const int _triggerEvery = 3;
 
   late AnimationController _blobAnimController;
 
-  // --- PERHATIAN UNTUK URL API BACKEND ---
-  // Menggunakan 127.0.0.1 karena kita jalan di Chrome (Web)
-  final String apiUrl = "${AppConfig.baseUrl}/test-ai";
-  final String historyUrl = "${AppConfig.baseUrl}/chat-history";
+  final String apiUrl     = '${AppConfig.baseUrl}/test-ai';
+  final String historyUrl = '${AppConfig.baseUrl}/chat-history';
 
-@override
-void initState() {
-  super.initState();
+  @override
+  void initState() {
+    super.initState();
 
-  _blobAnimController = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 10),
-  )..repeat(reverse: true);
+    _blobAnimController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 10),
+    )..repeat(reverse: true);
 
-  loadChatHistory();
-}
+    // FIX: Set welcome message default dulu sebelum loadChatHistory selesai
+    // Ini mencegah layar kosong saat history masih loading
+    _setWelcomeMessageInline();
+
+    // Lalu load history dari server (akan overwrite welcome jika ada history)
+    loadChatHistory();
+  }
 
   @override
   void dispose() {
@@ -288,113 +259,152 @@ void initState() {
     });
   }
 
+  // ===========================================================================
+  // FIX: kirimCurhat — guard token sebelum hit API, handle 401 dengan pesan jelas
+  // ===========================================================================
   Future<void> kirimCurhat() async {
-    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
-    final text = _controller.text.trim();
-    if (text.isEmpty) return;
+  final langNotifier =
+      Provider.of<LanguageNotifier>(context, listen: false);
 
-    // Deteksi mood dari pesan user SEBELUM dikirim, untuk artikel rekomendasi
-    final String detectedMood = _detectMoodCategory(text);
+  final text = _controller.text.trim();
 
+  if (text.isEmpty) return;
+
+  final token = await _getToken();
+
+  print("TOKEN LOGIN: $token");
+
+  if (token == null || token.isEmpty) {
     setState(() {
-      _messages.add({"role": "user", "text": text, "moodCategory": null});
-      _isLoading = true;
-      _sendButtonScale = 1.0;
-      _userMessageCount++; // Tambah counter setiap user mengirim pesan
+      _messages.add({
+        'role': 'ai',
+        'text':
+            'Sesi login hilang. Silakan login ulang terlebih dahulu.',
+        'moodCategory': null,
+      });
     });
-    _controller.clear();
+
     _scrollToBottom();
+    return;
+  }
 
-    try {
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-        },
-        body: jsonEncode({
-          "message": text,
-          "lang": langNotifier.currentLanguage
-        }),
-      );
+  final String detectedMood = _detectMoodCategory(text);
 
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        setState(() {
-          // Simpan moodCategory di pesan AI agar artikel bisa ditampilkan di bawahnya
-          _messages.add({
-            "role": "ai",
-            "text": data['reply'] ?? langNotifier.translate('chat_error_empty') ?? "Maaf, tidak ada balasan dari AI.",
-            "moodCategory": detectedMood,
-          });
+  setState(() {
+    _messages.add({
+      'role': 'user',
+      'text': text,
+      'moodCategory': null,
+    });
 
-          // --- CEK TRIGGER JURNAL AI ---
-          // Jika jumlah pesan user sudah mencapai kelipatan _triggerEvery,
-          // sisipkan banner undangan Cek Kondisi Mental setelah balasan AI
-          if (_userMessageCount % _triggerEvery == 0) {
-            _messages.add({
-              "role": "journal_trigger", // Tipe khusus untuk banner
-              "text": "",
-              "moodCategory": null,
-            });
-          }
-        });
-      } else {
-        setState(() {
-          _messages.add({
-            "role": "ai",
-            "text":
-                "${langNotifier.translate('chat_error_conn')} (Status: ${response.statusCode})",
-            "moodCategory": null,
-          });
-        });
-      }
-    } catch (e) {
+    _isLoading = true;
+    _sendButtonScale = 1.0;
+    _userMessageCount++;
+  });
+
+  _controller.clear();
+  _scrollToBottom();
+
+  try {
+    final response = await http.post(
+      Uri.parse(apiUrl),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'message': text,
+        'lang': langNotifier.currentLanguage,
+      }),
+    );
+
+    print("CHAT STATUS: ${response.statusCode}");
+    print("CHAT BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+
       setState(() {
         _messages.add({
-          "role": "ai",
-          "text":
-              "${langNotifier.translate('chat_error_detail')}\n\nDetail: $e",
-          "moodCategory": null,
+          'role': 'ai',
+          'text': data['reply'] ??
+              'Maaf, AI tidak memberikan balasan.',
+          'moodCategory': detectedMood,
+        });
+
+        if (_userMessageCount % _triggerEvery == 0) {
+          _messages.add({
+            'role': 'journal_trigger',
+            'text': '',
+            'moodCategory': null,
+          });
+        }
+      });
+
+    } else if (response.statusCode == 401) {
+
+      setState(() {
+        _messages.add({
+          'role': 'ai',
+          'text':
+              'Token login tidak valid atau sesi berakhir. Silakan login ulang.',
+          'moodCategory': null,
         });
       });
-    } finally {
+
+    } else {
+
       setState(() {
-        _isLoading = false;
+        _messages.add({
+          'role': 'ai',
+          'text':
+              'Server error (${response.statusCode})\n${response.body}',
+          'moodCategory': null,
+        });
       });
-      _scrollToBottom();
     }
+
+  } catch (e) {
+
+    print("CHAT ERROR: $e");
+
+    setState(() {
+      _messages.add({
+        'role': 'ai',
+        'text': 'Terjadi error:\n$e',
+        'moodCategory': null,
+      });
+    });
+
+  } finally {
+
+    setState(() {
+      _isLoading = false;
+    });
+
+    _scrollToBottom();
   }
+}
 
   @override
   Widget build(BuildContext context) {
+    // FIX: HAPUS blok _initialized dari sini.
+    // Welcome message sudah diset di initState() → _setWelcomeMessageInline()
+    // loadChatHistory() akan overwrite dengan data server jika ada
+    // Tidak ada lagi race condition antara build() dan loadChatHistory()
+
     final langNotifier = Provider.of<LanguageNotifier>(context);
-    
-    if (!_initialized) {
-      _messages = [
-        {
-          "role": "ai",
-          "text": langNotifier.translate('chat_welcome'),
-          "moodCategory": null,
-        },
-      ];
-      _initialized = true;
-    }
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
-          // Background Blobs Dekoratif dengan animasi diagonal dan pulse
           RepaintBoundary(child: _buildAnimatedBlobs()),
-
           SafeArea(
             child: Column(
               children: [
-                // Modern AppBar (Sekarang memiliki tombol Back)
-                _buildAppBar(),
-
-                // Chat Area
+                _buildAppBar(langNotifier),
                 Expanded(
                   child: ListView.builder(
                     controller: _scrollController,
@@ -405,33 +415,28 @@ void initState() {
                     itemCount: _messages.length + (_isLoading ? 1 : 0),
                     itemBuilder: (context, index) {
                       if (index == _messages.length) {
-                        return _buildTypingIndicator();
+                        return _buildTypingIndicator(langNotifier);
                       }
-                      final msg = _messages[index];
-                      final isUser = msg["role"] == "user";
-                      final moodCategory = msg["moodCategory"];
+                      final msg          = _messages[index];
+                      final isUser       = msg['role'] == 'user';
+                      final moodCategory = msg['moodCategory'];
 
-                      // Jika tipe pesan adalah journal_trigger, tampilkan banner khusus
-                      if (msg["role"] == "journal_trigger") {
-                        return _buildJournalTriggerCard(index);
+                      if (msg['role'] == 'journal_trigger') {
+                        return _buildJournalTriggerCard(index, langNotifier);
                       }
 
-                      // Tampilkan bubble + artikel rekomendasi (jika ada mood terdeteksi)
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          _buildChatBubble(msg["text"]!, isUser, index),
-                          // Hanya tampilkan artikel di bawah balasan AI (bukan pesan user)
+                          _buildChatBubble(msg['text']!, isUser, index),
                           if (!isUser && moodCategory != null)
-                            _buildArticleRecommendations(moodCategory, index),
+                            _buildArticleRecommendations(moodCategory, index, langNotifier),
                         ],
                       );
                     },
                   ),
                 ),
-
-                // Input Area (Glassmorphism)
-                _buildInputArea(),
+                _buildInputArea(langNotifier),
               ],
             ),
           ),
@@ -448,12 +453,10 @@ void initState() {
             math.sin(_blobAnimController.value * math.pi) * 30;
         final double moveXPurple =
             math.cos(_blobAnimController.value * math.pi) * 30;
-
         final double moveYGreen =
             math.cos(_blobAnimController.value * math.pi) * 30;
         final double moveXGreen =
             math.sin(_blobAnimController.value * math.pi) * 30;
-
         final double pulsePurple =
             0.15 + (math.sin(_blobAnimController.value * math.pi) * 0.05);
         final double pulseGreen =
@@ -497,8 +500,7 @@ void initState() {
     );
   }
 
-  Widget _buildAppBar() {
-    final langNotifier = Provider.of<LanguageNotifier>(context);
+  Widget _buildAppBar(LanguageNotifier langNotifier) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
@@ -526,7 +528,7 @@ void initState() {
               ),
             ),
           ),
-          const SizedBox(width: 48), // Spacer to balance the back button
+          const SizedBox(width: 48),
         ],
       ),
     );
@@ -550,9 +552,8 @@ void initState() {
       child: Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: Row(
-          mainAxisAlignment: isUser
-              ? MainAxisAlignment.end
-              : MainAxisAlignment.start,
+          mainAxisAlignment:
+              isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (!isUser) ...[
@@ -571,7 +572,6 @@ void initState() {
                 ),
               ),
             ],
-
             Flexible(
               child: Stack(
                 clipBehavior: Clip.none,
@@ -629,7 +629,6 @@ void initState() {
                       ),
                     ),
                   ),
-
                   if (!isUser)
                     Positioned(
                       top: -12,
@@ -659,8 +658,7 @@ void initState() {
     );
   }
 
-  Widget _buildTypingIndicator() {
-    final langNotifier = Provider.of<LanguageNotifier>(context);
+  Widget _buildTypingIndicator(LanguageNotifier langNotifier) {
     return TweenAnimationBuilder<double>(
       key: const ValueKey('typing_indicator'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -707,10 +705,11 @@ void initState() {
                   bottomRight: Radius.circular(16),
                 ),
                 border: Border.all(
-                    color: Theme.of(context).brightness == Brightness.dark
-                        ? AppColors.cardBorderDark
-                        : AppColors.cardBorder,
-                    width: 1),
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -733,8 +732,7 @@ void initState() {
     );
   }
 
-  Widget _buildInputArea() {
-    final langNotifier = Provider.of<LanguageNotifier>(context);
+  Widget _buildInputArea(LanguageNotifier langNotifier) {
     return ClipRRect(
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
@@ -752,10 +750,11 @@ void initState() {
                 .withOpacity(0.8),
             border: Border(
               top: BorderSide(
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? AppColors.cardBorderDark
-                      : Colors.white,
-                  width: 1.5),
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? AppColors.cardBorderDark
+                    : Colors.white,
+                width: 1.5,
+              ),
             ),
           ),
           child: Row(
@@ -859,12 +858,9 @@ void initState() {
   }
 
   // ===========================================================================
-  // WIDGET: Trigger Banner → Ajakan Cek Kondisi Mental (Jurnal AI)
-  // Muncul setiap kelipatan _triggerEvery pesan di dalam alur chat
+  // WIDGET: Banner Trigger Jurnal AI
   // ===========================================================================
-
-  Widget _buildJournalTriggerCard(int index) {
-    final langNotifier = Provider.of<LanguageNotifier>(context);
+  Widget _buildJournalTriggerCard(int index, LanguageNotifier langNotifier) {
     return TweenAnimationBuilder<double>(
       key: ValueKey('trigger_$index'),
       tween: Tween(begin: 0.0, end: 1.0),
@@ -905,7 +901,6 @@ void initState() {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Header
                   Row(
                     children: [
                       Container(
@@ -940,10 +935,7 @@ void initState() {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 12),
-
-                  // Deskripsi
                   Text(
                     langNotifier.translate('chat_trigger_desc'),
                     style: AppTextStyles.bodySM.copyWith(
@@ -951,77 +943,62 @@ void initState() {
                       height: 1.5,
                     ),
                   ),
-
                   const SizedBox(height: 16),
-
-                  // Tombol CTA
-                  Row(
-                    children: [
-                      Expanded(
-                        child: GestureDetector(
-                          onTap: () {
-                            // Navigasi ke JournalPage
-                            Navigator.push(
-                              context,
-                              PageRouteBuilder(
-                                pageBuilder: (_, animation, __) =>
-                                    const JournalPage(),
-                                transitionsBuilder: (_, animation, __, child) {
-                                  return SlideTransition(
-                                    position:
-                                        Tween<Offset>(
-                                          begin: const Offset(1.0, 0.0),
-                                          end: Offset.zero,
-                                        ).animate(
-                                          CurvedAnimation(
-                                            parent: animation,
-                                            curve: Curves.easeOutCubic,
-                                          ),
-                                        ),
-                                    child: child,
-                                  );
-                                },
-                                transitionDuration: const Duration(
-                                  milliseconds: 400,
-                                ),
-                              ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        PageRouteBuilder(
+                          pageBuilder: (_, animation, __) => const JournalPage(),
+                          transitionsBuilder: (_, animation, __, child) {
+                            return SlideTransition(
+                              position: Tween<Offset>(
+                                begin: const Offset(1.0, 0.0),
+                                end: Offset.zero,
+                              ).animate(CurvedAnimation(
+                                parent: animation,
+                                curve: Curves.easeOutCubic,
+                              )),
+                              child: child,
                             );
                           },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(
-                                  Icons.book_rounded,
-                                  size: 16,
-                                  color: Color(0xFF7C3AED),
-                                ),
-                                const SizedBox(width: 8),
-                                Text(
-                                  langNotifier.translate('chat_trigger_cta'),
-                                  style: AppTextStyles.label.copyWith(
-                                    color: const Color(0xFF7C3AED),
-                                    fontWeight: FontWeight.w700,
-                                  ),
-                                ),
-                              ],
+                          transitionDuration: const Duration(milliseconds: 400),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(
+                            Icons.book_rounded,
+                            size: 16,
+                            color: Color(0xFF7C3AED),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            langNotifier.translate('chat_trigger_cta'),
+                            style: AppTextStyles.label.copyWith(
+                              color: const Color(0xFF7C3AED),
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ],
               ),
@@ -1035,9 +1012,8 @@ void initState() {
   // ===========================================================================
   // WIDGET: Artikel Rekomendasi di Bawah Balasan AI
   // ===========================================================================
-
-  Widget _buildArticleRecommendations(String moodCategory, int msgIndex) {
-    final langNotifier = Provider.of<LanguageNotifier>(context);
+  Widget _buildArticleRecommendations(
+      String moodCategory, int msgIndex, LanguageNotifier langNotifier) {
     final articles =
         _articlesByMood[moodCategory] ?? _articlesByMood['default']!;
 
@@ -1060,7 +1036,6 @@ void initState() {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Label header artikel
             Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: Row(
@@ -1081,11 +1056,8 @@ void initState() {
                 ],
               ),
             ),
-
-            // Daftar card artikel horizontal
             SizedBox(
-              height:
-                  110, // <-- Diperbesar dari 100 menjadi 110 agar tidak overlap
+              height: 110,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 itemCount: articles.length,
@@ -1105,7 +1077,6 @@ void initState() {
     );
   }
 
-  /// Card artikel kecil dengan desain glassmorphism
   Widget _buildArticleCard({
     required String emoji,
     required String title,
@@ -1158,9 +1129,11 @@ void initState() {
       ),
     );
   }
-
 }
 
+// ===========================================================================
+// BOUNCING DOTS INDICATOR
+// ===========================================================================
 class BouncingDotsIndicator extends StatefulWidget {
   const BouncingDotsIndicator({super.key});
 
@@ -1196,7 +1169,8 @@ class _BouncingDotsIndicatorState extends State<BouncingDotsIndicator>
           animation: _controller,
           builder: (context, child) {
             final double offset =
-                math.sin((_controller.value * 2 * math.pi) - (index * 1.5)) * 4;
+                math.sin((_controller.value * 2 * math.pi) - (index * 1.5)) *
+                    4;
             return Transform.translate(
               offset: Offset(0, offset),
               child: Container(

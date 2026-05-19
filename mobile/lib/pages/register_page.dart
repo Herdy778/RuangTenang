@@ -60,73 +60,72 @@ class _RegisterPageState extends State<RegisterPage> with TickerProviderStateMix
   }
 
   Future<void> register() async {
-    setState(() => isLoading = true);
-
-    if (nameController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Semua field wajib diisi")),
-      );
-      setState(() => isLoading = false);
-      return;
-    }
-
-    try {
-      var response = await http.post(
-  Uri.parse("${AppConfig.baseUrl}/register"),
-        headers: {
-          "Accept": "application/json",
-          "Content-Type": "application/json",
-        },
-        body: jsonEncode({
-          "nama_lengkap": nameController.text,
-          "email": emailController.text,
-          "password": passwordController.text,
-        }),
-      );
-
-      var data;
-      try {
-        data = jsonDecode(response.body);
-      } catch (e) {
-        data = {};
-      }
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool('isLogin', true);
-        await prefs.setString('email', data['data']?['email'] ?? '');
-        await prefs.setString(
-          'nama_lengkap',
-          data['data']?['nama_lengkap'] ?? nameController.text,
-        );
-        await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
-        await prefs.setString(
-          'occupation',
-          data['data']?['occupation'] ?? 'Student',
-        );
-        await prefs.setString('token', data['token'] ?? '');
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Akun berhasil dibuat!")),
-        );
-
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(data['pesan'] ?? "Registrasi gagal")),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Tidak bisa connect ke server")),
-      );
-    }
-
-    setState(() => isLoading = false);
+  if (nameController.text.trim().isEmpty ||
+      emailController.text.trim().isEmpty ||
+      passwordController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Semua field wajib diisi")),
+    );
+    return;
   }
+
+  setState(() => isLoading = true);
+
+  try {
+    final response = await http
+        .post(
+          Uri.parse("${AppConfig.baseUrl}/register"),
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode({
+            "nama_lengkap": nameController.text.trim(),
+            "email": emailController.text.trim(),
+            "password": passwordController.text.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+        print("REGISTER STATUS: ${response.statusCode}");
+print("REGISTER BODY: ${response.body}");
+
+    Map<String, dynamic> data = {};
+    try {
+      data = jsonDecode(response.body);
+    } catch (_) {}
+
+    print("REGISTER STATUS: ${response.statusCode}");
+    print("REGISTER BODY: ${response.body}");
+
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.clear();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Akun berhasil dibuat, silakan login"),
+        ),
+      );
+
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['pesan'] ?? "Registrasi gagal")),
+      );
+    }
+  } catch (e) {
+    print("REGISTER ERROR: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error register: $e")),
+    );
+  } finally {
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
+  }
+}
 
   InputDecoration _fieldDecoration(String hint, IconData icon, {Widget? suffix}) {
     return InputDecoration(

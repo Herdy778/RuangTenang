@@ -58,92 +58,96 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Future<void> login() async {
-    setState(() => isLoading = true);
-
-    if (emailController.text.isEmpty || passwordController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Email & password wajib diisi")),
-      );
-      setState(() => isLoading = false);
-      return;
-    }
-
-    try {
-      var response = await http
-    .post(
-      Uri.parse("${AppConfig.baseUrl}/login"),
-      headers: {
-        "Accept": "application/json",
-        "Content-Type": "application/json",
-      },
-      body: jsonEncode({
-        "email": emailController.text,
-        "password": passwordController.text,
-      }),
-    )
-    .timeout(const Duration(seconds: 5));
-
-      var data;
-      try {
-        data = jsonDecode(response.body);
-      } catch (e) {
-        data = {};
-      }
-
-      print("STATUS CODE: ${response.statusCode}");
-print("RESPONSE BODY: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final prefs = await SharedPreferences.getInstance();
-
-        await prefs.setBool('isLogin', true);
-        await prefs.setString('email', data['data']?['email'] ?? '');
-        await prefs.setString(
-          'nama_lengkap',
-          data['data']?['nama_lengkap'] ?? 'User',
-        );
-        await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
-        await prefs.setString(
-          'occupation',
-          data['data']?['occupation'] ?? 'Student',
-        );
-        await prefs.setString('token', data['token'] ?? '');
-
-        final photoPath = data['data']?['photo'];
-        if (photoPath != null && photoPath.toString().isNotEmpty) {
-          final filename = photoPath
-              .toString()
-              .split('/')
-              .last
-              .split('\\')
-              .last;
-          final fullUrl = "${AppConfig.baseUrl}/photo/$filename";
-          await prefs.setString('profile_image_url', fullUrl);
-        } else {
-          // If no photo in backend, clear the old locally cached photo
-          await prefs.remove('profile_image_url');
-        }
-
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text("Login berhasil")));
-
-        Navigator.pushReplacementNamed(context, '/dashboard');
-      } else {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text(data['pesan'] ?? "Login gagal")));
-      }
-    } catch (e) {
-  print("LOGIN ERROR: $e");
-
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(content: Text("Error: $e")),
-  );
-}
-
-    setState(() => isLoading = false);
+  if (emailController.text.trim().isEmpty ||
+      passwordController.text.trim().isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Email & password wajib diisi")),
+    );
+    return;
   }
+
+  setState(() => isLoading = true);
+
+  try {
+    final response = await http
+        .post(
+          Uri.parse("${AppConfig.baseUrl}/login"),
+          headers: {
+            "Accept": "application/json",
+            "Content-Type": "application/json",
+          },
+          body: jsonEncode({
+            "email": emailController.text.trim(),
+            "password": passwordController.text.trim(),
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    Map<String, dynamic> data = {};
+    try {
+      data = jsonDecode(response.body);
+    } catch (_) {}
+
+    print("LOGIN STATUS: ${response.statusCode}");
+    print("LOGIN BODY: ${response.body}");
+
+    if (response.statusCode == 200) {
+      final token = data['token']?.toString() ?? '';
+
+      if (token.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Token login kosong dari server")),
+        );
+        return;
+      }
+
+      final prefs = await SharedPreferences.getInstance();
+
+      await prefs.clear();
+
+      await prefs.setBool('isLogin', true);
+      await prefs.setString('token', token);
+      await prefs.setString('email', data['data']?['email'] ?? '');
+      await prefs.setString(
+        'nama_lengkap',
+        data['data']?['nama_lengkap'] ?? 'User',
+      );
+      await prefs.setString('gender', data['data']?['gender'] ?? 'Female');
+      await prefs.setString(
+        'occupation',
+        data['data']?['occupation'] ?? 'Student',
+      );
+
+      final photoPath = data['data']?['photo'];
+      if (photoPath != null && photoPath.toString().isNotEmpty) {
+        final filename = photoPath.toString().split('/').last.split('\\').last;
+        final fullUrl = "${AppConfig.baseUrl}/photo/$filename";
+        await prefs.setString('profile_image_url', fullUrl);
+      } else {
+        await prefs.remove('profile_image_url');
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Login berhasil")),
+      );
+
+      Navigator.pushReplacementNamed(context, '/dashboard');
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(data['pesan'] ?? "Login gagal")),
+      );
+    }
+  } catch (e) {
+    print("LOGIN ERROR: $e");
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text("Error login: $e")),
+    );
+  } finally {
+    if (mounted) {
+      setState(() => isLoading = false);
+    }
+  }
+}
 
   InputDecoration _fieldDecoration(
     String hint,
