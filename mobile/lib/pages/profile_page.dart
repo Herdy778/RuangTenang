@@ -312,7 +312,7 @@ class _ProfilePageState extends State<ProfilePage> {
     final isDark = themeNotifier.isDarkMode;
 
     return Scaffold(
-      backgroundColor: isDark ? AppColors.backgroundDark : Colors.white,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         title: Text(
           langNotifier.translate('profile_title'),
@@ -352,12 +352,14 @@ class _ProfilePageState extends State<ProfilePage> {
               : null,
         ),
         const SizedBox(height: 16),
-        Text(
-          _userName,
+        AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 500),
+          curve: Curves.easeInOut,
           style: AppTextStyles.headingMD.copyWith(
             color:
                 isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
           ),
+          child: Text(_userName),
         ),
         const SizedBox(height: 4),
         Text(
@@ -397,17 +399,21 @@ class _ProfilePageState extends State<ProfilePage> {
     final langNotifier = Provider.of<LanguageNotifier>(context);
     final isDark = themeNotifier.isDarkMode;
 
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            langNotifier.translate('app_settings'),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
             style: AppTextStyles.titleMD.copyWith(
               color:
                   isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
+            child: Text(langNotifier.translate('app_settings')),
           ),
           const SizedBox(height: 16),
           _buildSettingsTile(
@@ -418,7 +424,7 @@ class _ProfilePageState extends State<ProfilePage> {
               onChanged: (val) {
                 themeNotifier.toggleTheme(val);
               },
-              activeColor: AppColors.primary,
+              activeThumbColor: AppColors.primary,
             ),
             onTap: () {
               themeNotifier.toggleTheme(!isDark);
@@ -443,12 +449,14 @@ class _ProfilePageState extends State<ProfilePage> {
             onTap: _showPrivacySettings,
           ),
           const SizedBox(height: 24),
-          Text(
-            langNotifier.translate('help_info'),
+          AnimatedDefaultTextStyle(
+            duration: const Duration(milliseconds: 500),
+            curve: Curves.easeInOut,
             style: AppTextStyles.titleMD.copyWith(
               color:
                   isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
             ),
+            child: Text(langNotifier.translate('help_info')),
           ),
           const SizedBox(height: 16),
           _buildSettingsTile(
@@ -499,7 +507,6 @@ class _ProfilePageState extends State<ProfilePage> {
               icon: const Icon(Icons.logout),
               label: Text(langNotifier.translate('logout')),
               style: ElevatedButton.styleFrom(
-                // ✅ Ganti Colors.red.shade100 / .shade700 → Color langsung
                 backgroundColor: const Color(0xFFFFCDD2),
                 foregroundColor: const Color(0xFFC62828),
                 elevation: 0,

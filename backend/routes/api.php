@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\MoodController;
 */
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password/verify', [AuthController::class, 'resetPasswordVerify']);
+Route::post('/forgot-password/reset', [AuthController::class, 'resetPassword']);
 
 // Artikel bisa diakses tanpa login
 Route::get('/articles', [ArticleController::class, 'index']);

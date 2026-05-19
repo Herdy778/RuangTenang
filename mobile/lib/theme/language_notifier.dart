@@ -153,6 +153,7 @@ class LanguageNotifier extends ChangeNotifier {
       'mood_neutral': 'Netral',
       'mood_happy': 'Senang',
       'mood_v_happy': 'Sangat Senang',
+      'recommended_articles': 'Artikel Rekomendasi',
       // Journal Results
       'res_minimal_title': 'Kondisi Minimal',
       'res_minimal_desc': 'Kondisi mentalmu cukup baik saat ini. Teruslah menjaga keseimbangan dan luangkan waktu untuk merawat diri.',
@@ -352,6 +353,7 @@ class LanguageNotifier extends ChangeNotifier {
       'mood_neutral': 'Neutral',
       'mood_happy': 'Happy',
       'mood_v_happy': 'Very Happy',
+      'recommended_articles': 'Recommended Articles',
       // Journal Results
       'res_minimal_title': 'Minimal Symptoms',
       'res_minimal_desc': 'Your mental condition is quite good at the moment. Continue to maintain balance and take time for self-care.',

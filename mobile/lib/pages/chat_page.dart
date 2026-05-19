@@ -65,38 +65,44 @@ String _detectMoodCategory(String userText) {
   if (lower.contains('stres') ||
       lower.contains('tertekan') ||
       lower.contains('tekanan') ||
-      lower.contains('beban'))
+      lower.contains('beban')) {
     return 'stres';
+  }
   if (lower.contains('cemas') ||
       lower.contains('khawatir') ||
       lower.contains('takut') ||
       lower.contains('galau') ||
-      lower.contains('panik'))
+      lower.contains('panik')) {
     return 'cemas';
+  }
   if (lower.contains('sedih') ||
       lower.contains('menangis') ||
       lower.contains('nangis') ||
       lower.contains('kecewa') ||
-      lower.contains('patah hati'))
+      lower.contains('patah hati')) {
     return 'sedih';
+  }
   if (lower.contains('lelah') ||
       lower.contains('capek') ||
       lower.contains('exhausted') ||
       lower.contains('ngantuk') ||
-      lower.contains('bosan'))
+      lower.contains('bosan')) {
     return 'lelah';
+  }
   if (lower.contains('marah') ||
       lower.contains('kesal') ||
       lower.contains('frustrasi') ||
       lower.contains('emosi') ||
-      lower.contains('jengkel'))
+      lower.contains('jengkel')) {
     return 'marah';
+  }
   if (lower.contains('burnout') ||
       lower.contains('menyerah') ||
       lower.contains('tidak sanggup') ||
       lower.contains('ga kuat') ||
-      lower.contains('gak kuat'))
+      lower.contains('gak kuat')) {
     return 'burnout';
+  }
   return 'default';
 }
 
@@ -288,7 +294,26 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     return;
   }
 
+<<<<<<< HEAD
   final String detectedMood = _detectMoodCategory(text);
+=======
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('token') ?? '';
+
+      final response = await http.post(
+        Uri.parse(apiUrl),
+        headers: {
+          "Content-Type": "application/json",
+          "Accept": "application/json",
+          "Authorization": "Bearer $token",
+        },
+        body: jsonEncode({
+          "message": text,
+          "lang": langNotifier.currentLanguage
+        }),
+      );
+>>>>>>> 718bb58dc1cb56df906eaeb46bab3a01ba789cb1
 
   setState(() {
     _messages.add({
@@ -397,7 +422,7 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     final langNotifier = Provider.of<LanguageNotifier>(context);
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           RepaintBoundary(child: _buildAnimatedBlobs()),

@@ -8,6 +8,7 @@ import 'services/notification_service.dart';
 import 'pages/login_page.dart';
 import 'pages/main_wrapper.dart';
 import 'pages/register_page.dart';
+import 'pages/forgot_password_page.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -63,6 +64,7 @@ class RuangTenangApp extends StatelessWidget {
             '/login': (context) => const LoginPage(),
             '/register': (context) => const RegisterPage(),
             '/dashboard': (context) => const MainWrapper(),
+            '/forgot-password': (context) => const ForgotPasswordPage(),
           },
         );
       },

@@ -366,7 +366,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                         ),
                                       ),
                                     ),
-                                    const SizedBox(height: 28),
+                                    const SizedBox(height: 12),
+                                    Align(
+                                      alignment: Alignment.centerRight,
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.pushNamed(context, '/forgot-password');
+                                        },
+                                        child: const Text(
+                                          "Lupa Kata Sandi?",
+                                          style: TextStyle(
+                                            color: Color(0xFFD8B4FE),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 20),
 
                                     // Tombol login
                                     SizedBox(
