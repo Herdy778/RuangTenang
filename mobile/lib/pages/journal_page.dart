@@ -172,55 +172,92 @@ class _JournalPageState extends State<JournalPage>
 
   // ── API ──────────────────────────────────────────────────────
   Future<void> _analyzeJournal() async {
-    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
-    _textFocus.unfocus();
-    if (_textController.text.trim().isEmpty) {
-      _showSnack(langNotifier.translate('journal_input_hint'));
+  final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
+
+  _textFocus.unfocus();
+
+  final teksCurhat = _textController.text.trim();
+
+  if (teksCurhat.isEmpty) {
+    _showSnack(langNotifier.translate('journal_input_hint'));
+    return;
+  }
+
+  HapticFeedback.mediumImpact();
+  setState(() => _isLoading = true);
+
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    print("JOURNAL TOKEN: $token");
+
+    if (token.isEmpty) {
+      _showSnack("Token kosong. Silakan login ulang.");
+      Navigator.pushReplacementNamed(context, '/login');
       return;
     }
-    HapticFeedback.mediumImpact();
-    setState(() => _isLoading = true);
 
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token');
+    final res = await http.post(
+      Uri.parse('$_kBaseUrl/journal/analyze'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'teks_curhat': teksCurhat,
+        'perasaan_sedih': _perasaanSedih,
+        'minat_kegiatan': _minatKegiatan,
+        'kualitas_tidur': _kualitasTidur,
+        'tingkat_lelah': _tingkatLelah,
+        'kesulitan_konsentrasi': _kesulitanKonsentrasi,
+      }),
+    );
 
-      final res = await http.post(
-        Uri.parse('$_kBaseUrl/journal/analyze'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'teks_curhat': _textController.text.trim(),
-          'perasaan_sedih': _perasaanSedih,
-          'minat_kegiatan': _minatKegiatan,
-          'kualitas_tidur': _kualitasTidur,
-          'tingkat_lelah': _tingkatLelah,
-          'kesulitan_konsentrasi': _kesulitanKonsentrasi,
-        }),
-      );
+    print("JOURNAL STATUS: ${res.statusCode}");
+    print("JOURNAL BODY: ${res.body}");
 
-      if (res.statusCode == 200) {
-        final body = jsonDecode(res.body);
-        final prediction = (body['data']?['prediction'] ?? 'Minimal') as String;
-        final skor = (body['data']?['skor_total'] ?? _totalSkor) as int;
-        if (mounted) _showResultSheet(prediction, skor);
-      } else {
-        try {
-          final body = jsonDecode(res.body);
-          _showSnack(body['message'] ?? body['pesan'] ?? 'Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏');
-        } catch (_) {
-          _showSnack('Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏');
-        }
+    if (res.statusCode == 200) {
+      final body = jsonDecode(res.body);
+
+      final prediction =
+          body['data']?['prediction']?.toString() ?? 'Minimal';
+
+      final skor = int.tryParse(
+            body['data']?['skor_total']?.toString() ?? '',
+          ) ??
+          _totalSkor;
+
+      if (mounted) {
+        _showResultSheet(prediction, skor);
       }
-    } catch (e) {
-      _showSnack('Tidak dapat terhubung ke server: $e');
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+    } else if (res.statusCode == 401) {
+      _showSnack("Sesi login berakhir. Silakan login ulang.");
+      Navigator.pushReplacementNamed(context, '/login');
+    } else {
+      try {
+        final body = jsonDecode(res.body);
+        _showSnack(
+          body['message'] ??
+              body['pesan'] ??
+              'Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏',
+        );
+      } catch (_) {
+        _showSnack(
+          'Terjadi kesalahan (${res.statusCode}). Silakan coba lagi 🙏',
+        );
+      }
+    }
+  } catch (e) {
+    print("JOURNAL ERROR: $e");
+    _showSnack('Tidak dapat terhubung ke server: $e');
+  } finally {
+    if (mounted) {
+      setState(() => _isLoading = false);
     }
   }
+}
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(

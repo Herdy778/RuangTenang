@@ -64,6 +64,10 @@ Route::middleware('auth.token')->group(function () {
     Route::get('/articles/rekomendasi', [ArticleController::class, 'rekomendasi']);
     Route::get('/my-recommended-articles', [ArticleController::class, 'myRecommendedArticles']);
 
+    // ✅ PENTING: route statis (/read) HARUS di atas route dinamis ({articleId})
+    // supaya Laravel tidak salah cocokkan "read" sebagai nilai {articleId}
+    Route::post('/articles/{articleId}/read', [ArticleController::class, 'markAsRead']);
+
     // Chatbot (WAJIB LOGIN)
     Route::post('/test-ai', [JournalController::class, 'tesAi']);
     Route::get('/chat-history', [JournalController::class, 'getChatHistory']);
@@ -80,26 +84,26 @@ Route::middleware('auth.token')->group(function () {
 */
 Route::middleware(['auth.token', 'isAdmin'])->group(function () {
 
-   
     // User Management
-   Route::get('/admin/users', [AuthController::class, 'users']); 
-   Route::put('/admin/users/{id}', [AuthController::class, 'updateUser']); 
-   Route::delete('/admin/users/{id}', [AuthController::class, 'deleteUser']);
+    Route::get('/admin/users', [AuthController::class, 'users']);
+    Route::put('/admin/users/{id}', [AuthController::class, 'updateUser']);
+    Route::delete('/admin/users/{id}', [AuthController::class, 'deleteUser']);
 
     // Journal Management
     Route::get('/admin/journals', [JournalController::class, 'adminJournals']);
     Route::delete('/admin/journals/{id}', [JournalController::class, 'deleteJournal']);
 
     // ===== FITUR REKOMENDASI ARTIKEL =====
-Route::get(
-    '/admin/journals/{id}/recommended-articles',
-    [JournalController::class, 'recommendedArticles']
-);
-
-Route::post(
-    '/admin/journals/send-article',
-    [JournalController::class, 'sendRecommendedArticle']
-);
+    // ✅ PENTING: route statis (send-article) HARUS di atas route dinamis ({id})
+    // supaya Laravel tidak salah cocokkan "send-article" sebagai nilai {id}
+    Route::post(
+        '/admin/journals/send-article',
+        [JournalController::class, 'sendRecommendedArticle']
+    );
+    Route::get(
+        '/admin/journals/{id}/recommended-articles',
+        [JournalController::class, 'recommendedArticles']
+    );
 
     // Article Management
     Route::get('/admin/articles', [ArticleController::class, 'index']);

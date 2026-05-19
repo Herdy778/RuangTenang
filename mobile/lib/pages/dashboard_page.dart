@@ -74,6 +74,293 @@ void _showArticleDetail(
   );
 }
 
+// ============================================================
+// HALAMAN SEMUA ARTIKEL REKOMENDASI
+// Ditampilkan saat user tekan "Lihat Semua" di dashboard
+// ============================================================
+class AllRecommendedArticlesPage extends StatefulWidget {
+  const AllRecommendedArticlesPage({super.key});
+
+  @override
+  State<AllRecommendedArticlesPage> createState() =>
+      _AllRecommendedArticlesPageState();
+}
+
+class _AllRecommendedArticlesPageState
+    extends State<AllRecommendedArticlesPage> {
+  late Future<Map<String, dynamic>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = ApiService().fetchRecommendedArticlesWithCount();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          langNotifier.translate('recommended_articles'),
+          style: AppTextStyles.titleMD.copyWith(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
+      ),
+      body: FutureBuilder<Map<String, dynamic>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              (snapshot.data!['data'] as List).isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.article_outlined,
+                      size: 64,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      langNotifier.translate('no_recommended_articles'),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMD.copyWith(
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final articles = snapshot.data!['data'] as List;
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: articles.length,
+            itemBuilder: (context, index) {
+              final article = articles[index];
+              final bool isRead = article['is_read'] == true;
+
+              return _ArticleCard(
+                article: article,
+                isRead: isRead,
+                isDark: isDark,
+                onTap: () {
+                  // Tandai sebagai sudah dibaca
+                  ApiService().markArticleAsRead(article['_id'] ?? '');
+                  _showArticleDetail(
+                    context,
+                    article['judul_artikel'] ?? '',
+                    article['isi_konten'] ?? '',
+                  );
+                },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ============================================================
+// CARD ARTIKEL — dipakai di halaman semua artikel
+// ============================================================
+class _ArticleCard extends StatelessWidget {
+  final dynamic article;
+  final bool isRead;
+  final bool isDark;
+  final VoidCallback onTap;
+
+  const _ArticleCard({
+    required this.article,
+    required this.isRead,
+    required this.isDark,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: AppDecorations.card.copyWith(
+          color: isDark
+              ? AppColors.cardBackgroundDark
+              : AppColors.cardBackground,
+          border: Border.all(
+            color: isRead
+                ? (isDark ? AppColors.cardBorderDark : AppColors.cardBorder)
+                : AppColors.primary.withOpacity(0.4),
+            width: isRead ? 1 : 1.5,
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Badge "Belum Dibaca" + thumbnail
+            Stack(
+              children: [
+                if (article['thumbnail_url'] != null &&
+                    article['thumbnail_url'].toString().isNotEmpty)
+                  ClipRRect(
+                    borderRadius: const BorderRadius.only(
+                      topLeft: Radius.circular(16),
+                      topRight: Radius.circular(16),
+                    ),
+                    child: Image.network(
+                      article['thumbnail_url'],
+                      height: 140,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                // Badge "Baru" jika belum dibaca
+                if (!isRead)
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Text(
+                        langNotifier.translate('article_new_badge'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Judul artikel
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Dot indikator belum dibaca
+                      if (!isRead)
+                        Container(
+                          margin: const EdgeInsets.only(top: 5, right: 8),
+                          width: 8,
+                          height: 8,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      Expanded(
+                        child: Text(
+                          article['judul_artikel'] ?? '-',
+                          style: AppTextStyles.titleSM.copyWith(
+                            color: AppColors.primary,
+                            fontWeight: isRead
+                                ? FontWeight.w600
+                                : FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Isi konten (preview)
+                  Text(
+                    _stripHtml(article['isi_konten'] ?? ''),
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyMD.copyWith(
+                      color: isDark
+                          ? AppColors.textSecondaryDark
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  // Tombol baca selengkapnya
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        langNotifier.translate('read_more'),
+                        style: const TextStyle(
+                          color: AppColors.primary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (isRead)
+                        Row(
+                          children: [
+                            Icon(
+                              Icons.check_circle_outline,
+                              size: 14,
+                              color: isDark
+                                  ? AppColors.textMutedDark
+                                  : AppColors.textMuted,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              langNotifier.translate('article_read_label'),
+                              style: AppTextStyles.caption.copyWith(
+                                color: isDark
+                                    ? AppColors.textMutedDark
+                                    : AppColors.textMuted,
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ============================================================
+// DASHBOARD PAGE
+// ============================================================
 class _DashboardPageState extends State<DashboardPage>
     with TickerProviderStateMixin {
   late AnimationController _blobAnimController;
@@ -123,7 +410,6 @@ class _DashboardPageState extends State<DashboardPage>
 
   @override
   Widget build(BuildContext context) {
-    // FIX 1: Hapus isDark karena tidak dipakai langsung di build()
     final langNotifier = Provider.of<LanguageNotifier>(context);
     int animIndex = 0;
 
@@ -210,6 +496,7 @@ class _DashboardPageState extends State<DashboardPage>
                     ),
                     const SizedBox(height: 36),
 
+                    // ===== SEKSI ARTIKEL REKOMENDASI (dengan tombol Lihat Semua) =====
                     _StaggeredFadeInUp(
                       index: animIndex++,
                       controller: _staggeredController,
@@ -892,7 +1179,6 @@ class _DashboardPageState extends State<DashboardPage>
               final timeStr =
                   '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 
-              // FIX 5: Pakai langNotifier untuk teks tanggal
               if (diff == 0) {
                 dateLabel =
                     '${langNotifier.translate('today')}, $timeStr';
@@ -983,104 +1269,296 @@ class _DashboardPageState extends State<DashboardPage>
   }
 }
 
-// FIX 2 & 3: Pakai langNotifier untuk teks + tambah error handling
+// ============================================================
+// SEKSI ARTIKEL REKOMENDASI DI DASHBOARD
+// Menampilkan preview 3 artikel + tombol "Lihat Semua" + badge jumlah
+// ============================================================
 Widget _buildRecommendedArticles(BuildContext context) {
   final isDark = Theme.of(context).brightness == Brightness.dark;
   final langNotifier = Provider.of<LanguageNotifier>(context, listen: false);
 
-  return FutureBuilder<List<dynamic>>(
-    future: ApiService().fetchRecommendedArticles(),
+  return FutureBuilder<Map<String, dynamic>>(
+    // Gunakan method baru yang mengembalikan total_count juga
+    future: ApiService().fetchRecommendedArticlesWithCount(),
     builder: (context, snapshot) {
       if (snapshot.connectionState == ConnectionState.waiting) {
         return const Center(child: CircularProgressIndicator());
       }
 
-      // FIX 3: Tambah pengecekan error
       if (snapshot.hasError ||
           !snapshot.hasData ||
-          snapshot.data!.isEmpty) {
+          (snapshot.data!['data'] as List).isEmpty) {
         return const SizedBox.shrink();
       }
 
-      final articles = snapshot.data!.take(3).toList();
+      final allArticles = snapshot.data!['data'] as List;
+      final int totalCount = snapshot.data!['total_count'] as int? ?? allArticles.length;
+
+      // Hitung berapa yang belum dibaca (untuk badge di tombol "Lihat Semua")
+      final int unreadCount =
+          allArticles.where((a) => a['is_read'] != true).length;
+
+      // Preview: tampilkan maksimal 3 artikel terbaru di dashboard
+      final previewArticles = allArticles.take(3).toList();
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // FIX 2: Pakai langNotifier bukan hardcoded string
-          Text(
-            langNotifier.translate('recommended_articles'),
-            style: AppTextStyles.titleMD.copyWith(
-              color: isDark
-                  ? AppColors.textPrimaryDark
-                  : AppColors.textPrimary,
-            ),
+          // Header seksi: judul + tombol "Lihat Semua" + badge
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Text(
+                langNotifier.translate('recommended_articles'),
+                style: AppTextStyles.titleMD.copyWith(
+                  color: isDark
+                      ? AppColors.textPrimaryDark
+                      : AppColors.textPrimary,
+                ),
+              ),
+
+              // Tombol "Lihat Semua" hanya tampil jika ada lebih dari 3 artikel
+              if (totalCount > 3)
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const AllRecommendedArticlesPage(),
+                      ),
+                    );
+                  },
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        langNotifier.translate('see_all'),
+                        style: AppTextStyles.label
+                            .copyWith(color: AppColors.primary),
+                      ),
+                      // Badge jumlah artikel belum dibaca
+                      if (unreadCount > 0) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 7, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            unreadCount > 99 ? '99+' : '$unreadCount',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+            ],
           ),
           const SizedBox(height: 16),
-          ...articles.map((article) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 12),
-              padding: const EdgeInsets.all(16),
-              decoration: AppDecorations.card.copyWith(
-                color: isDark
-                    ? AppColors.cardBackgroundDark
-                    : AppColors.cardBackground,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (article['thumbnail_url'] != null &&
-                      article['thumbnail_url'].toString().isNotEmpty)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(12),
-                      child: Image.network(
-                        article['thumbnail_url'],
-                        height: 140,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
+
+          // Preview 3 artikel terbaru
+          ...previewArticles.map((article) {
+            final bool isRead = article['is_read'] == true;
+
+            return GestureDetector(
+              onTap: () {
+                // Tandai sebagai sudah dibaca
+                ApiService().markArticleAsRead(article['_id'] ?? '');
+                _showArticleDetail(
+                  context,
+                  article['judul_artikel'] ?? '',
+                  article['isi_konten'] ?? '',
+                );
+              },
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: AppDecorations.card.copyWith(
+                  color: isDark
+                      ? AppColors.cardBackgroundDark
+                      : AppColors.cardBackground,
+                  // Border lebih terang jika belum dibaca
+                  border: Border.all(
+                    color: isRead
+                        ? (isDark
+                            ? AppColors.cardBorderDark
+                            : AppColors.cardBorder)
+                        : AppColors.primary.withOpacity(0.4),
+                    width: isRead ? 1 : 1.5,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Thumbnail
+                    if (article['thumbnail_url'] != null &&
+                        article['thumbnail_url'].toString().isNotEmpty)
+                      Stack(
+                        children: [
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              topLeft: Radius.circular(16),
+                              topRight: Radius.circular(16),
+                            ),
+                            child: Image.network(
+                              article['thumbnail_url'],
+                              height: 140,
+                              width: double.infinity,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) =>
+                                  const SizedBox.shrink(),
+                            ),
+                          ),
+                          // Badge "Baru" jika belum dibaca
+                          if (!isRead)
+                            Positioned(
+                              top: 10,
+                              left: 10,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  langNotifier
+                                      .translate('article_new_badge'),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
+
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Judul + dot indikator belum dibaca
+                          Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (!isRead)
+                                Container(
+                                  margin:
+                                      const EdgeInsets.only(top: 5, right: 8),
+                                  width: 8,
+                                  height: 8,
+                                  decoration: const BoxDecoration(
+                                    color: AppColors.primary,
+                                    shape: BoxShape.circle,
+                                  ),
+                                ),
+                              Expanded(
+                                child: Text(
+                                  article['judul_artikel'] ?? '-',
+                                  style: AppTextStyles.titleSM.copyWith(
+                                    color: AppColors.primary,
+                                    fontWeight: isRead
+                                        ? FontWeight.w600
+                                        : FontWeight.w700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            _stripHtml(article['isi_konten'] ?? ''),
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyMD.copyWith(
+                              color: isDark
+                                  ? AppColors.textSecondaryDark
+                                  : AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            langNotifier.translate('read_more'),
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                  const SizedBox(height: 12),
-                  Text(
-                    article['judul_artikel'] ?? '-',
-                    style: AppTextStyles.titleSM.copyWith(
-                      color: AppColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _stripHtml(article['isi_konten'] ?? ''),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyMD.copyWith(
-                      color: isDark
-                          ? AppColors.textSecondaryDark
-                          : AppColors.textSecondary,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  GestureDetector(
-                    onTap: () {
-                      _showArticleDetail(
-                        context,
-                        article['judul_artikel'] ?? '',
-                        article['isi_konten'] ?? '',
-                      );
-                    },
-                    // FIX 2: Pakai langNotifier bukan hardcoded string
-                    child: Text(
-                      langNotifier.translate('read_more'),
-                      style: const TextStyle(
-                        color: AppColors.primary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
-          }),
+          }).toList(),
+
+          // Jika masih ada lebih dari 3, tampilkan info ringkas
+          if (totalCount > 3)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const AllRecommendedArticlesPage(),
+                    ),
+                  );
+                },
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: AppColors.primary.withOpacity(0.3),
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '+ ${totalCount - 3} ${langNotifier.translate('more_articles')}',
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.primary,
+                        ),
+                      ),
+                      if (unreadCount > 3) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppColors.primary.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            '${unreadCount - 3} ${langNotifier.translate('unread_label')}',
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       );
     },

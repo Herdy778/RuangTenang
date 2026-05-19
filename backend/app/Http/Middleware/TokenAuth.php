@@ -2,82 +2,86 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Token;
 use App\Models\User;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class TokenAuth
 {
     public function handle(Request $request, Closure $next)
     {
         try {
-            // Ambil bearer token dari header Authorization
             $bearerToken = $request->bearerToken();
 
             if (!$bearerToken) {
                 return response()->json([
                     'status' => 'error',
-                    'pesan'  => 'Token tidak ditemukan'
+                    'pesan'  => 'Token tidak ditemukan',
                 ], 401);
             }
 
-            // Hash token karena token disimpan hashed di database
             $hashedToken = hash('sha256', $bearerToken);
 
-            // Cari token
-            $token = Token::where('token', $hashedToken)->first();
+            // Pakai DB langsung — Token::where()->first() bisa OOM jika collection besar
+            $token = DB::connection('mongodb')
+                ->collection('tokens')
+                ->where('token', $hashedToken)
+                ->first();
 
             if (!$token) {
                 return response()->json([
                     'status' => 'error',
-                    'pesan'  => 'Token tidak valid'
+                    'pesan'  => 'Token tidak valid',
                 ], 401);
             }
 
-            // Cari user berdasarkan token
-            $user = User::where('_id', $token->user_id)->first();
+            // user_id sudah pasti string karena AuthController insert pakai DB langsung
+            $userId = $token['user_id'] ?? null;
+
+            if (empty($userId)) {
+                \Log::error('TokenAuth: user_id kosong di token', ['token_doc' => $token]);
+                return response()->json([
+                    'status' => 'error',
+                    'pesan'  => 'Token rusak: user_id tidak valid',
+                ], 401);
+            }
+
+            // Pastikan string (fallback jika ada token lama dengan ObjectId)
+            if (is_object($userId) && method_exists($userId, '__toString')) {
+                $userId = (string) $userId;
+            } elseif (is_array($userId) && isset($userId['$oid'])) {
+                $userId = (string) $userId['$oid'];
+            }
+
+            $user = User::where('_id', $userId)->first();
 
             if (!$user) {
                 return response()->json([
                     'status' => 'error',
-                    'pesan'  => 'User tidak ditemukan'
+                    'pesan'  => 'User tidak ditemukan',
                 ], 401);
             }
 
-            // Update last_used_at
-            $token->update([
-                'last_used_at' => now()
-            ]);
+            // Update last_used_at pakai DB langsung
+            DB::connection('mongodb')
+                ->collection('tokens')
+                ->where('token', $hashedToken)
+                ->update(['last_used_at' => now()->toDateTimeString()]);
 
-            /*
-             |-----------------------------------------
-             | PENTING:
-             | Simpan user ke request
-             |-----------------------------------------
-             */
-
-            // supaya bisa dipanggil: $request->auth_user
-            $request->merge([
-                'auth_user' => $user
-            ]);
-
-            // supaya bisa dipanggil: auth()->user()
-            $request->setUserResolver(function () use ($user) {
-                return $user;
-            });
+            $request->attributes->set('auth_user', $user);
+            $request->setUserResolver(fn() => $user);
 
             return $next($request);
 
         } catch (\Exception $e) {
-
             \Log::error('TokenAuth middleware error: ' . $e->getMessage(), [
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             return response()->json([
                 'status' => 'error',
-                'pesan'  => 'Authentication error: ' . $e->getMessage()
+                'pesan'  => 'Authentication error: ' . $e->getMessage(),
             ], 401);
         }
     }
