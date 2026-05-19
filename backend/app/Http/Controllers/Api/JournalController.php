@@ -512,7 +512,7 @@ Aturan:
         $dataUser = $request->all();
 
         try {
-            $response = Http::post('http://192.168.1.17:5000/predict', $dataUser);
+            $response = Http::post('http://127.0.0.1:5000/predict', $dataUser);
 
             if ($response->successful()) {
                 $hasilPrediksi = $response->json();

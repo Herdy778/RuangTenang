@@ -12,14 +12,11 @@ export default function AdminUsers() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // State untuk modal
   const [showModal, setShowModal] = useState(false);
   const [modalData, setModalData] = useState({ title: '', content: null });
 
-  // State untuk pagination card role
   const [roleCardPage, setRoleCardPage] = useState(1);
-  // Total card yang tampil = 5 (1 total card + 4 role card)
-  const ROLES_PER_PAGE = 4; // Maksimal 4 card role per halaman
+  const ROLES_PER_PAGE = 4;
 
   const [sortConfig, setSortConfig] = useState({
     key: "nama_lengkap",
@@ -84,7 +81,6 @@ export default function AdminUsers() {
     setCurrentPage(1);
   }, [searchTerm]);
 
-  // Reset role card page saat data user berubah
   useEffect(() => {
     setRoleCardPage(1);
   }, [allUsers]);
@@ -124,7 +120,6 @@ export default function AdminUsers() {
     return stats;
   }, [allUsers]);
 
-  // Konversi roleStats ke array untuk pagination
   const roleStatsArray = Object.entries(roleStats);
   const totalRolePages = Math.ceil(roleStatsArray.length / ROLES_PER_PAGE);
   const paginatedRoleStats = roleStatsArray.slice(
@@ -166,7 +161,7 @@ export default function AdminUsers() {
         content: (
           <div>
             <p style={{ marginBottom: 12 }}>Seluruh pengguna yang terdaftar di RuangTenang:</p>
-            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#4F46E5' }}>{totalUsers}</p>
+            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#818CF8' }}>{totalUsers}</p>
             <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
             <div style={{ marginTop: 16 }}>
               <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
@@ -195,26 +190,47 @@ export default function AdminUsers() {
       });
       setShowModal(true);
     } else if (role) {
-      const roleStyle = getRoleBadgeStyle(role);
+      let roleLabel, roleIcon, roleColor;
+      switch (role?.toLowerCase()) {
+        case "admin":
+          roleLabel = "Admin";
+          roleIcon = "👑";
+          roleColor = "#F59E0B";
+          break;
+        case "psikolog":
+          roleLabel = "Psikolog";
+          roleIcon = "🧠";
+          roleColor = "#8B5CF6";
+          break;
+        case "mahasiswa":
+          roleLabel = "Mahasiswa";
+          roleIcon = "🎓";
+          roleColor = "#10B981";
+          break;
+        default:
+          roleLabel = role || "Unknown";
+          roleIcon = "👤";
+          roleColor = "#64748B";
+      }
       const percentage = totalUsers > 0 ? Math.round((count / totalUsers) * 100) : 0;
       setModalData({
-        title: `${roleStyle.icon} Detail Role: ${roleStyle.label}`,
+        title: `${roleIcon} Detail Role: ${roleLabel}`,
         content: (
           <div>
-            <div style={{ textAlign: 'center', padding: 20, background: roleStyle.background, borderRadius: 16 }}>
-              <span style={{ fontSize: 64 }}>{roleStyle.icon}</span>
-              <p style={{ fontSize: 28, fontWeight: 700, marginTop: 8, color: roleStyle.color }}>{roleStyle.label}</p>
+            <div style={{ textAlign: 'center', padding: 20, background: `${roleColor}15`, borderRadius: 16, border: `1px solid ${roleColor}30` }}>
+              <span style={{ fontSize: 64 }}>{roleIcon}</span>
+              <p style={{ fontSize: 28, fontWeight: 700, marginTop: 8, color: roleColor }}>{roleLabel}</p>
               <p style={{ fontSize: 48, fontWeight: 700, marginTop: 8 }}>{count}</p>
-              <p style={{ fontSize: 14, marginTop: 4 }}>pengguna ({percentage}% dari total)</p>
+              <p style={{ fontSize: 14, marginTop: 4, color: '#64748B' }}>pengguna ({percentage}% dari total)</p>
             </div>
             <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
             <p style={{ fontSize: 14, color: '#64748B', lineHeight: 1.5 }}>
-              {roleStyle.label === 'Admin' && '👑 Admin memiliki akses penuh untuk mengelola seluruh data, user, jurnal, dan artikel.'}
-              {roleStyle.label === 'Psikolog' && '🧠 Psikolog dapat memberikan konseling, melihat jurnal user, dan memberikan rekomendasi.'}
-              {roleStyle.label === 'Mahasiswa' && '🎓 Mahasiswa adalah pengguna utama yang menulis jurnal, memantau mood, dan menerima rekomendasi.'}
-              {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleStyle.label) && `📌 Role "${roleStyle.label}" memiliki akses terbatas sesuai konfigurasi sistem.`}
+              {roleLabel === 'Admin' && '👑 Admin memiliki akses penuh untuk mengelola seluruh data, user, jurnal, dan artikel.'}
+              {roleLabel === 'Psikolog' && '🧠 Psikolog dapat memberikan konseling, melihat jurnal user, dan memberikan rekomendasi.'}
+              {roleLabel === 'Mahasiswa' && '🎓 Mahasiswa adalah pengguna utama yang menulis jurnal, memantau mood, dan menerima rekomendasi.'}
+              {!['Admin', 'Psikolog', 'Mahasiswa'].includes(roleLabel) && `📌 Role "${roleLabel}" memiliki akses terbatas sesuai konfigurasi sistem.`}
             </p>
-            <button onClick={() => setShowModal(false)} style={{ ...modalButtonStyle, background: roleStyle.color }}>
+            <button onClick={() => setShowModal(false)} style={{ ...modalButtonStyle, background: roleColor }}>
               Tutup
             </button>
           </div>
@@ -266,7 +282,6 @@ export default function AdminUsers() {
           <span style={styles.navLink} onClick={() => navigate("/admin/articles")}>Artikel</span>
           <span style={styles.navLink} onClick={() => navigate("/admin/data-admin")}>Data Admin</span>
           <span style={styles.navLink} onClick={() => navigate("/profile")}>Profil</span>
-          <span style={styles.navLink} onClick={() => navigate('/api-tester')}>🧪 API</span>
           <button style={styles.logoutBtn} onClick={doLogout}>Keluar</button>
         </div>
       </nav>
@@ -275,50 +290,78 @@ export default function AdminUsers() {
         <div style={styles.header}>
           <div>
             <h1 style={styles.title}>👥 Data Pengguna</h1>
-            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang </p>
+            <p style={styles.subtitle}>Kelola seluruh pengguna RuangTenang</p>
           </div>
           <div style={styles.dateBadge}>
             {new Date().toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
           </div>
         </div>
 
-        {/* STATS CARDS - Total 5 card (1 total card + maksimal 4 role card) */}
+        {/* STATS CARDS */}
         <div style={styles.statsGrid}>
-          {/* Total Card - SELALU ADA di posisi pertama */}
+          {/* Total Card - Soft Indigo / Biru Keunguan */}
           <div 
-            style={{ ...styles.statCard, cursor: 'pointer' }}
+            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #A5B4FC, #818CF8)', color: '#312E81' }}
             onClick={() => handleCardClick('total_users')}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={styles.statIcon}>👥</div>
-            <div style={styles.statNum}>{totalUsers}</div>
-            <div style={styles.statLabel}>Total Pengguna</div>
-            <div style={styles.statTrend}>Semua role</div>
-            <div style={styles.clickHint}>✨ Klik untuk detail</div>
+            <div style={{ ...styles.statNum, color: '#312E81' }}>{totalUsers}</div>
+            <div style={{ ...styles.statLabel, color: '#3730A3' }}>Total Pengguna</div>
+            <div style={{ ...styles.statTrend, color: '#4338CA' }}>Semua role</div>
+            <div style={{ ...styles.clickHint, color: '#6366F1' }}>✨ Klik untuk detail</div>
           </div>
           
-          {/* Role Cards - Maksimal 4 card per halaman */}
+          {/* Role Cards - Warna SOFT */}
           {paginatedRoleStats.map(([role, count]) => {
-            const roleStyle = getRoleBadgeStyle(role);
+            let bgGradient, textColor;
+            let icon, label;
+            
+            switch (role?.toLowerCase()) {
+              case "admin":
+                bgGradient = "linear-gradient(135deg, #FDE68A, #FCD34D)";
+                textColor = "#78350F";
+                icon = "👑";
+                label = "Admin";
+                break;
+              case "psikolog":
+                bgGradient = "linear-gradient(135deg, #C4B5FD, #A78BFA)";
+                textColor = "#4C1D95";
+                icon = "🧠";
+                label = "Psikolog";
+                break;
+              case "mahasiswa":
+                bgGradient = "linear-gradient(135deg, #A7F3D0, #6EE7B7)";
+                textColor = "#064E3B";
+                icon = "🎓";
+                label = "Mahasiswa";
+                break;
+              default:
+                bgGradient = "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
+                textColor = "#1E293B";
+                icon = "👤";
+                label = role || "Unknown";
+            }
+            
             return (
               <div 
                 key={role} 
-                style={{ ...styles.statCard, background: roleStyle.background, border: `1px solid ${roleStyle.color}20`, cursor: 'pointer' }}
+                style={{ ...styles.statCard, cursor: 'pointer', background: bgGradient, color: textColor }}
                 onClick={() => handleCardClick('role_detail', role, count)}
                 onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
                 onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
               >
-                <div style={styles.statIcon}>{roleStyle.icon}</div>
-                <div style={{ ...styles.statNum, color: roleStyle.color }}>{count}</div>
-                <div style={{ ...styles.statLabel, color: roleStyle.color }}>{roleStyle.label}</div>
-                <div style={{ ...styles.clickHint, color: roleStyle.color }}>✨ Klik untuk detail</div>
+                <div style={styles.statIcon}>{icon}</div>
+                <div style={{ ...styles.statNum, color: textColor }}>{count}</div>
+                <div style={{ ...styles.statLabel, color: textColor }}>{label}</div>
+                <div style={{ ...styles.clickHint, color: textColor === '#0F172A' ? '#475569' : 'rgba(0,0,0,0.5)' }}>✨ Klik untuk detail</div>
               </div>
             );
           })}
         </div>
 
-        {/* Tombol Navigasi Card Role - Muncul jika total role > 4 */}
+        {/* Tombol Navigasi Card Role */}
         {roleStatsArray.length > ROLES_PER_PAGE && (
           <div style={styles.cardPagination}>
             <button 
@@ -373,82 +416,82 @@ export default function AdminUsers() {
               <p style={styles.emptySubtext}>Coba ubah kata kunci pencarian</p>
             </div>
           ) : (
-            <>
-              <table style={styles.table}>
-                <thead>
-                  <tr style={styles.theadRow}>
-                    <th style={styles.thNo}>No</th>
-                    <th style={styles.th} onClick={() => handleSort("nama_lengkap")}>
-                      Nama Lengkap {getSortIcon("nama_lengkap")}
-                    </th>
-                    <th style={styles.th} onClick={() => handleSort("email")}>
-                      Email {getSortIcon("email")}
-                    </th>
-                    <th style={styles.th} onClick={() => handleSort("role")}>
-                      Role {getSortIcon("role")}
-                    </th>
-                    <th style={styles.thAksi}>Aksi</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedUsers.map((u, i) => {
-                    const roleStyle = getRoleBadgeStyle(u.role);
-                    return (
-                      <tr key={u._id} style={styles.tr}>
-                        <td style={styles.tdNo}>{(currentPage - 1) * itemsPerPage + i + 1}</td>
-                        <td style={styles.td}>
-                          <div style={styles.userName}>
-                            <span style={styles.userAvatar}>
-                              {u.nama_lengkap?.charAt(0)?.toUpperCase() || "U"}
-                            </span>
-                            {u.nama_lengkap}
-                          </div>
-                        </td>
-                        <td style={styles.td}>{u.email}</td>
-                        <td style={styles.td}>
-                          <span style={{ ...styles.badge, background: roleStyle.background, color: roleStyle.color }}>
-                            {roleStyle.icon} {roleStyle.label}
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.theadRow}>
+                  <th style={styles.thNo}>No</th>
+                  <th style={styles.th} onClick={() => handleSort("nama_lengkap")}>
+                    Nama Lengkap {getSortIcon("nama_lengkap")}
+                  </th>
+                  <th style={styles.th} onClick={() => handleSort("email")}>
+                    Email {getSortIcon("email")}
+                  </th>
+                  <th style={styles.th} onClick={() => handleSort("role")}>
+                    Role {getSortIcon("role")}
+                  </th>
+                  <th style={styles.thAksi}>Aksi</th>
+                 </tr>
+              </thead>
+              <tbody>
+                {paginatedUsers.map((u, i) => {
+                  const roleStyle = getRoleBadgeStyle(u.role);
+                  return (
+                    <tr key={u._id} style={styles.tr}>
+                      <td style={styles.tdNo}>{(currentPage - 1) * itemsPerPage + i + 1}</td>
+                      <td style={styles.td}>
+                        <div style={styles.userName}>
+                          <span style={styles.userAvatar}>
+                            {u.nama_lengkap?.charAt(0)?.toUpperCase() || "U"}
                           </span>
-                        </td>
-                        <td style={styles.tdAksi}>
-                          <button style={styles.deleteBtn} onClick={() => deleteUser(u._id)}>
-                            🗑️ Hapus
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-
-              <div style={styles.pagination}>
-                <div style={styles.paginationInfo}>
-                  Menampilkan {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                  {Math.min(currentPage * itemsPerPage, getSortedUsers.length)} dari {getSortedUsers.length} data
-                </div>
-                <div style={styles.paginationControls}>
-                  <select
-                    value={itemsPerPage}
-                    onChange={(e) => {
-                      setItemsPerPage(Number(e.target.value));
-                      setCurrentPage(1);
-                    }}
-                    style={styles.perPageSelect}
-                  >
-                    <option value={10}>10 / halaman</option>
-                    <option value={25}>25 / halaman</option>
-                    <option value={50}>50 / halaman</option>
-                  </select>
-                  <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>«</button>
-                  <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>‹</button>
-                  <span style={styles.pageInfo}>Halaman {currentPage} dari {Math.ceil(getSortedUsers.length / itemsPerPage) || 1}</span>
-                  <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(getSortedUsers.length / itemsPerPage)))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>›</button>
-                  <button onClick={() => setCurrentPage(Math.ceil(getSortedUsers.length / itemsPerPage))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>»</button>
-                </div>
-              </div>
-            </>
+                          {u.nama_lengkap}
+                        </div>
+                      </td>
+                      <td style={styles.td}>{u.email}</td>
+                      <td style={styles.td}>
+                        <span style={{ ...styles.badge, background: roleStyle.background, color: roleStyle.color }}>
+                          {roleStyle.icon} {roleStyle.label}
+                        </span>
+                      </td>
+                      <td style={styles.tdAksi}>
+                        <button style={styles.deleteBtn} onClick={() => deleteUser(u._id)}>
+                          🗑️ Hapus
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           )}
         </div>
+
+        {getSortedUsers.length > 0 && (
+          <div style={styles.pagination}>
+            <div style={styles.paginationInfo}>
+              Menampilkan {(currentPage - 1) * itemsPerPage + 1} -{" "}
+              {Math.min(currentPage * itemsPerPage, getSortedUsers.length)} dari {getSortedUsers.length} data
+            </div>
+            <div style={styles.paginationControls}>
+              <select
+                value={itemsPerPage}
+                onChange={(e) => {
+                  setItemsPerPage(Number(e.target.value));
+                  setCurrentPage(1);
+                }}
+                style={styles.perPageSelect}
+              >
+                <option value={10}>10 / halaman</option>
+                <option value={25}>25 / halaman</option>
+                <option value={50}>50 / halaman</option>
+              </select>
+              <button onClick={() => setCurrentPage(1)} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>«</button>
+              <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1} style={{ ...styles.pageBtn, opacity: currentPage === 1 ? 0.5 : 1 }}>‹</button>
+              <span style={styles.pageInfo}>Halaman {currentPage} dari {Math.ceil(getSortedUsers.length / itemsPerPage) || 1}</span>
+              <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, Math.ceil(getSortedUsers.length / itemsPerPage)))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>›</button>
+              <button onClick={() => setCurrentPage(Math.ceil(getSortedUsers.length / itemsPerPage))} disabled={currentPage === Math.ceil(getSortedUsers.length / itemsPerPage)} style={{ ...styles.pageBtn, opacity: currentPage === Math.ceil(getSortedUsers.length / itemsPerPage) ? 0.5 : 1 }}>»</button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -457,7 +500,7 @@ export default function AdminUsers() {
 const modalButtonStyle = {
   marginTop: 20,
   padding: '10px 20px',
-  background: '#4F46E5',
+  background: '#818CF8',
   color: 'white',
   border: 'none',
   borderRadius: 40,
@@ -480,9 +523,9 @@ const styles = {
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#818CF8",
+    background: "#A5B4FC",
     filter: "blur(120px)",
-    opacity: 0.12,
+    opacity: 0.1,
     top: "-20vh",
     right: "-10vw",
     zIndex: 0,
@@ -493,7 +536,7 @@ const styles = {
     width: "40vw",
     height: "40vw",
     borderRadius: "50%",
-    background: "#34D399",
+    background: "#C4B5FD",
     filter: "blur(100px)",
     opacity: 0.08,
     bottom: "-10vh",
@@ -506,7 +549,7 @@ const styles = {
     width: "30vw",
     height: "30vw",
     borderRadius: "50%",
-    background: "#F472B6",
+    background: "#FDE68A",
     filter: "blur(100px)",
     opacity: 0.07,
     bottom: "30vh",
@@ -681,7 +724,7 @@ const styles = {
     cursor: "pointer",
     fontSize: 13,
     fontWeight: 500,
-    color: "#4F46E5",
+    color: "#818CF8",
     transition: "all 0.2s ease",
   },
   cardPageInfo: {
@@ -843,7 +886,7 @@ const styles = {
     width: 40,
     height: 40,
     border: "3px solid #E2E8F0",
-    borderTop: "3px solid #6366F1",
+    borderTop: "3px solid #818CF8",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto 16px",

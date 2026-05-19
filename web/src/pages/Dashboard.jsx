@@ -381,7 +381,7 @@ const mappedData = rawData.map((item) => ({
 
   <button
     style={styles.viewAllBtn}
-    onClick={() => navigate('/admin/manajemen')}
+    onClick={() => navigate('/admin/data-admin')}
   >
     Manajemen Admin
   </button>
