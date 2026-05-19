@@ -130,11 +130,11 @@ export default function AdminUsers() {
   const getRoleBadgeStyle = (role) => {
     switch (role?.toLowerCase()) {
       case "admin":
-        return { background: "#FEF3C7", color: "#92400E", icon: "👑", label: "Admin" };
+        return { background: "#EDE9FE", color: "#5B21B6", icon: "👑", label: "Admin" };
       case "psikolog":
-        return { background: "#EDE9FE", color: "#5B21B6", icon: "🧠", label: "Psikolog" };
+        return { background: "#E9D5FF", color: "#6D28D9", icon: "🧠", label: "Psikolog" };
       case "mahasiswa":
-        return { background: "#ECFDF5", color: "#065F46", icon: "🎓", label: "Mahasiswa" };
+        return { background: "#DBEAFE", color: "#1E40AF", icon: "🎓", label: "Mahasiswa" };
       default:
         return { background: "#F1F5F9", color: "#475569", icon: "👤", label: role || "Unknown" };
     }
@@ -161,7 +161,7 @@ export default function AdminUsers() {
         content: (
           <div>
             <p style={{ marginBottom: 12 }}>Seluruh pengguna yang terdaftar di RuangTenang:</p>
-            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#818CF8' }}>{totalUsers}</p>
+            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#8B5CF6' }}>{totalUsers}</p>
             <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
             <div style={{ marginTop: 16 }}>
               <p style={{ fontWeight: 600, marginBottom: 12 }}>📊 Distribusi Role:</p>
@@ -195,17 +195,17 @@ export default function AdminUsers() {
         case "admin":
           roleLabel = "Admin";
           roleIcon = "👑";
-          roleColor = "#F59E0B";
+          roleColor = "#8B5CF6";
           break;
         case "psikolog":
           roleLabel = "Psikolog";
           roleIcon = "🧠";
-          roleColor = "#8B5CF6";
+          roleColor = "#A78BFA";
           break;
         case "mahasiswa":
           roleLabel = "Mahasiswa";
           roleIcon = "🎓";
-          roleColor = "#10B981";
+          roleColor = "#3B82F6";
           break;
         default:
           roleLabel = role || "Unknown";
@@ -299,47 +299,45 @@ export default function AdminUsers() {
 
         {/* STATS CARDS */}
         <div style={styles.statsGrid}>
-          {/* Total Card - Soft Indigo / Biru Keunguan */}
           <div 
-            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #A5B4FC, #818CF8)', color: '#312E81' }}
+            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #A78BFA, #8B5CF6)', color: 'white' }}
             onClick={() => handleCardClick('total_users')}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={styles.statIcon}>👥</div>
-            <div style={{ ...styles.statNum, color: '#312E81' }}>{totalUsers}</div>
-            <div style={{ ...styles.statLabel, color: '#3730A3' }}>Total Pengguna</div>
-            <div style={{ ...styles.statTrend, color: '#4338CA' }}>Semua role</div>
-            <div style={{ ...styles.clickHint, color: '#6366F1' }}>✨ Klik untuk detail</div>
+            <div style={{ ...styles.statNum, color: 'white' }}>{totalUsers}</div>
+            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>Total Pengguna</div>
+            <div style={{ ...styles.statTrend, color: 'rgba(255,255,255,0.6)' }}>Semua role</div>
+            <div style={{ ...styles.clickHint, color: 'rgba(255,255,255,0.5)' }}>✨ Klik untuk detail</div>
           </div>
           
-          {/* Role Cards - Warna SOFT */}
           {paginatedRoleStats.map(([role, count]) => {
             let bgGradient, textColor;
             let icon, label;
             
             switch (role?.toLowerCase()) {
               case "admin":
-                bgGradient = "linear-gradient(135deg, #FDE68A, #FCD34D)";
-                textColor = "#78350F";
+                bgGradient = "linear-gradient(135deg, #EDE9FE, #C4B5FD)";
+                textColor = "#5B21B6";
                 icon = "👑";
                 label = "Admin";
                 break;
               case "psikolog":
-                bgGradient = "linear-gradient(135deg, #C4B5FD, #A78BFA)";
-                textColor = "#4C1D95";
+                bgGradient = "linear-gradient(135deg, #E9D5FF, #D8B4FE)";
+                textColor = "#6D28D9";
                 icon = "🧠";
                 label = "Psikolog";
                 break;
               case "mahasiswa":
-                bgGradient = "linear-gradient(135deg, #A7F3D0, #6EE7B7)";
-                textColor = "#064E3B";
+                bgGradient = "linear-gradient(135deg, #DBEAFE, #BFDBFE)";
+                textColor = "#1E40AF";
                 icon = "🎓";
                 label = "Mahasiswa";
                 break;
               default:
-                bgGradient = "linear-gradient(135deg, #E2E8F0, #CBD5E1)";
-                textColor = "#1E293B";
+                bgGradient = "linear-gradient(135deg, #F1F5F9, #E2E8F0)";
+                textColor = "#475569";
                 icon = "👤";
                 label = role || "Unknown";
             }
@@ -355,13 +353,12 @@ export default function AdminUsers() {
                 <div style={styles.statIcon}>{icon}</div>
                 <div style={{ ...styles.statNum, color: textColor }}>{count}</div>
                 <div style={{ ...styles.statLabel, color: textColor }}>{label}</div>
-                <div style={{ ...styles.clickHint, color: textColor === '#0F172A' ? '#475569' : 'rgba(0,0,0,0.5)' }}>✨ Klik untuk detail</div>
+                <div style={{ ...styles.clickHint, color: textColor === '#475569' ? '#64748B' : 'rgba(0,0,0,0.4)' }}>✨ Klik untuk detail</div>
               </div>
             );
           })}
         </div>
 
-        {/* Tombol Navigasi Card Role */}
         {roleStatsArray.length > ROLES_PER_PAGE && (
           <div style={styles.cardPagination}>
             <button 
@@ -430,7 +427,7 @@ export default function AdminUsers() {
                     Role {getSortIcon("role")}
                   </th>
                   <th style={styles.thAksi}>Aksi</th>
-                 </tr>
+                </tr>
               </thead>
               <tbody>
                 {paginatedUsers.map((u, i) => {
@@ -500,7 +497,7 @@ export default function AdminUsers() {
 const modalButtonStyle = {
   marginTop: 20,
   padding: '10px 20px',
-  background: '#818CF8',
+  background: '#8B5CF6',
   color: 'white',
   border: 'none',
   borderRadius: 40,
@@ -523,7 +520,7 @@ const styles = {
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#A5B4FC",
+    background: "#A78BFA",
     filter: "blur(120px)",
     opacity: 0.1,
     top: "-20vh",
@@ -536,7 +533,7 @@ const styles = {
     width: "40vw",
     height: "40vw",
     borderRadius: "50%",
-    background: "#C4B5FD",
+    background: "#EDE9FE",
     filter: "blur(100px)",
     opacity: 0.08,
     bottom: "-10vh",
@@ -549,7 +546,7 @@ const styles = {
     width: "30vw",
     height: "30vw",
     borderRadius: "50%",
-    background: "#FDE68A",
+    background: "#DBEAFE",
     filter: "blur(100px)",
     opacity: 0.07,
     bottom: "30vh",
@@ -724,7 +721,7 @@ const styles = {
     cursor: "pointer",
     fontSize: 13,
     fontWeight: 500,
-    color: "#818CF8",
+    color: "#8B5CF6",
     transition: "all 0.2s ease",
   },
   cardPageInfo: {
@@ -886,7 +883,7 @@ const styles = {
     width: 40,
     height: 40,
     border: "3px solid #E2E8F0",
-    borderTop: "3px solid #818CF8",
+    borderTop: "3px solid #8B5CF6",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto 16px",

@@ -38,7 +38,6 @@ export default function DataAdmin() {
     }
   }
 
-  // Fungsi Export CSV
   const handleExportCSV = () => {
     try {
       if (filteredAdmins.length === 0) {
@@ -207,12 +206,14 @@ export default function DataAdmin() {
 
         {/* STATS CARDS */}
         <div style={styles.statsGrid}>
+          {/* Total Admin Card - Soft Purple */}
           <div 
             className={clickEffect === 'admin' ? 'card-click-animation' : ''}
             style={{ 
               ...styles.statCard, 
               cursor: 'pointer',
               transition: 'all 0.2s ease-in-out',
+              background: 'linear-gradient(135deg, #A78BFA, #8B5CF6)'
             }}
             onClick={handleAdminCardClick}
             onMouseEnter={(e) => {
@@ -230,11 +231,12 @@ export default function DataAdmin() {
             <div style={styles.statTrend}>✨ Klik untuk detail</div>
           </div>
 
+          {/* Total User Card - Soft Blue */}
           <div 
             className={clickEffect === 'user' ? 'card-click-animation' : ''}
             style={{ 
               ...styles.statCard, 
-              background: "linear-gradient(135deg, #60A5FA, #3B82F6)", 
+              background: "linear-gradient(135deg, #93C5FD, #60A5FA)", 
               color: "white", 
               cursor: 'pointer',
               transition: 'all 0.2s ease-in-out',
@@ -383,7 +385,7 @@ const styles = {
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#A5B4FC",
+    background: "#A78BFA",
     filter: "blur(120px)",
     opacity: 0.1,
     top: "-20vh",
@@ -396,7 +398,7 @@ const styles = {
     width: "40vw",
     height: "40vw",
     borderRadius: "50%",
-    background: "#6EE7B7",
+    background: "#93C5FD",
     filter: "blur(100px)",
     opacity: 0.08,
     bottom: "-10vh",
@@ -535,7 +537,7 @@ const styles = {
     marginBottom: 32,
   },
   statCard: {
-    background: "linear-gradient(135deg, #A5B4FC, #818CF8)",
+    background: "linear-gradient(135deg, #A78BFA, #8B5CF6)",
     padding: "24px 28px",
     borderRadius: 24,
     border: "1px solid #E2E8F0",
@@ -604,7 +606,7 @@ const styles = {
   },
   exportBtn: {
     padding: "10px 24px",
-    background: "linear-gradient(135deg, #3B82F6, #2563EB)", // 🔵 BIRU
+    background: "linear-gradient(135deg, #3B82F6, #2563EB)",
     color: "white",
     border: "none",
     borderRadius: 40,
@@ -670,7 +672,7 @@ const styles = {
     width: 40,
     height: 40,
     borderRadius: "50%",
-    background: "linear-gradient(135deg, #A5B4FC, #818CF8)",
+    background: "linear-gradient(135deg, #A78BFA, #8B5CF6)",
     color: "white",
     display: "flex",
     alignItems: "center",
@@ -729,7 +731,7 @@ const styles = {
     width: 40,
     height: 40,
     border: "3px solid #E2E8F0",
-    borderTop: "3px solid #A5B4FC",
+    borderTop: "3px solid #60A5FA",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     margin: "0 auto 16px",
@@ -828,7 +830,7 @@ const styles = {
     padding: "10px 24px",
     borderRadius: 40,
     border: "none",
-    background: "linear-gradient(135deg, #A5B4FC, #818CF8)",
+    background: "linear-gradient(135deg, #A78BFA, #8B5CF6)",
     color: "white",
     cursor: "pointer",
     fontSize: 14,
