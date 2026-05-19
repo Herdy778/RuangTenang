@@ -7,84 +7,100 @@ use App\Models\Mood;
 use App\Models\Journal;
 use App\Models\RelaxationSession;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class MoodController extends Controller
 {
-    /**
-     * Mengambil data mood terbaru.
-     * Mengambil 7 data terakhir.
-     */
+    // Helper ambil userId dari auth_user yang disimpan middleware
+    private function getUserId(Request $request): string
+    {
+        $user = $request->attributes->get('auth_user');
+
+        if (!$user) {
+            throw new \Exception('User tidak ditemukan di request');
+        }
+
+        $attrs = $user->getAttributes();
+        $id    = $attrs['_id'] ?? $user->getKey();
+
+        if ($id instanceof \MongoDB\BSON\ObjectId) {
+            return (string) $id;
+        }
+        if (is_object($id) && method_exists($id, '__toString')) {
+            return (string) $id;
+        }
+        if (is_string($id) && !empty($id)) {
+            return $id;
+        }
+
+        throw new \Exception('User ID tidak valid');
+    }
+
     public function index()
     {
         try {
-            // Mengambil 7 data mood terbaru berdasarkan tanggal pembuatan
             $moods = Mood::latest()->take(7)->get();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Data mood berhasil diambil.',
-                'data'    => $moods
+                'data'    => $moods,
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal mengambil data mood: ' . $e->getMessage()
+                'message' => 'Gagal mengambil data mood: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Mengambil statistik untuk ditampilkan di Dashboard.
-     */
     public function dashboardStats(Request $request)
     {
         try {
-            $user = $request->auth_user;
-            $userId = (string) $user->_id;
+            $userId = $this->getUserId($request);
 
-            // Menghitung jumlah total jurnal milik user
             $totalJurnal = Journal::where('user_id', $userId)->count();
-            
-            // Mencari mood dominan milik user
-            $allMoods = Mood::where('user_id', $userId)->get();
-            $moodDominan = 'Netral';
 
+            $allMoods    = Mood::where('user_id', $userId)->get();
+            $moodDominan = 'Netral';
             if ($allMoods->isNotEmpty()) {
                 $moodDominan = $allMoods->countBy('mood')->sortDesc()->keys()->first();
             }
 
+            $sesiRelaksasi = RelaxationSession::where('user_id', $userId)->count();
+
             return response()->json([
                 'status' => 'success',
-                'data' => [
-                    'total_jurnal' => $totalJurnal,
-                    'mood_dominan' => $moodDominan,
-                    'sesi_relaksasi' => RelaxationSession::where('user_id', $userId)->count()
-                ]
+                'data'   => [
+                    'total_jurnal'   => $totalJurnal,
+                    'mood_dominan'   => $moodDominan,
+                    'sesi_relaksasi' => $sesiRelaksasi,
+                ],
             ], 200);
+
         } catch (\Exception $e) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Gagal mengambil data dashboard: ' . $e->getMessage()
+                'status'  => 'error',
+                'message' => 'Gagal mengambil data dashboard: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Menyimpan data mood ke database.
-     */
     public function store(Request $request)
     {
         try {
             $validated = $request->validate([
-                'mood' => 'required|string',
-                'score' => 'required|integer|min:1|max:5',
-                'catatan' => 'nullable|string'
+                'mood'    => 'required|string',
+                'score'   => 'required|integer|min:1|max:5',
+                'catatan' => 'nullable|string',
             ]);
 
-            $mood = new Mood();
-            $mood->user_id = (string) $request->auth_user->_id;
-            $mood->mood = $validated['mood'];
-            $mood->score = $validated['score'];
+            $userId = $this->getUserId($request);
+
+            $mood          = new Mood();
+            $mood->user_id = $userId;
+            $mood->mood    = $validated['mood'];
+            $mood->score   = $validated['score'];
             $mood->catatan = $validated['catatan'] ?? '';
             $mood->tanggal = now();
             $mood->save();
@@ -92,43 +108,44 @@ class MoodController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Mood berhasil disimpan.',
-                'data' => $mood
+                'data'    => $mood,
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Gagal menyimpan mood: ' . $e->getMessage()
+                'message' => 'Gagal menyimpan mood: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-    /**
-     * Menyimpan data log sesi relaksasi.
-     */
     public function storeRelaxation(Request $request)
     {
         try {
             $validated = $request->validate([
                 'activity_name' => 'required|string',
-                'duration' => 'required|integer|min:1'
+                'duration'      => 'required|integer|min:1',
             ]);
 
-            $session = new RelaxationSession();
-            $session->user_id = (string) $request->auth_user->_id;
+            $userId = $this->getUserId($request);
+
+            $session                  = new RelaxationSession();
+            $session->user_id         = $userId;
             $session->jenis_relaksasi = $validated['activity_name'];
-            $session->durasi_menit = $validated['duration'];
-            $session->tanggal = now();
+            $session->durasi_menit    = $validated['duration'];
+            $session->tanggal         = now();
             $session->save();
 
             return response()->json([
                 'success' => true,
                 'message' => 'Sesi relaksasi berhasil dicatat!',
-                'data' => $session
+                'data'    => $session,
             ], 201);
+
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Sistem gagal menyimpan durasi sesi: ' . $e->getMessage()
+                'message' => 'Sistem gagal menyimpan durasi sesi: ' . $e->getMessage(),
             ], 500);
         }
     }

@@ -5,7 +5,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../config/app_config.dart';
 
 class ApiService {
-  // ✅ Ganti static const → static String get
   static String get baseUrl => AppConfig.baseUrl;
 
   // 🔥 Ambil token
@@ -110,18 +109,65 @@ class ApiService {
     }
   }
 
+  // =============================
+  // ARTIKEL REKOMENDASI
+  // =============================
+
+  /// Versi lama — dipertahankan agar tidak breaking change di tempat lain
+  /// yang masih memakainya. Internally memanggil versi baru.
   Future<List<dynamic>> fetchRecommendedArticles() async {
-    final response = await get('/my-recommended-articles');
+    final result = await fetchRecommendedArticlesWithCount();
+    return result['data'] as List<dynamic>;
+  }
 
-    debugPrint('ARTICLE RESPONSE: $response');
+  /// Versi baru — mengembalikan { 'total_count': int, 'data': List }
+  /// Dipakai oleh dashboard_page.dart untuk menampilkan badge & tombol
+  /// "Lihat Semua" beserta indikator belum-dibaca.
+  Future<Map<String, dynamic>> fetchRecommendedArticlesWithCount() async {
+    try {
+      final res = await http.get(
+        Uri.parse('$baseUrl/my-recommended-articles'),
+        headers: await _headers(),
+      );
 
-    if (response['status'] == 'success') {
-      return response['data'];
-    } else {
-      return [];
+      debugPrint('ARTICLE RESPONSE: ${res.body}');
+
+      if (res.statusCode == 200) {
+        final body = jsonDecode(res.body) as Map<String, dynamic>;
+        if (body['status'] == 'success') {
+          return {
+            'total_count': body['total_count'] ?? 0,
+            'data': body['data'] ?? [],
+          };
+        }
+      }
+
+      // Gagal atau status bukan success → kembalikan kosong
+      return {'total_count': 0, 'data': []};
+    } catch (e) {
+      debugPrint('Error fetchRecommendedArticlesWithCount: $e');
+      return {'total_count': 0, 'data': []};
     }
   }
 
+  /// Tandai artikel sudah dibaca oleh user.
+  /// Dipanggil saat user membuka detail artikel di dashboard.
+  /// Silent fail — tidak blokir UI jika request gagal.
+  Future<void> markArticleAsRead(String articleId) async {
+    if (articleId.isEmpty) return;
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/articles/$articleId/read'),
+        headers: await _headers(),
+      );
+    } catch (e) {
+      debugPrint('markArticleAsRead error (ignored): $e');
+    }
+  }
+
+  // =============================
+  // GENERIC
+  // =============================
   Future<dynamic> get(String endpoint) async {
     final res = await http.get(
       Uri.parse('$baseUrl$endpoint'),

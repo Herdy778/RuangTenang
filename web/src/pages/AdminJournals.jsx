@@ -60,9 +60,13 @@ export default function AdminJournals() {
     }
   };
 
+  // ✅ FIX: URL dan nama field disesuaikan dengan route Laravel
   const sendRecommendation = async (journalId, articleId) => {
     try {
-      await API.post(`/admin/journals/${journalId}/recommend`, { articleId });
+      await API.post(`/admin/journals/send-article`, {
+        journal_id: journalId,
+        article_id: articleId,
+      });
       toast.success("Rekomendasi berhasil dikirim!");
       setShowRecommendModal(false);
     } catch (err) {
@@ -76,16 +80,10 @@ export default function AdminJournals() {
     const res = await API.get("/admin/journals");
     const rawData = res.data.data || [];
     
-    // 🔍 Debug: lihat data dari backend
-    console.log("📦 Data dari backend:", rawData);
-    
-    // Pastikan data memiliki user_nama
     const mappedData = rawData.map((item) => {
-      // Jika user_nama kosong atau "User Tidak Diketahui", coba ambil dari field lain
       let userName = item.user_nama;
       
       if (!userName || userName === "User Tidak Diketahui") {
-        // Coba dari field lain jika ada
         if (item.nama_lengkap) userName = item.nama_lengkap;
         else if (item.user?.nama_lengkap) userName = item.user.nama_lengkap;
         else if (item.user_id?.nama_lengkap) userName = item.user_id.nama_lengkap;
@@ -99,7 +97,6 @@ export default function AdminJournals() {
       };
     });
     
-    console.log("✅ Data setelah mapping:", mappedData);
     setJournals(mappedData);
     
   } catch (err) {
@@ -149,7 +146,6 @@ export default function AdminJournals() {
     Krisis: { bg: "#FFE4E6", color: "#9F1239", emoji: "🆘", borderLeft: "#EF4444", description: "Kondisi darurat yang membutuhkan perhatian segera" },
   };
 
-  // Hitung statistik mood
   const moodStats = {
     total: journals.length,
     Burnout: journals.filter(j => j.hasil_mood === "Burnout").length,
@@ -159,7 +155,6 @@ export default function AdminJournals() {
     Krisis: journals.filter(j => j.hasil_mood === "Krisis").length,
   };
 
-  // Handler untuk klik card statistik
   const handleStatsCardClick = (type, moodName = null) => {
     if (type === 'total') {
       setStatsModalData({
@@ -294,7 +289,7 @@ export default function AdminJournals() {
           </div>
         </div>
 
-        {/* STATS CARDS - Bisa diklik */}
+        {/* STATS CARDS */}
         <div style={styles.statsGrid}>
           <div 
             style={{ ...styles.statCard, cursor: 'pointer' }}
@@ -425,18 +420,18 @@ export default function AdminJournals() {
                   </p>
 
                   <div style={styles.journalFooter}>
-                   <div style={styles.userInfo}>
-                    <span style={styles.userAvatar}>
-                      {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
-                        ? j.user_nama.charAt(0).toUpperCase() 
-                        : "U"}
-                    </span>
-                    <span style={styles.userName}>
-                      {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
-                        ? j.user_nama 
-                        : "User"}
-                    </span>
-                  </div>
+                    <div style={styles.userInfo}>
+                      <span style={styles.userAvatar}>
+                        {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
+                          ? j.user_nama.charAt(0).toUpperCase() 
+                          : "U"}
+                      </span>
+                      <span style={styles.userName}>
+                        {j.user_nama && j.user_nama !== "User Tidak Diketahui" 
+                          ? j.user_nama 
+                          : "User"}
+                      </span>
+                    </div>
                     
                     <button 
                       style={styles.recommendBtn}
@@ -738,375 +733,68 @@ const styles = {
     boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
     transition: "all 0.2s ease",
   },
-  statIcon: {
-    fontSize: 28,
-    marginBottom: 12,
-  },
-  statNum: {
-    fontSize: 32,
-    fontWeight: 800,
-    color: "#0F172A",
-  },
-  statLabel: {
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#64748B",
-    marginTop: 6,
-  },
-  statTrend: {
-    fontSize: 11,
-    color: "#10B981",
-    marginTop: 10,
-  },
-  clickHint: {
-    fontSize: 10,
-    color: "#94A3B8",
-    marginTop: 10,
-    textAlign: 'center',
-    fontStyle: 'italic',
-  },
-  actionBar: {
-    display: "flex",
-    gap: 16,
-    marginBottom: 24,
-    flexWrap: "wrap",
-  },
-  searchWrapper: {
-    flex: 1,
-    position: "relative",
-    display: "flex",
-    alignItems: "center",
-  },
-  searchIcon: {
-    position: "absolute",
-    left: 14,
-    fontSize: 14,
-    opacity: 0.5,
-  },
+  statIcon: { fontSize: 28, marginBottom: 12 },
+  statNum: { fontSize: 32, fontWeight: 800, color: "#0F172A" },
+  statLabel: { fontSize: 13, fontWeight: 500, color: "#64748B", marginTop: 6 },
+  statTrend: { fontSize: 11, color: "#10B981", marginTop: 10 },
+  clickHint: { fontSize: 10, color: "#94A3B8", marginTop: 10, textAlign: 'center', fontStyle: 'italic' },
+  actionBar: { display: "flex", gap: 16, marginBottom: 24, flexWrap: "wrap" },
+  searchWrapper: { flex: 1, position: "relative", display: "flex", alignItems: "center" },
+  searchIcon: { position: "absolute", left: 14, fontSize: 14, opacity: 0.5 },
   searchInput: {
-    width: "100%",
-    padding: "12px 14px 12px 38px",
-    border: "1px solid #E2E8F0",
-    borderRadius: 48,
-    fontSize: 14,
-    background: "white",
-    outline: "none",
-    transition: "all 0.2s ease",
+    width: "100%", padding: "12px 14px 12px 38px",
+    border: "1px solid #E2E8F0", borderRadius: 48,
+    fontSize: 14, background: "white", outline: "none", transition: "all 0.2s ease",
   },
   clearBtn: {
-    position: "absolute",
-    right: 12,
-    background: "#F1F5F9",
-    border: "none",
-    borderRadius: 20,
-    padding: "4px 10px",
-    fontSize: 12,
-    cursor: "pointer",
-    color: "#64748B",
+    position: "absolute", right: 12, background: "#F1F5F9",
+    border: "none", borderRadius: 20, padding: "4px 10px",
+    fontSize: 12, cursor: "pointer", color: "#64748B",
   },
-  filterSelect: {
-    padding: "12px 20px",
-    border: "1px solid #E2E8F0",
-    borderRadius: 48,
-    fontSize: 14,
-    background: "white",
-    cursor: "pointer",
-  },
-  loading: {
-    textAlign: "center",
-    padding: "60px 24px",
-    color: "#64748B",
-    background: "white",
-    borderRadius: 24,
-    border: "1px solid #E2E8F0",
-  },
-  spinner: {
-    width: 40,
-    height: 40,
-    border: "3px solid #E2E8F0",
-    borderTop: "3px solid #6366F1",
-    borderRadius: "50%",
-    animation: "spin 1s linear infinite",
-    margin: "0 auto 16px",
-  },
-  emptyCard: {
-    background: "white",
-    padding: "60px 24px",
-    borderRadius: 24,
-    textAlign: 'center',
-    border: '1px solid #E2E8F0',
-  },
-  emptyIllustration: {
-    fontSize: 64,
-    marginBottom: 16,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: 500,
-    color: "#1E293B",
-    marginBottom: 8,
-  },
-  emptySubtext: {
-    fontSize: 13,
-    color: "#94A3B8",
-  },
-  journalList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 16,
-  },
-  journalCard: {
-    background: "white",
-    padding: "20px 24px",
-    borderRadius: 20,
-    border: "1px solid #E2E8F0",
-    borderLeftWidth: 4,
-    borderLeftStyle: "solid",
-    transition: "all 0.2s ease",
-  },
-  journalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 14,
-    flexWrap: "wrap",
-    gap: 10,
-  },
-  moodBadge: {
-    padding: "4px 14px",
-    borderRadius: 30,
-    fontSize: 12,
-    fontWeight: 600,
-  },
-  statusBadge: {
-    padding: "4px 12px",
-    borderRadius: 30,
-    fontSize: 11,
-    fontWeight: 500,
-  },
-  journalMeta: {
-    display: "flex",
-    gap: 12,
-  },
-  journalDate: {
-    fontSize: 12,
-    color: "#94A3B8",
-  },
-  journalText: {
-    fontSize: 14,
-    color: "#334155",
-    lineHeight: 1.55,
-    marginBottom: 16,
-  },
-  journalFooter: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  userInfo: {
-    display: "flex",
-    alignItems: "center",
-    gap: 10,
-  },
-  userAvatar: {
-    width: 32,
-    height: 32,
-    borderRadius: 32,
-    background: "linear-gradient(135deg, #6366F1, #A855F7)",
-    color: "white",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontSize: 14,
-    fontWeight: 600,
-  },
-  userName: {
-    fontSize: 13,
-    fontWeight: 500,
-    color: "#1E293B",
-  },
-  recommendBtn: {
-    padding: "8px 20px",
-    background: "#8B5CF6",
-    color: "white",
-    border: "none",
-    borderRadius: 40,
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 500,
-    transition: "all 0.2s ease",
-  },
-  actionButtons: {
-    display: "flex",
-    gap: 10,
-    flexWrap: "wrap",
-    paddingTop: 12,
-    borderTop: "1px solid #F1F5F9",
-  },
-  statusWarningBtn: {
-    padding: "6px 16px",
-    fontSize: 12,
-    fontWeight: 500,
-    borderRadius: 30,
-    border: "none",
-    background: "#FEF3C7",
-    color: "#92400E",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  statusDangerBtn: {
-    padding: "6px 16px",
-    fontSize: 12,
-    fontWeight: 500,
-    borderRadius: 30,
-    border: "none",
-    background: "#FEE2E2",
-    color: "#991B1B",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  deleteBtn: {
-    padding: "6px 16px",
-    fontSize: 12,
-    fontWeight: 500,
-    borderRadius: 30,
-    border: "none",
-    background: "#EF4444",
-    color: "white",
-    cursor: "pointer",
-    transition: "all 0.2s ease",
-  },
-  pagination: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "16px 24px",
-    borderTop: "1px solid #E2E8F0",
-    flexWrap: "wrap",
-    gap: 12,
-  },
-  paginationInfo: {
-    fontSize: 13,
-    color: "#64748B",
-  },
-  paginationControls: {
-    display: "flex",
-    gap: 8,
-    alignItems: "center",
-  },
-  perPageSelect: {
-    padding: "6px 10px",
-    border: "1px solid #E2E8F0",
-    borderRadius: 30,
-    fontSize: 13,
-    cursor: "pointer",
-    background: "white",
-  },
-  pageBtn: {
-    padding: "6px 12px",
-    border: "1px solid #E2E8F0",
-    background: "white",
-    borderRadius: 30,
-    cursor: "pointer",
-    fontSize: 13,
-    transition: "all 0.2s ease",
-  },
-  pageInfo: {
-    fontSize: 13,
-    color: "#475569",
-  },
-  modalOverlay: {
-    position: "fixed",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    background: "rgba(0,0,0,0.5)",
-    backdropFilter: "blur(4px)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    zIndex: 1000,
-  },
-  modalContent: {
-    background: "white",
-    borderRadius: 28,
-    maxWidth: 500,
-    width: "90%",
-    maxHeight: "80vh",
-    overflow: "auto",
-    boxShadow: "0 20px 40px rgba(0,0,0,0.2)",
-  },
-  modalHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "20px 24px",
-    borderBottom: "1px solid #E2E8F0",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: 600,
-    color: "#0F172A",
-    margin: 0,
-  },
-  modalClose: {
-    background: "none",
-    border: "none",
-    fontSize: 24,
-    cursor: "pointer",
-    color: "#94A3B8",
-    padding: "0 8px",
-  },
-  modalBody: {
-    padding: "24px",
-  },
-  modalJournalPreview: {
-    marginBottom: 16,
-  },
-  modalJournalText: {
-    background: "#F8FAFC",
-    padding: "12px",
-    borderRadius: 12,
-    fontSize: 14,
-    color: "#475569",
-    marginTop: 8,
-  },
-  articleList: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-    marginTop: 12,
-  },
-  articleItem: {
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-    padding: "12px 16px",
-    border: "1px solid #E2E8F0",
-    borderRadius: 12,
-  },
-  selectArticleBtn: {
-    padding: "6px 16px",
-    background: "#10B981",
-    color: "white",
-    border: "none",
-    borderRadius: 30,
-    cursor: "pointer",
-    fontSize: 12,
-    fontWeight: 500,
-  },
-  noArticles: {
-    textAlign: "center",
-    padding: "40px",
-    color: "#94A3B8",
-  },
+  filterSelect: { padding: "12px 20px", border: "1px solid #E2E8F0", borderRadius: 48, fontSize: 14, background: "white", cursor: "pointer" },
+  loading: { textAlign: "center", padding: "60px 24px", color: "#64748B", background: "white", borderRadius: 24, border: "1px solid #E2E8F0" },
+  spinner: { width: 40, height: 40, border: "3px solid #E2E8F0", borderTop: "3px solid #6366F1", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
+  emptyCard: { background: "white", padding: "60px 24px", borderRadius: 24, textAlign: 'center', border: '1px solid #E2E8F0' },
+  emptyIllustration: { fontSize: 64, marginBottom: 16 },
+  emptyText: { fontSize: 18, fontWeight: 500, color: "#1E293B", marginBottom: 8 },
+  emptySubtext: { fontSize: 13, color: "#94A3B8" },
+  journalList: { display: "flex", flexDirection: "column", gap: 16 },
+  journalCard: { background: "white", padding: "20px 24px", borderRadius: 20, border: "1px solid #E2E8F0", borderLeftWidth: 4, borderLeftStyle: "solid", transition: "all 0.2s ease" },
+  journalHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14, flexWrap: "wrap", gap: 10 },
+  moodBadge: { padding: "4px 14px", borderRadius: 30, fontSize: 12, fontWeight: 600 },
+  statusBadge: { padding: "4px 12px", borderRadius: 30, fontSize: 11, fontWeight: 500 },
+  journalMeta: { display: "flex", gap: 12 },
+  journalDate: { fontSize: 12, color: "#94A3B8" },
+  journalText: { fontSize: 14, color: "#334155", lineHeight: 1.55, marginBottom: 16 },
+  journalFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 },
+  userInfo: { display: "flex", alignItems: "center", gap: 10 },
+  userAvatar: { width: 32, height: 32, borderRadius: 32, background: "linear-gradient(135deg, #6366F1, #A855F7)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600 },
+  userName: { fontSize: 13, fontWeight: 500, color: "#1E293B" },
+  recommendBtn: { padding: "8px 20px", background: "#8B5CF6", color: "white", border: "none", borderRadius: 40, cursor: "pointer", fontSize: 12, fontWeight: 500, transition: "all 0.2s ease" },
+  actionButtons: { display: "flex", gap: 10, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid #F1F5F9" },
+  statusWarningBtn: { padding: "6px 16px", fontSize: 12, fontWeight: 500, borderRadius: 30, border: "none", background: "#FEF3C7", color: "#92400E", cursor: "pointer", transition: "all 0.2s ease" },
+  statusDangerBtn: { padding: "6px 16px", fontSize: 12, fontWeight: 500, borderRadius: 30, border: "none", background: "#FEE2E2", color: "#991B1B", cursor: "pointer", transition: "all 0.2s ease" },
+  deleteBtn: { padding: "6px 16px", fontSize: 12, fontWeight: 500, borderRadius: 30, border: "none", background: "#EF4444", color: "white", cursor: "pointer", transition: "all 0.2s ease" },
+  pagination: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 24px", borderTop: "1px solid #E2E8F0", flexWrap: "wrap", gap: 12 },
+  paginationInfo: { fontSize: 13, color: "#64748B" },
+  paginationControls: { display: "flex", gap: 8, alignItems: "center" },
+  perPageSelect: { padding: "6px 10px", border: "1px solid #E2E8F0", borderRadius: 30, fontSize: 13, cursor: "pointer", background: "white" },
+  pageBtn: { padding: "6px 12px", border: "1px solid #E2E8F0", background: "white", borderRadius: 30, cursor: "pointer", fontSize: 13, transition: "all 0.2s ease" },
+  pageInfo: { fontSize: 13, color: "#475569" },
+  modalOverlay: { position: "fixed", top: 0, left: 0, right: 0, bottom: 0, background: "rgba(0,0,0,0.5)", backdropFilter: "blur(4px)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 1000 },
+  modalContent: { background: "white", borderRadius: 28, maxWidth: 500, width: "90%", maxHeight: "80vh", overflow: "auto", boxShadow: "0 20px 40px rgba(0,0,0,0.2)" },
+  modalHeader: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "20px 24px", borderBottom: "1px solid #E2E8F0" },
+  modalTitle: { fontSize: 20, fontWeight: 600, color: "#0F172A", margin: 0 },
+  modalClose: { background: "none", border: "none", fontSize: 24, cursor: "pointer", color: "#94A3B8", padding: "0 8px" },
+  modalBody: { padding: "24px" },
+  modalJournalPreview: { marginBottom: 16 },
+  modalJournalText: { background: "#F8FAFC", padding: "12px", borderRadius: 12, fontSize: 14, color: "#475569", marginTop: 8 },
+  articleList: { display: "flex", flexDirection: "column", gap: 12, marginTop: 12 },
+  articleItem: { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "12px 16px", border: "1px solid #E2E8F0", borderRadius: 12 },
+  selectArticleBtn: { padding: "6px 16px", background: "#10B981", color: "white", border: "none", borderRadius: 30, cursor: "pointer", fontSize: 12, fontWeight: 500 },
+  noArticles: { textAlign: "center", padding: "40px", color: "#94A3B8" },
 };
 
-// CSS untuk animasi spinner
 const styleSheet = document.createElement("style");
 styleSheet.textContent = `
   @keyframes spin {
