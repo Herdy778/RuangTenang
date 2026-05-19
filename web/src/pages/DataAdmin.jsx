@@ -1,609 +1,586 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast, { Toaster } from "react-hot-toast";
+import API from "../utils/api";
 
 export default function DataAdmin() {
   const navigate = useNavigate();
 
-  const [admins, setAdmins] = useState([
-    {
-      id: 1,
-      nama: "Gusti Ayu Dhyananti",
-      email: "gusti@example.com",
-      role: "Super Admin",
-      status: "Aktif",
-    },
-    {
-      id: 2,
-      nama: "Budi Santoso",
-      email: "budi@example.com",
-      role: "Admin",
-      status: "Aktif",
-    },
-  ]);
+  const [admins, setAdmins] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [search, setSearch] = useState("");
-  const [isEdit, setIsEdit] = useState(false);
-  const [selectedId, setSelectedId] = useState(null);
+  // EDIT
+  const [editingAdmin, setEditingAdmin] = useState(null);
 
-  const [form, setForm] = useState({
-    nama: "",
+  const [editForm, setEditForm] = useState({
+    nama_lengkap: "",
     email: "",
-    password: "",
-    role: "Admin",
-    status: "Aktif",
   });
 
-  const filteredAdmins = useMemo(() => {
-    return admins.filter(
-      (admin) =>
-        admin.nama.toLowerCase().includes(search.toLowerCase()) ||
-        admin.email.toLowerCase().includes(search.toLowerCase())
-    );
-  }, [admins, search]);
+  useEffect(() => {
+    fetchAdmins();
+  }, []);
 
-  function handleChange(e) {
-    setForm({
-      ...form,
-      [e.target.name]: e.target.value,
-    });
-  }
+  async function fetchAdmins() {
+    try {
+      setLoading(true);
 
-  function resetForm() {
-    setForm({
-      nama: "",
-      email: "",
-      password: "",
-      role: "Admin",
-      status: "Aktif",
-    });
+      const res = await API.get("/admin/users");
 
-    setIsEdit(false);
-    setSelectedId(null);
-  }
+      const data = res.data.data || [];
 
-  function handleSubmit(e) {
-    e.preventDefault();
-
-    if (!form.nama || !form.email || !form.role) {
-      toast.error("Lengkapi semua data");
-      return;
-    }
-
-    if (isEdit) {
-      const updated = admins.map((admin) =>
-        admin.id === selectedId
-          ? {
-              ...admin,
-              nama: form.nama,
-              email: form.email,
-              role: form.role,
-              status: form.status,
-            }
-          : admin
+      const adminOnly = data.filter(
+        (user) => user.role === "admin"
       );
 
-      setAdmins(updated);
-      toast.success("Data admin berhasil diupdate");
-    } else {
-      const newAdmin = {
-        id: Date.now(),
-        nama: form.nama,
-        email: form.email,
-        role: form.role,
-        status: form.status,
-      };
-
-      setAdmins([...admins, newAdmin]);
-      toast.success("Admin berhasil ditambahkan");
+      setAdmins(adminOnly);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal memuat data admin");
+    } finally {
+      setLoading(false);
     }
-
-    resetForm();
   }
 
-  function handleEdit(admin) {
-    setIsEdit(true);
-    setSelectedId(admin.id);
-
-    setForm({
-      nama: admin.nama,
-      email: admin.email,
-      password: "",
-      role: admin.role,
-      status: admin.status,
-    });
-  }
-
-  function handleDelete(id) {
-    const confirmDelete = window.confirm("Yakin ingin menghapus admin?");
+  async function deleteAdmin(id) {
+    const confirmDelete = window.confirm(
+      "⚠️ Hapus admin ini?"
+    );
 
     if (!confirmDelete) return;
 
-    const filtered = admins.filter((admin) => admin.id !== id);
-    setAdmins(filtered);
+    try {
+      await API.delete(`/admin/users/${id}`);
 
-    toast.success("Admin berhasil dihapus");
+      toast.success("Admin berhasil dihapus");
+
+      fetchAdmins();
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal menghapus admin");
+    }
+  }
+
+  // BUKA MODAL EDIT
+  function openEditModal(admin) {
+    setEditingAdmin(admin);
+
+    setEditForm({
+      nama_lengkap: admin.nama_lengkap || "",
+      email: admin.email || "",
+    });
+  }
+
+  // SIMPAN EDIT
+  async function saveEdit() {
+    try {
+      await API.put(
+        `/admin/users/${editingAdmin._id}`,
+        editForm
+      );
+
+      toast.success("Data admin berhasil diupdate");
+
+      setEditingAdmin(null);
+
+      fetchAdmins();
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal update admin");
+    }
+  }
+
+  async function doLogout() {
+    try {
+      await API.post("/logout");
+    } catch (err) {
+      console.error(err);
+    } finally {
+      localStorage.removeItem("token");
+      localStorage.removeItem("user");
+
+      navigate("/");
+    }
   }
 
   return (
     <div style={styles.bg}>
       <Toaster position="top-right" />
 
+      {/* BACKGROUND */}
       <div style={styles.blob1} />
       <div style={styles.blob2} />
+      <div style={styles.blob3} />
 
       {/* NAVBAR */}
       <nav style={styles.nav}>
         <div style={styles.navLogo}>
-          <span style={styles.navLogoIcon}>🌿</span>
-          <span style={styles.navLogoText}>RuangTenang Admin</span>
+          <div style={styles.navLogoIcon}>🌿</div>
+          <span style={styles.navLogoText}>RuangTenang</span>
+          <span style={styles.navBadge}>Admin</span>
         </div>
 
         <div style={styles.navLinks}>
-  <span
-    style={styles.navLink}
-    onClick={() => navigate("/dashboard")}
-  >
-    Dashboard
-  </span>
+          <span
+            style={styles.navLink}
+            onClick={() => navigate("/dashboard")}
+          >
+            Dashboard
+          </span>
 
-  <span
-    style={styles.navLink}
-    onClick={() => navigate("/admin/users")}
-  >
-    Data User
-  </span>
+          <span
+            style={styles.navLink}
+            onClick={() => navigate("/admin/users")}
+          >
+            Data User
+          </span>
 
-  <span
-    style={styles.navLink}
-    onClick={() => navigate("/admin/journals")}
-  >
-    Data Jurnal
-  </span>
+          <span
+            style={styles.navLink}
+            onClick={() => navigate("/admin/journals")}
+          >
+            Data Jurnal
+          </span>
 
-  <span
-    style={styles.navLink}
-    onClick={() => navigate("/admin/articles")}
-  >
-    Artikel
-  </span>
+          <span
+            style={styles.navLink}
+            onClick={() => navigate("/admin/articles")}
+          >
+            Artikel
+          </span>
 
-  {/* ACTIVE */}
-  <span
-    style={{
-      ...styles.navLink,
-      ...styles.navLinkActive,
-    }}
-    onClick={() => navigate("/admin/data-admin")}
-  >
-    Data Admin
-  </span>
+          <span
+            style={{
+              ...styles.navLink,
+              ...styles.navLinkActive,
+            }}
+          >
+            Data Admin
+          </span>
 
-  <span
-    style={styles.navLink}
-    onClick={() => navigate("/profile")}
-  >
-    Profile
-  </span>
+          <span
+            style={styles.navLink}
+            onClick={() => navigate("/profile")}
+          >
+            Profil
+          </span>
+          
+          <span 
+            style={styles.navLink} 
+            onClick={() => navigate('/api-tester')}
+            >
+              🧪 API
+            </span>
 
-  <button style={styles.logoutBtn}>
-    Keluar
-  </button>
-</div>
+          <button
+            style={styles.logoutBtn}
+            onClick={doLogout}
+          >
+            Keluar
+          </button>
+        </div>
       </nav>
 
       {/* CONTENT */}
       <div style={styles.container}>
         <div style={styles.header}>
-          <h1 style={styles.title}>Admin Manajemen</h1>
-        </div>
+          <div>
+            <h1 style={styles.title}>
+              👑 Data Admin
+            </h1>
 
-        {/* CARD FORM */}
-        <div style={styles.card}>
-          <div style={styles.cardHeader}>
-            <h2 style={styles.cardTitle}>
-              {isEdit ? "Edit Admin" : "Tambah Admin"}
-            </h2>
+            <p style={styles.subtitle}>
+              Kelola seluruh admin RuangTenang
+            </p>
           </div>
 
-          <form onSubmit={handleSubmit} style={styles.formGrid}>
-            <div>
-              <label style={styles.label}>Nama Lengkap</label>
-
-              <input
-                type="text"
-                name="nama"
-                value={form.nama}
-                onChange={handleChange}
-                placeholder="Masukkan nama lengkap"
-                style={styles.input}
-              />
-            </div>
-
-            <div>
-              <label style={styles.label}>Email</label>
-
-              <input
-                type="email"
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                placeholder="Masukkan email"
-                style={styles.input}
-              />
-            </div>
-
-            <div>
-              <label style={styles.label}>Password</label>
-
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                placeholder="Masukkan password"
-                style={styles.input}
-              />
-            </div>
-
-            <div>
-              <label style={styles.label}>Role</label>
-
-              <select
-                name="role"
-                value={form.role}
-                onChange={handleChange}
-                style={styles.select}
-              >
-                <option value="Admin">👑 Admin</option>
-                <option value="Super Admin">⭐ Super Admin</option>
-              </select>
-            </div>
-
-            <div>
-              <label style={styles.label}>Status</label>
-
-              <select
-                name="status"
-                value={form.status}
-                onChange={handleChange}
-                style={styles.select}
-              >
-                <option value="Aktif">🟢 Aktif</option>
-                <option value="Nonaktif">🔴 Nonaktif</option>
-              </select>
-            </div>
-
-            <div style={styles.buttonWrapper}>
-              <button type="submit" style={styles.primaryBtn}>
-                {isEdit ? "Update Admin" : "Tambah Admin"}
-              </button>
-
-              <button
-                type="button"
-                style={styles.secondaryBtn}
-                onClick={resetForm}
-              >
-                Reset
-              </button>
-            </div>
-          </form>
+          <div style={styles.dateBadge}>
+            {new Date().toLocaleDateString("id-ID", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </div>
         </div>
 
-        {/* SEARCH */}
-        <div style={styles.searchWrapper}>
-          <input
-            type="text"
-            placeholder="🔍 Cari admin..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            style={styles.searchInput}
-          />
+        {/* STAT CARD */}
+        <div style={styles.statsGrid}>
+          <div style={styles.statCard}>
+            <div style={styles.statIcon}>👑</div>
+
+            <div style={styles.statNum}>
+              {admins.length}
+            </div>
+
+            <div style={styles.statLabel}>
+              Total Admin
+            </div>
+
+            <div style={styles.statTrend}>
+              Admin aktif RuangTenang
+            </div>
+          </div>
         </div>
 
         {/* TABLE */}
         <div style={styles.card}>
-          <table style={styles.table}>
-            <thead>
-              <tr>
-                <th style={styles.th}>No</th>
-                <th style={styles.th}>Nama</th>
-                <th style={styles.th}>Email</th>
-                <th style={styles.th}>Role</th>
-                <th style={styles.th}>Status</th>
-                <th style={styles.th}>Aksi</th>
-              </tr>
-            </thead>
+          {loading ? (
+            <div style={styles.loading}>
+              <div style={styles.spinner}></div>
 
-            <tbody>
-              {filteredAdmins.map((admin, index) => (
-                <tr key={admin.id}>
-                  <td style={styles.td}>{index + 1}</td>
-                  <td style={styles.td}>{admin.nama}</td>
-                  <td style={styles.td}>{admin.email}</td>
-
-                  <td style={styles.td}>
-                    <span
-                      style={{
-                        ...styles.badge,
-                        background:
-                          admin.role === "Super Admin"
-                            ? "#FEF3C7"
-                            : "#EDE9FE",
-                        color:
-                          admin.role === "Super Admin"
-                            ? "#92400E"
-                            : "#7C3AED",
-                      }}
-                    >
-                      {admin.role}
-                    </span>
-                  </td>
-
-                  <td style={styles.td}>
-                    <span
-                      style={{
-                        ...styles.badge,
-                        background:
-                          admin.status === "Aktif"
-                            ? "#F0FDF4"
-                            : "#FEF2F2",
-                        color:
-                          admin.status === "Aktif"
-                            ? "#166534"
-                            : "#DC2626",
-                      }}
-                    >
-                      {admin.status}
-                    </span>
-                  </td>
-
-                  <td style={styles.td}>
-                    <div style={styles.actionWrapper}>
-                      <button
-                        type="button"
-                        style={styles.editBtn}
-                        onClick={() => handleEdit(admin)}
-                      >
-                        ✏️ Edit
-                      </button>
-
-                      <button
-                        type="button"
-                        style={styles.deleteBtn}
-                        onClick={() => handleDelete(admin.id)}
-                      >
-                        🗑️ Hapus
-                      </button>
-                    </div>
-                  </td>
+              <p>Memuat data admin...</p>
+            </div>
+          ) : (
+            <table style={styles.table}>
+              <thead>
+                <tr style={styles.theadRow}>
+                  <th style={styles.thNo}>No</th>
+                  <th style={styles.th}>Nama</th>
+                  <th style={styles.th}>Email</th>
+                  <th style={styles.th}>Role</th>
+                  <th style={styles.thAksi}>Aksi</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {admins.map((admin, i) => (
+                  <tr
+                    key={admin._id}
+                    style={styles.tr}
+                  >
+                    <td style={styles.tdNo}>
+                      {i + 1}
+                    </td>
+
+                    <td style={styles.td}>
+                      <div style={styles.userCell}>
+                        <div style={styles.avatar}>
+                          👤
+                        </div>
+
+                        <div>
+                          <div style={styles.userName}>
+                            {admin.nama_lengkap}
+                          </div>
+
+                          <div style={styles.userSub}>
+                            Administrator
+                          </div>
+                        </div>
+                      </div>
+                    </td>
+
+                    <td style={styles.td}>
+                      {admin.email}
+                    </td>
+
+                    <td style={styles.td}>
+                      <span style={styles.badge}>
+                        👑 Admin
+                      </span>
+                    </td>
+
+                    <td style={styles.tdAksi}>
+                      <div style={styles.actionWrapper}>
+                        <button
+                          style={styles.editBtn}
+                          onClick={() =>
+                            openEditModal(admin)
+                          }
+                        >
+                          ✏️ Edit
+                        </button>
+
+                        <button
+                          style={styles.deleteBtn}
+                          onClick={() =>
+                            deleteAdmin(admin._id)
+                          }
+                        >
+                          🗑️ Hapus
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
+
+      {/* MODAL EDIT */}
+      {editingAdmin && (
+        <div style={styles.modalOverlay}>
+          <div style={styles.modal}>
+            <h2 style={styles.modalTitle}>
+              ✏️ Edit Admin
+            </h2>
+
+            <input
+              style={styles.input}
+              placeholder="Nama lengkap"
+              value={editForm.nama_lengkap}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  nama_lengkap:
+                    e.target.value,
+                })
+              }
+            />
+
+            <input
+              style={styles.input}
+              placeholder="Email"
+              value={editForm.email}
+              onChange={(e) =>
+                setEditForm({
+                  ...editForm,
+                  email: e.target.value,
+                })
+              }
+            />
+
+            <div style={styles.modalActions}>
+              <button
+                style={styles.cancelBtn}
+                onClick={() =>
+                  setEditingAdmin(null)
+                }
+              >
+                Batal
+              </button>
+
+              <button
+                style={styles.saveBtn}
+                onClick={saveEdit}
+              >
+                Simpan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 const styles = {
   bg: {
-    minHeight: "100vh",
-    background: "#FAFAFA",
-    fontFamily: "'DM Sans', sans-serif",
-  },
+  minHeight: "100vh",
+  background: "#F8FAFC",
+  fontFamily: "'Inter', 'DM Sans', system-ui, sans-serif",
+  position: "relative",
+  overflowX: "hidden",
+},
 
   blob1: {
     position: "fixed",
-    width: 600,
-    height: 600,
+    width: "50vw",
+    height: "50vw",
     borderRadius: "50%",
-    background: "#C4B5FD",
-    filter: "blur(100px)",
-    opacity: 0.2,
-    top: -200,
-    right: -200,
+    background: "#818CF8",
+    filter: "blur(120px)",
+    opacity: 0.12,
+    top: "-20vh",
+    right: "-10vw",
+    pointerEvents: "none",
+    zIndex: 0,
   },
 
   blob2: {
     position: "fixed",
-    width: 400,
-    height: 400,
+    width: "40vw",
+    height: "40vw",
     borderRadius: "50%",
     background: "#34D399",
-    filter: "blur(80px)",
-    opacity: 0.15,
-    bottom: -100,
-    left: -100,
+    filter: "blur(100px)",
+    opacity: 0.08,
+    bottom: "-10vh",
+    left: "-10vw",
+    pointerEvents: "none",
+    zIndex: 0,
+  },
+
+  blob3: {
+    position: "fixed",
+    width: "30vw",
+    height: "30vw",
+    borderRadius: "50%",
+    background: "#F472B6",
+    filter: "blur(100px)",
+    opacity: 0.07,
+    bottom: "30vh",
+    right: "20vw",
+    pointerEvents: "none",
+    zIndex: 0,
   },
 
   nav: {
     position: "sticky",
     top: 0,
-    background: "rgba(255,255,255,0.85)",
-    backdropFilter: "blur(20px)",
-    borderBottom: "1px solid #F4F4F5",
-    padding: "0 40px",
+    background:
+      "rgba(255,255,255,0.92)",
+    backdropFilter: "blur(12px)",
+    borderBottom: "1px solid #E2E8F0",
+    padding: "0 32px",
     display: "flex",
     alignItems: "center",
     justifyContent: "space-between",
-    height: 64,
+    height: 70,
     zIndex: 100,
   },
 
   navLogo: {
     display: "flex",
     alignItems: "center",
-    gap: 8,
+    gap: 10,
   },
 
   navLogoIcon: {
-    fontSize: 22,
+  fontSize: 26,
+  background: "linear-gradient(135deg, #6366F1, #A855F7)",
+  width: 38,
+  height: 38,
+  borderRadius: 12,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
   },
 
   navLogoText: {
-    fontFamily: "Georgia, serif",
-    fontSize: 18,
-    fontWeight: 500,
-    color: "#18181B",
+  fontFamily: "'Inter', sans-serif",
+  fontSize: 18,
+  fontWeight: 700,
+  background: "linear-gradient(135deg, #1E293B, #3B82F6)",
+  WebkitBackgroundClip: "text",
+  WebkitTextFillColor: "transparent",
+  backgroundClip: "text",
+  },
+
+  navBadge: {
+  fontSize: 11,
+  background: "#EDE9FE",
+  padding: "2px 10px",
+  borderRadius: 20,
+  color: "#7C3AED",
+  fontWeight: 500,
   },
 
   navLinks: {
     display: "flex",
-    gap: 8,
+    gap: 6,
     alignItems: "center",
   },
 
   navLink: {
-    padding: "8px 16px",
-    borderRadius: 8,
-    fontSize: 14,
-    color: "#52525B",
-    cursor: "pointer",
-  },
+  padding: "8px 18px",
+  borderRadius: 40,
+  fontSize: 14,
+  fontWeight: 500,
+  color: "#475569",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+},
 
   navLinkActive: {
-    background: "#EDE9FE",
-    color: "#7C3AED",
-    fontWeight: 500,
+    background: "#EEF2FF",
+    color: "#4F46E5",
+    fontWeight: 600,
   },
 
   logoutBtn: {
-    marginLeft: 8,
-    padding: "8px 16px",
-    background: "transparent",
-    border: "1px solid #E4E4E7",
-    borderRadius: 8,
-    fontSize: 14,
-    color: "#52525B",
-    cursor: "pointer",
-  },
+  marginLeft: 8,
+  padding: "8px 20px",
+  background: "transparent",
+  border: "1px solid #E2E8F0",
+  borderRadius: 40,
+  fontSize: 14,
+  fontWeight: 500,
+  color: "#EF4444",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+},
 
   container: {
-    maxWidth: 1000,
+    maxWidth: 1200,
     margin: "0 auto",
-    padding: "40px 24px",
+    padding: "32px 24px",
+    position: "relative",
+    zIndex: 1,
   },
 
   header: {
-    marginBottom: 24,
-  },
-
-  title: {
-    fontSize: 42,
-    fontWeight: 700,
-    color: "#18181B",
-    marginBottom: 6,
-  },
-
-  subtitle: {
-    fontSize: 14,
-    color: "#71717A",
-  },
-
-  card: {
-    background: "white",
-    borderRadius: 20,
-    border: "1px solid #F4F4F5",
-    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
-    overflow: "hidden",
-    marginBottom: 24,
-  },
-
-  cardHeader: {
-    padding: "24px 28px",
-    borderBottom: "1px solid #F4F4F5",
+    marginBottom: 32,
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
   },
 
-  cardTitle: {
-    fontSize: 24,
+  title: {
+    fontSize: 28,
     fontWeight: 700,
-    color: "#18181B",
+    color: "#0F172A",
   },
 
-  formGrid: {
-    padding: 28,
-    display: "grid",
-    gridTemplateColumns: "repeat(2, 1fr)",
-    gap: 20,
-  },
-
-  label: {
-    display: "block",
-    marginBottom: 8,
+  subtitle: {
     fontSize: 14,
-    fontWeight: 500,
-    color: "#52525B",
+    color: "#64748B",
   },
 
-  input: {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: 12,
-    border: "1px solid #E4E4E7",
-    background: "#FAFAFA",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
-  },
-
-  select: {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: 12,
-    border: "1px solid #E4E4E7",
-    background: "#FAFAFA",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
-    cursor: "pointer",
-  },
-
-  buttonWrapper: {
-    display: "flex",
-    gap: 12,
-    alignItems: "end",
-  },
-
-  primaryBtn: {
-    padding: "12px 20px",
-    background: "#7C3AED",
-    color: "white",
-    border: "none",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 500,
-  },
-
-  secondaryBtn: {
-    padding: "12px 20px",
+  dateBadge: {
+    fontSize: 13,
     background: "white",
-    color: "#52525B",
-    border: "1px solid #E4E4E7",
-    borderRadius: 10,
-    cursor: "pointer",
-    fontSize: 14,
-    fontWeight: 500,
+    padding: "8px 18px",
+    borderRadius: 40,
+    border: "1px solid #E2E8F0",
   },
 
-  searchWrapper: {
-    marginBottom: 20,
+ statsGrid: {
+  display: "grid",
+  gridTemplateColumns: "1fr",
+  gap: 20,
+  marginBottom: 32,
+},
+
+  statCard: {
+  width: "100%",
+  background: "linear-gradient(135deg, #6366F1, #818CF8)",
+  padding: "28px 32px",
+  borderRadius: 24,
+  border: "1px solid #E2E8F0",
+  boxShadow: "0 4px 12px rgba(0,0,0,0.02)",
+  transition: "all 0.2s ease",
+  color: "white",
+},
+
+  statIcon: {
+    fontSize: 28,
+    marginBottom: 12,
   },
 
-  searchInput: {
-    width: "100%",
-    padding: "14px 16px",
-    borderRadius: 12,
-    border: "1px solid #E4E4E7",
-    background: "#FAFAFA",
-    fontSize: 14,
-    outline: "none",
-    boxSizing: "border-box",
+  statNum: {
+    fontSize: 34,
+    fontWeight: 800,
+  },
+
+  statLabel: {
+    marginTop: 6,
+  },
+
+  statTrend: {
+    fontSize: 12,
+    marginTop: 10,
+    opacity: 0.8,
+  },
+
+  card: {
+    background: "white",
+    borderRadius: 24,
+    overflow: "hidden",
+    border: "1px solid #E2E8F0",
   },
 
   table: {
@@ -611,53 +588,203 @@ const styles = {
     borderCollapse: "collapse",
   },
 
+  theadRow: {
+    background: "#F8FAFC",
+  },
+
   th: {
-    textAlign: "left",
-    padding: "16px 20px",
-    fontSize: 13,
-    color: "#71717A",
-    borderBottom: "1px solid #F4F4F5",
-    fontWeight: 600,
+  textAlign: "left",
+  padding: "16px 20px",
+  fontSize: 13,
+  fontWeight: 600,
+  color: "#475569",
+  borderBottom: "1px solid #E2E8F0",
+},
+
+  thNo: {
+    width: 70,
+    textAlign: "center",
+  },
+
+  thAksi: {
+    width: 220,
+    textAlign: "center",
   },
 
   td: {
-    padding: "16px 20px",
-    fontSize: 14,
-    color: "#18181B",
-    borderBottom: "1px solid #F4F4F5",
+  padding: "16px 20px",
+  fontSize: 14,
+  color: "#1E293B",
+  borderBottom: "1px solid #F1F5F9",
+},
+
+  tdNo: {
+    textAlign: "center",
+    borderBottom: "1px solid #F1F5F9",
+  },
+
+  tdAksi: {
+    textAlign: "center",
+    borderBottom: "1px solid #F1F5F9",
+    position: "relative",
+    zIndex: 2,
+  },
+
+  tr: {
+    position: "relative",
+  },
+
+  userCell: {
+    display: "flex",
+    alignItems: "center",
+    gap: 12,
+  },
+
+  avatar: {
+    width: 46,
+    height: 46,
+    borderRadius: "50%",
+    background: "#EEF2FF",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  userName: {
+    fontWeight: 600,
+  },
+
+  userSub: {
+    fontSize: 12,
+    color: "#94A3B8",
   },
 
   badge: {
     padding: "6px 14px",
-    borderRadius: 20,
-    fontSize: 13,
-    fontWeight: 500,
+    borderRadius: 30,
+    background: "#FEF3C7",
+    color: "#92400E",
+    fontSize: 12,
+    fontWeight: 600,
   },
 
   actionWrapper: {
     display: "flex",
     gap: 10,
+    justifyContent: "center",
   },
 
   editBtn: {
-    padding: "8px 14px",
-    borderRadius: 10,
-    border: "1px solid #E4E4E7",
-    background: "white",
-    color: "#52525B",
-    cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 500,
+  padding: "6px 16px",
+  fontSize: 12,
+  borderRadius: 30,
+  border: "1px solid #BFDBFE",
+  background: "#EFF6FF",
+  color: "#2563EB",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+},
+
+ deleteBtn: {
+  padding: "6px 16px",
+  fontSize: 12,
+  borderRadius: 30,
+  border: "1px solid #FECACA",
+  background: "#FEF2F2",
+  color: "#DC2626",
+  cursor: "pointer",
+  transition: "all 0.2s ease",
+},
+
+  loading: {
+    padding: 50,
+    textAlign: "center",
   },
 
-  deleteBtn: {
-    padding: "8px 14px",
-    borderRadius: 10,
-    border: "1px solid #FECACA",
-    background: "#FEF2F2",
-    color: "#DC2626",
+  spinner: {
+    width: 40,
+    height: 40,
+    border:
+      "3px solid #E2E8F0",
+    borderTop:
+      "3px solid #6366F1",
+    borderRadius: "50%",
+    margin: "0 auto 16px",
+    animation:
+      "spin 1s linear infinite",
+  },
+
+  modalOverlay: {
+    position: "fixed",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    background:
+      "rgba(0,0,0,0.4)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: 9999,
+  },
+
+  modal: {
+    background: "white",
+    padding: 28,
+    borderRadius: 24,
+    width: 400,
+  },
+
+  modalTitle: {
+    marginBottom: 20,
+  },
+
+  input: {
+    width: "100%",
+    padding: 12,
+    borderRadius: 12,
+    border: "1px solid #E2E8F0",
+    marginBottom: 16,
+    fontSize: 14,
+  },
+
+  modalActions: {
+    display: "flex",
+    justifyContent: "flex-end",
+    gap: 10,
+  },
+
+  cancelBtn: {
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "1px solid #E2E8F0",
+    background: "white",
     cursor: "pointer",
-    fontSize: 13,
-    fontWeight: 500,
+  },
+
+  saveBtn: {
+    padding: "10px 16px",
+    borderRadius: 12,
+    border: "none",
+    background: "#4F46E5",
+    color: "white",
+    cursor: "pointer",
   },
 };
+
+const styleSheet =
+  document.createElement("style");
+
+styleSheet.textContent = `
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+`;
+
+document.head.appendChild(styleSheet);
