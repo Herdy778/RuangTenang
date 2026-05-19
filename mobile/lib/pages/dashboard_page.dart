@@ -1502,7 +1502,6 @@ Widget _buildRecommendedArticles(BuildContext context) {
                 ),
               ),
             );
-<<<<<<< HEAD
           }).toList(),
 
           // Jika masih ada lebih dari 3, tampilkan info ringkas
@@ -1560,9 +1559,6 @@ Widget _buildRecommendedArticles(BuildContext context) {
                 ),
               ),
             ),
-=======
-          }),
->>>>>>> 718bb58dc1cb56df906eaeb46bab3a01ba789cb1
         ],
       );
     },

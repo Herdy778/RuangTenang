@@ -294,26 +294,7 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     return;
   }
 
-<<<<<<< HEAD
   final String detectedMood = _detectMoodCategory(text);
-=======
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('token') ?? '';
-
-      final response = await http.post(
-        Uri.parse(apiUrl),
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json",
-          "Authorization": "Bearer $token",
-        },
-        body: jsonEncode({
-          "message": text,
-          "lang": langNotifier.currentLanguage
-        }),
-      );
->>>>>>> 718bb58dc1cb56df906eaeb46bab3a01ba789cb1
 
   setState(() {
     _messages.add({
