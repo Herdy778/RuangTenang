@@ -2,6 +2,7 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
@@ -413,7 +414,7 @@ class _DashboardPageState extends State<DashboardPage>
     int animIndex = 0;
 
     return Scaffold(
-      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           RepaintBoundary(child: _buildAnimatedBlobs()),
@@ -965,67 +966,77 @@ class _DashboardPageState extends State<DashboardPage>
     return Expanded(
       child: GestureDetector(
         onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
-          decoration: isPrimary
-              ? BoxDecoration(
-                  gradient: AppGradients.primaryButton,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withOpacity(0.3),
-                      offset: const Offset(0, 4),
-                      blurRadius: 10,
-                    ),
-                  ],
-                )
-              : AppDecorations.card.copyWith(
-                  color: isDark
-                      ? AppColors.cardBackgroundDark
-                      : AppColors.cardBackground,
-                  border: Border.all(
-                    color: isDark
-                        ? AppColors.cardBorderDark
-                        : AppColors.cardBorder,
-                    width: 1,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+        decoration: isPrimary
+            ? BoxDecoration(
+                gradient: AppGradients.primaryButton,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.primary.withOpacity(0.3),
+                    offset: const Offset(0, 4),
+                    blurRadius: 10,
                   ),
-                  borderRadius: BorderRadius.circular(16),
+                ],
+              )
+            : AppDecorations.card.copyWith(
+                color: isDark
+                    ? AppColors.cardBackgroundDark
+                    : AppColors.cardBackground,
+                border: Border.all(
+                  color: isDark
+                      ? AppColors.cardBorderDark
+                      : AppColors.cardBorder,
+                  width: 1,
                 ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
+                borderRadius: BorderRadius.circular(16),
+              ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              style: TextStyle(
+                fontFamily: 'Georgia',
+                fontWeight: FontWeight.w600,
+                fontSize: 22,
+                color: isPrimary
+                    ? Colors.white
+                    : (isDark
+                        ? AppColors.textPrimaryDark
+                        : AppColors.textPrimary),
+              ),
+              child: Text(
                 value,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontFamily: 'Georgia',
-                  fontWeight: FontWeight.w600,
-                  fontSize: 22,
-                  color: isPrimary
-                      ? Colors.white
-                      : (isDark
-                          ? AppColors.textPrimaryDark
-                          : AppColors.textPrimary),
-                ),
               ),
-              const SizedBox(height: 8),
-              Text(
+            ),
+            const SizedBox(height: 8),
+            AnimatedDefaultTextStyle(
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeInOut,
+              style: AppTextStyles.caption.copyWith(
+                color: isPrimary
+                    ? Colors.white.withOpacity(0.9)
+                    : (isDark
+                        ? AppColors.textMutedDark
+                        : AppColors.textMuted),
+                fontWeight: FontWeight.w500,
+              ),
+              child: Text(
                 title,
                 textAlign: TextAlign.center,
-                style: AppTextStyles.caption.copyWith(
-                  color: isPrimary
-                      ? Colors.white.withOpacity(0.9)
-                      : (isDark
-                          ? AppColors.textMutedDark
-                          : AppColors.textMuted),
-                  fontWeight: FontWeight.w500,
-                ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
+      ),
       ),
     );
   }
@@ -1033,7 +1044,9 @@ class _DashboardPageState extends State<DashboardPage>
   Widget _buildCTACard() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final langNotifier = Provider.of<LanguageNotifier>(context);
-    return Container(
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOut,
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
       decoration: AppDecorations.ctaCard(isDark),
@@ -1043,21 +1056,25 @@ class _DashboardPageState extends State<DashboardPage>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  langNotifier.translate('start_journal'),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
                   style: AppTextStyles.titleLG.copyWith(
                     color:
                         isDark ? AppColors.primaryLight : AppColors.primary,
                   ),
+                  child: Text(langNotifier.translate('start_journal')),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  langNotifier.translate('journal_desc'),
+                AnimatedDefaultTextStyle(
+                  duration: const Duration(milliseconds: 500),
+                  curve: Curves.easeInOut,
                   style: AppTextStyles.bodySM.copyWith(
                     color: isDark
                         ? AppColors.textSecondaryDark
                         : AppColors.textSecondary,
                   ),
+                  child: Text(langNotifier.translate('journal_desc')),
                 ),
               ],
             ),

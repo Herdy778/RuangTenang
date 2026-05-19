@@ -517,7 +517,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       dropdownColor: isDark ? AppColors.cardBackgroundDark : Colors.white,
       items: options
           .map((opt) => DropdownMenuItem(
