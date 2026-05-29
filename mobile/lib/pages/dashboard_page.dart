@@ -2,7 +2,6 @@ import 'dart:ui';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_html/flutter_html.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../theme/language_notifier.dart';
@@ -16,7 +15,7 @@ class DashboardPage extends StatefulWidget {
   @override
   State<DashboardPage> createState() => _DashboardPageState();
 }
-
+ 
 String _stripHtml(String htmlText) {
   return htmlText
       .replaceAll(RegExp(r'<[^>]*>'), '')
@@ -177,6 +176,185 @@ class _AllRecommendedArticlesPageState
                     article['isi_konten'] ?? '',
                   );
                 },
+              );
+            },
+          );
+        },
+      ),
+    );
+  }
+}
+
+class AllJournalEntriesPage extends StatefulWidget {
+  const AllJournalEntriesPage({super.key});
+
+  @override
+  State<AllJournalEntriesPage> createState() => _AllJournalEntriesPageState();
+}
+
+class _AllJournalEntriesPageState extends State<AllJournalEntriesPage> {
+  late Future<List<dynamic>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = ApiService().fetchRecentJournals(limit: 100); // ambil semua
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final langNotifier = Provider.of<LanguageNotifier>(context);
+
+    return Scaffold(
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: Text(
+          langNotifier.translate('recent_journal'),
+          style: AppTextStyles.titleMD.copyWith(
+            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+          ),
+        ),
+        iconTheme: IconThemeData(
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+        ),
+      ),
+      body: FutureBuilder<List<dynamic>>(
+        future: _future,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError ||
+              !snapshot.hasData ||
+              snapshot.data!.isEmpty) {
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(32),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.book_outlined,
+                      size: 64,
+                      color: isDark
+                          ? AppColors.textMutedDark
+                          : AppColors.textMuted,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      langNotifier.translate('no_recent_journal'),
+                      textAlign: TextAlign.center,
+                      style: AppTextStyles.bodyMD.copyWith(
+                        color: isDark
+                            ? AppColors.textMutedDark
+                            : AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
+          final entries = snapshot.data!;
+          return ListView.builder(
+            padding: const EdgeInsets.all(20),
+            itemCount: entries.length,
+            itemBuilder: (context, index) {
+              final entry = entries[index];
+              final mood = entry['hasil_mood'] ?? 'Netral';
+              final teks = entry['teks_curhat'] ?? '-';
+              final tanggal = entry['tanggal'] ?? entry['created_at'] ?? '';
+              String dateLabel = tanggal;
+              try {
+                final dt = DateTime.parse(tanggal.toString()).toLocal();
+                final now = DateTime.now();
+                final diff = now.difference(dt).inDays;
+                final timeStr =
+                    '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+                if (diff == 0) {
+                  dateLabel = '${langNotifier.translate('today')}, $timeStr';
+                } else if (diff == 1) {
+                  dateLabel = '${langNotifier.translate('yesterday')}, $timeStr';
+                } else {
+                  dateLabel = '${dt.day}/${dt.month}/${dt.year}';
+                }
+              } catch (_) {}
+
+              final moodStyle = AppMoodColors.of(mood);
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: AppDecorations.card.copyWith(
+                  color: isDark
+                      ? AppColors.cardBackgroundDark
+                      : AppColors.cardBackground,
+                  border: Border.all(
+                    color: isDark
+                        ? AppColors.cardBorderDark
+                        : AppColors.cardBorder,
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: moodStyle.background,
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                moodStyle.emoji,
+                                style: const TextStyle(fontSize: 12),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                mood,
+                                style: AppTextStyles.label.copyWith(
+                                  color: moodStyle.textColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          dateLabel,
+                          style: AppTextStyles.caption.copyWith(
+                            color: isDark
+                                ? AppColors.textMutedDark
+                                : AppColors.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      teks,
+                      style: AppTextStyles.bodyMD.copyWith(
+                        color: isDark
+                            ? AppColors.textSecondaryDark
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                  ],
+                ),
               );
             },
           );
@@ -822,75 +1000,94 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildHeader() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langNotifier = Provider.of<LanguageNotifier>(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: AppColors.primaryBorder,
-                image: _profileImageUrl != null &&
-                        _profileImageUrl!.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(_profileImageUrl!),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
-              ),
-              child: _profileImageUrl == null || _profileImageUrl!.isEmpty
-                  ? const Icon(Icons.person,
-                      color: AppColors.primary, size: 32)
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final langNotifier = Provider.of<LanguageNotifier>(context);
+  
+  // Greeting berdasarkan jam
+  final hour = DateTime.now().hour;
+  String greetingKey;
+  if (hour >= 5 && hour < 12) {
+    greetingKey = 'good_morning';
+  } else if (hour >= 12 && hour < 15) {
+    greetingKey = 'good_afternoon';
+  } else if (hour >= 15 && hour < 19) {
+    greetingKey = 'good_evening';
+  } else {
+    greetingKey = 'good_night';
+  }
+
+  // Format tanggal hari ini
+  final now = DateTime.now();
+  final months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  final dateStr = '${now.day} ${months[now.month - 1]} ${now.year}';
+
+  return Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Row(
+        children: [
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: AppColors.primaryBorder,
+              image: _profileImageUrl != null && _profileImageUrl!.isNotEmpty
+                  ? DecorationImage(
+                      image: NetworkImage(_profileImageUrl!),
+                      fit: BoxFit.cover,
+                    )
                   : null,
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  RichText(
-                    text: TextSpan(
-                      style: AppTextStyles.headingMD.copyWith(
-                        color: isDark
-                            ? AppColors.textPrimaryDark
-                            : AppColors.textPrimary,
-                      ),
-                      children: [
-                        TextSpan(
-                            text: "${langNotifier.translate('welcome')},\n"),
-                        TextSpan(
-                          text: userName,
-                          style: AppTextStyles.headingMD.copyWith(
-                            fontStyle: FontStyle.italic,
-                            color: AppColors.primary,
-                          ),
+            child: _profileImageUrl == null || _profileImageUrl!.isEmpty
+                ? const Icon(Icons.person, color: AppColors.primary, size: 32)
+                : null,
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  dateStr,
+                  style: AppTextStyles.caption.copyWith(
+                    color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                RichText(
+                  text: TextSpan(
+                    style: AppTextStyles.headingMD.copyWith(
+                      color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
+                    ),
+                    children: [
+                      TextSpan(text: "${langNotifier.translate(greetingKey)},\n"),
+                      TextSpan(
+                        text: userName,
+                        style: AppTextStyles.headingMD.copyWith(
+                          fontStyle: FontStyle.italic,
+                          color: AppColors.primary,
                         ),
-                        const TextSpan(text: " 👋"),
-                      ],
-                    ),
+                      ),
+                      const TextSpan(text: " 👋"),
+                    ],
                   ),
-                  const SizedBox(height: 4),
-                  Text(
-                    langNotifier.translate('how_feel'),
-                    style: AppTextStyles.bodyMD.copyWith(
-                      color: isDark
-                          ? AppColors.textMutedDark
-                          : AppColors.textMuted,
-                    ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  langNotifier.translate('how_feel'),
+                  style: AppTextStyles.bodyMD.copyWith(
+                    color: isDark ? AppColors.textMutedDark : AppColors.textMuted,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ],
-    );
-  }
+          ),
+        ],
+      ),
+    ],
+  );
+}
 
   Widget _buildStatsGrid() {
     final langNotifier = Provider.of<LanguageNotifier>(context);
@@ -998,25 +1195,24 @@ class _DashboardPageState extends State<DashboardPage>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 500),
-              curve: Curves.easeInOut,
-              style: TextStyle(
-                fontFamily: 'Georgia',
-                fontWeight: FontWeight.w600,
-                fontSize: 22,
-                color: isPrimary
-                    ? Colors.white
-                    : (isDark
-                        ? AppColors.textPrimaryDark
-                        : AppColors.textPrimary),
-              ),
-              child: Text(
-                value,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                textAlign: TextAlign.center,
-              ),
-            ),
+  duration: const Duration(milliseconds: 500),
+  curve: Curves.easeInOut,
+  style: TextStyle(
+    fontFamily: 'Georgia',
+    fontWeight: FontWeight.w600,
+    // Kurangi font size jika teks panjang
+    fontSize: value.length > 7 ? 14 : 22,
+    color: isPrimary
+        ? Colors.white
+        : (isDark ? AppColors.textPrimaryDark : AppColors.textPrimary),
+  ),
+  child: Text(
+    value,
+    maxLines: 2,              // izinkan 2 baris
+    overflow: TextOverflow.ellipsis,
+    textAlign: TextAlign.center,
+  ),
+),
             const SizedBox(height: 8),
             AnimatedDefaultTextStyle(
               duration: const Duration(milliseconds: 500),
@@ -1107,28 +1303,35 @@ class _DashboardPageState extends State<DashboardPage>
   }
 
   Widget _buildRecentEntriesTitle() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final langNotifier = Provider.of<LanguageNotifier>(context);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Text(
-          langNotifier.translate('recent_journal'),
-          style: AppTextStyles.titleMD.copyWith(
-            color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
-          ),
+  final isDark = Theme.of(context).brightness == Brightness.dark;
+  final langNotifier = Provider.of<LanguageNotifier>(context);
+  return Row(
+    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    crossAxisAlignment: CrossAxisAlignment.end,
+    children: [
+      Text(
+        langNotifier.translate('recent_journal'),
+        style: AppTextStyles.titleMD.copyWith(
+          color: isDark ? AppColors.textPrimaryDark : AppColors.textPrimary,
         ),
-        GestureDetector(
-          onTap: () => widget.onNavigateToJournal?.call(null),
-          child: Text(
-            langNotifier.translate('see_all'),
-            style: AppTextStyles.label.copyWith(color: AppColors.primary),
-          ),
+      ),
+      GestureDetector(
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => const AllJournalEntriesPage(),
+            ),
+          );
+        },
+        child: Text(
+          langNotifier.translate('see_all'),
+          style: AppTextStyles.label.copyWith(color: AppColors.primary),
         ),
-      ],
-    );
-  }
+      ),
+    ],
+  );
+}
 
   Widget _buildRecentList() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -1618,35 +1821,32 @@ class _MoodBarChartState extends State<MoodBarChart> {
   int? _selectedIndex;
 
   List<Map<String, dynamic>> get _parsedData {
-    var reversedData = widget.data.reversed.toList();
-    return reversedData.map((item) {
-      String dayStr = "-";
-      var dateRaw = item['tanggal'] ?? item['created_at'];
-      if (dateRaw != null) {
-        try {
-          DateTime dt = DateTime.parse(dateRaw.toString());
-          const indonesianDays = ["", "S", "S", "R", "K", "J", "S", "M"];
-          if (dt.weekday >= 1 && dt.weekday <= 7) {
-            dayStr = indonesianDays[dt.weekday];
-          }
-        } catch (e) {
-          dayStr = "?";
-        }
+  var reversedData = widget.data.reversed.toList();
+  return reversedData.map((item) {
+    String dayStr = "-";
+    var dateRaw = item['tanggal'] ?? item['created_at'];
+    if (dateRaw != null) {
+      try {
+        DateTime dt = DateTime.parse(dateRaw.toString());
+        // Tampilkan tanggal angka (lebih jelas dari singkatan hari)
+        dayStr = '${dt.day}';
+      } catch (e) {
+        dayStr = "?";
       }
+    }
 
-      int level = 3;
-      if (item['score'] != null) {
-        level = int.tryParse(item['score'].toString()) ?? 3;
-      }
+    int level = 3;
+    if (item['score'] != null) {
+      level = int.tryParse(item['score'].toString()) ?? 3;
+    }
 
-      String mood =
-          item['mood']?.toString() ??
-          item['hasil_mood']?.toString() ??
-          "Netral";
+    String mood = item['mood']?.toString() ??
+        item['hasil_mood']?.toString() ??
+        "Netral";
 
-      return {"day": dayStr, "level": level, "mood": mood};
-    }).toList();
-  }
+    return {"day": dayStr, "level": level, "mood": mood};
+  }).toList();
+}
 
   Color _getBarColor(int level) {
     switch (level) {

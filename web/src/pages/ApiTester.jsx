@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-const BASE_URL = "http://192.168.0.207:8000/api";
+const BASE_URL = "http://192.168.0.203:8000/api";
 
 const METHODS = ["GET", "POST", "PUT", "DELETE"];
 

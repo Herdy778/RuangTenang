@@ -372,70 +372,107 @@ class JournalController extends Controller
     // FIX: Pakai attributes->get('auth_user') konsisten dengan middleware
     // =========================
     public function tesAi(Request $request)
-    {
-        $userMessage = $request->input('message', '');
+{
+    $userMessage = $request->input('message', '');
 
-        if (empty(trim($userMessage))) {
-            return response()->json([
-                'reply' => 'Silakan tuliskan pesan terlebih dahulu 😊'
-            ]);
+    if (empty(trim($userMessage))) {
+        return response()->json([
+            'reply' => 'Silakan tuliskan pesan terlebih dahulu 😊'
+        ]);
+    }
+
+    try {
+        $userId = $this->getAuthenticatedUserId($request);
+    } catch (\Exception $e) {
+        return $this->unauthorizedResponse('Sesi kamu telah berakhir. Silakan logout lalu login kembali. 🙏');
+    }
+
+    $lowerMessage = strtolower($userMessage);
+
+    // Sapaan — langsung lolos ke AI
+    $greetingKeywords = [
+        'halo', 'hai', 'hi', 'hello', 'hey', 'hei',
+        'selamat pagi', 'selamat siang', 'selamat sore', 'selamat malam',
+        'apa kabar', 'permisi', 'assalamualaikum',
+    ];
+
+    // Kata kunci mental health
+    $allowedKeywords = [
+        'stres', 'cemas', 'depresi', 'sedih', 'overthinking',
+        'mental', 'emosi', 'burnout', 'trauma', 'hubungan',
+        'capek', 'lelah', 'bingung', 'takut', 'khawatir', 'gelisah',
+        'kesepian', 'marah', 'frustrasi', 'kesal', 'putus asa',
+        'menyerah', 'tidak sanggup', 'tertekan', 'beban', 'galau',
+        'panik', 'insomnia', 'susah tidur', 'nangis', 'menangis',
+        'kecewa', 'patah hati', 'hampa', 'kosong', 'tidak bersemangat',
+        'minder', 'tidak percaya diri', 'pesimis', 'hopeless',
+        'perasaan', 'curhat', 'cerita', 'butuh bantuan', 'butuh teman',
+        'pikiran', 'masalah', 'kehilangan', 'duka', 'berduka',
+        'sulit', 'susah', 'tidak baik-baik', 'tidak baik baik',
+    ];
+
+    $isGreeting = false;
+    foreach ($greetingKeywords as $greet) {
+        if (str_contains($lowerMessage, $greet)) {
+            $isGreeting = true;
+            break;
         }
+    }
 
-        try {
-            $userId = $this->getAuthenticatedUserId($request);
-        } catch (\Exception $e) {
-            return $this->unauthorizedResponse('Sesi kamu telah berakhir. Silakan logout lalu login kembali. 🙏');
-        }
-
-        $allowedKeywords = [
-            'stres', 'cemas', 'depresi', 'sedih', 'overthinking',
-            'mental', 'emosi', 'burnout', 'trauma', 'hubungan',
-            'capek', 'lelah', 'bingung', 'takut', 'khawatir', 'gelisah', 'kesepian'
-        ];
-
-        $isValid = false;
+    $isValid = $isGreeting;
+    if (!$isValid) {
         foreach ($allowedKeywords as $keyword) {
-            if (str_contains(strtolower($userMessage), $keyword)) {
+            if (str_contains($lowerMessage, $keyword)) {
                 $isValid = true;
                 break;
             }
         }
+    }
 
-        if (!$isValid) {
-            $reply = 'Sepertinya itu di luar topik kesehatan mental. '
-                . 'Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊';
+    // Pesan pendek (<=4 kata) tanpa keyword → beri benefit of the doubt
+    if (!$isValid && str_word_count($userMessage) <= 4) {
+        $isValid = true;
+    }
 
-            ChatMessage::create(['user_id' => $userId, 'sender' => 'user', 'message' => $userMessage]);
-            ChatMessage::create(['user_id' => $userId, 'sender' => 'ai',   'message' => $reply]);
+    if (!$isValid) {
+        $reply = 'Sepertinya itu di luar topik kesehatan mental. '
+            . 'Tapi kalau kamu ingin cerita tentang perasaanmu, aku siap mendengarkan 😊';
 
-            return response()->json(['reply' => $reply]);
-        }
+        ChatMessage::create(['user_id' => $userId, 'sender' => 'user', 'message' => $userMessage]);
+        ChatMessage::create(['user_id' => $userId, 'sender' => 'ai',   'message' => $reply]);
 
-        $apiKey = env('GROQ_API_KEY');
+        return response()->json(['reply' => $reply]);
+    }
 
-        if (!$apiKey) {
-            return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.'], 500);
-        }
+    $apiKey = env('GROQ_API_KEY');
 
-        try {
-            ChatMessage::create(['user_id' => $userId, 'sender' => 'user', 'message' => $userMessage]);
+    if (!$apiKey) {
+        return response()->json(['reply' => 'Maaf, layanan AI sedang tidak tersedia.'], 500);
+    }
 
-            $systemPrompt = "
+    try {
+        ChatMessage::create(['user_id' => $userId, 'sender' => 'user', 'message' => $userMessage]);
+
+        $systemPrompt = "
 Kamu adalah asisten psikologi bernama RuangTenang.
 
 Tugasmu:
+- Menyambut pengguna dengan hangat jika mereka menyapa
 - Mendengarkan curhatan pengguna
 - Memberikan dukungan emosional
 - Membantu pengguna memahami perasaannya
 
+Jika pengguna menyapa (halo, hai, hi, dll):
+- Balas dengan hangat dan perkenalkan dirimu secara singkat
+- Tanya bagaimana perasaannya hari ini
+
 Aturan:
-- Hanya jawab topik kesehatan mental
-- Jangan jawab topik di luar psikologi
+- Hanya jawab topik kesehatan mental dan sapaan
+- Jangan jawab topik yang tidak relevan (cuaca, coding, politik, dll)
 - Jangan menghakimi pengguna
 - Jangan memberikan diagnosis medis
 - Gunakan bahasa hangat dan empatik
 ";
-
             $response = Http::timeout(30)->withHeaders([
                 'Authorization' => 'Bearer ' . trim($apiKey),
                 'Content-Type'  => 'application/json',
@@ -473,30 +510,36 @@ Aturan:
     // RIWAYAT CHAT
     // =========================
     public function getChatHistory(Request $request)
-    {
-        try {
-            $userId = $this->getAuthenticatedUserId($request);
-        } catch (\Exception $e) {
-            return $this->unauthorizedResponse($e->getMessage());
-        }
-
-        try {
-            $messages = ChatMessage::where('user_id', $userId)
-                ->orderBy('created_at', 'asc')
-                ->get();
-
-            return response()->json([
-                'status' => 'success',
-                'data'   => $messages
-            ]);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Gagal memuat chat history: ' . $e->getMessage()
-            ], 500);
-        }
+{
+    try {
+        $userId = $this->getAuthenticatedUserId($request);
+    } catch (\Exception $e) {
+        return $this->unauthorizedResponse($e->getMessage());
     }
+
+    try {
+        // Hapus pesan lebih dari 30 hari
+        ChatMessage::where('user_id', $userId)
+            ->where('created_at', '<', now()->subDays(30))
+            ->delete();
+
+        $messages = ChatMessage::where('user_id', $userId)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data'   => $messages,
+            'info'   => 'Riwayat chat disimpan selama 30 hari.',
+        ]);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'Gagal memuat chat history: ' . $e->getMessage()
+        ], 500);
+    }
+}
 
     // =========================
     // ANALISIS KESEHATAN MENTAL (ML + GROQ DUAL-CHECK)
