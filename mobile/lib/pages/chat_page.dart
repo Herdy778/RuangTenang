@@ -151,19 +151,24 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
         final List messages = data['data'] ?? [];
 
         setState(() {
-          _messages.clear();
-          if (messages.isEmpty) {
-            _setWelcomeMessageInline();
-          } else {
-            for (var msg in messages) {
-              _messages.add({
-                'role': msg['sender'],
-                'text': msg['message'],
-                'moodCategory': null,
-              });
-            }
-          }
-        });
+  _messages.clear();
+  if (messages.isEmpty) {
+    _setWelcomeMessageInline();
+  } else {
+    _messages.add({
+      'role': 'info',
+      'text': 'Riwayat chat disimpan selama 30 hari, setelah itu akan otomatis terhapus.',
+      'moodCategory': null,
+    });
+    for (var msg in messages) {
+      _messages.add({
+        'role': msg['sender'],
+        'text': msg['message'],
+        'moodCategory': null,
+      });
+    }
+  }
+});
 
         _scrollToBottom();
 
@@ -430,7 +435,9 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
                       if (msg['role'] == 'journal_trigger') {
                         return _buildJournalTriggerCard(index, langNotifier);
                       }
-
+                      if (msg['role'] == 'info') {
+    return _buildInfoBanner(msg['text']!);
+}
                       return Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
@@ -1083,13 +1090,102 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildArticleCard({
-    required String emoji,
-    required String title,
-    required String subtitle,
-  }) {
-    return Container(
-      width: 150,
+  Widget _buildInfoBanner(String text) {
+  return Container(
+    margin: const EdgeInsets.only(bottom: 16),
+    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+    decoration: BoxDecoration(
+      color: Colors.amber.withOpacity(0.12),
+      borderRadius: BorderRadius.circular(10),
+      border: Border.all(color: Colors.amber.withOpacity(0.3)),
+    ),
+    child: Row(
+      children: [
+        const Icon(Icons.info_outline_rounded, size: 16, color: Colors.amber),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: AppTextStyles.caption.copyWith(
+              color: AppColors.textMuted,
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+ Widget _buildArticleCard({
+  required String emoji,
+  required String title,
+  required String subtitle,
+}) {
+  return GestureDetector(
+    onTap: () {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        backgroundColor: Colors.transparent,
+        builder: (_) => Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: Theme.of(context).brightness == Brightness.dark
+                ? AppColors.cardBackgroundDark
+                : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Handle bar
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 20),
+                  decoration: BoxDecoration(
+                    color: AppColors.cardBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              // Emoji + judul
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(emoji, style: const TextStyle(fontSize: 32)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: AppTextStyles.titleMD.copyWith(
+                        color: Theme.of(context).brightness == Brightness.dark
+                            ? AppColors.textPrimaryDark
+                            : AppColors.textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              // Isi artikel lengkap
+              Text(
+                subtitle,
+                style: AppTextStyles.bodyMD.copyWith(
+                  color: AppColors.textMuted,
+                  height: 1.6,
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+          ),
+        ),
+      );
+    },
+    child: Container(
+      width: 160,
       margin: const EdgeInsets.only(right: 10),
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -1126,15 +1222,16 @@ class _ChatAiPageState extends State<ChatAiPage> with TickerProviderStateMixin {
               Text(
                 subtitle,
                 style: AppTextStyles.caption.copyWith(fontSize: 10),
-                maxLines: 1,
+                maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
 }
 
 // ===========================================================================

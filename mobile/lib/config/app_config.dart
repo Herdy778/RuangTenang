@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 
 class AppConfig {
   // ⚠️ Ganti dengan IP lokal PC/laptop kamu (cek via `ipconfig` / `ifconfig`)
-  static const String _localIp = '192.168.1.51';
+  static const String _localIp = '192.168.0.203';
   static const int _port = 8000;
 
   static String get baseUrl {
