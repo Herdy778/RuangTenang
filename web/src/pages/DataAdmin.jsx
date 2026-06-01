@@ -115,8 +115,25 @@ export default function DataAdmin() {
       {/* NAVBAR */}
       <nav style={styles.nav}>
         <div style={styles.navLogo}>
-          <div style={styles.navLogoIcon}>🌿</div>
-          <span style={styles.navLogoText}>RuangTenang</span>
+          <div style={styles.navLogoIcon}>
+  <svg width="22" height="22" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    {/* Trunk */}
+    <line x1="22" y1="34" x2="22" y2="25" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+    {/* Roots */}
+    <line x1="22" y1="34" x2="17" y2="39" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    <line x1="22" y1="34" x2="27" y2="39" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    {/* Brain lobes */}
+    <circle cx="17" cy="16" r="6.5" fill="white" opacity="0.95"/>
+    <circle cx="27" cy="16" r="6.5" fill="white" opacity="0.95"/>
+    <circle cx="22" cy="14" r="6" fill="white" opacity="0.95"/>
+    {/* Brain center line */}
+    <line x1="22" y1="8" x2="22" y2="23" stroke="#7C3AED" strokeWidth="1.2" strokeLinecap="round"/>
+    {/* Hands */}
+    <path d="M9 34 Q6 28 10 25 Q15 22 17 27" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+    <path d="M35 34 Q38 28 34 25 Q29 22 27 27" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+  </svg>
+</div>
+<span style={styles.navLogoText}>RuangTenang</span>
           <span style={styles.navBadge}>Admin</span>
         </div>
 
@@ -440,15 +457,14 @@ const styles = {
   },
 
   navLogoIcon: {
-  fontSize: 26,
-  background: "linear-gradient(135deg, #6366F1, #A855F7)",
+  background: 'linear-gradient(135deg, #6366F1, #A855F7)',
   width: 38,
   height: 38,
   borderRadius: 12,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  },
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+},
 
   navLogoText: {
   fontFamily: "'Inter', sans-serif",

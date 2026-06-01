@@ -68,7 +68,19 @@ export default function Auth() {
         {/* LEFT: Branding panel */}
         <div style={s.brandPanel}>
           <div style={s.brandInner}>
-            <div style={s.logoCircle}>🌿</div>
+            <div style={s.logoCircle}>
+  <svg width="32" height="32" viewBox="0 0 44 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <line x1="22" y1="34" x2="22" y2="25" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+    <line x1="22" y1="34" x2="17" y2="39" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    <line x1="22" y1="34" x2="27" y2="39" stroke="white" strokeWidth="2" strokeLinecap="round"/>
+    <circle cx="17" cy="16" r="6.5" fill="white" opacity="0.95"/>
+    <circle cx="27" cy="16" r="6.5" fill="white" opacity="0.95"/>
+    <circle cx="22" cy="14" r="6" fill="white" opacity="0.95"/>
+    <line x1="22" y1="8" x2="22" y2="23" stroke="#7C3AED" strokeWidth="1.2" strokeLinecap="round"/>
+    <path d="M9 34 Q6 28 10 25 Q15 22 17 27" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+    <path d="M35 34 Q38 28 34 25 Q29 22 27 27" stroke="white" strokeWidth="1.8" fill="none" strokeLinecap="round"/>
+  </svg>
+</div>
             <h1 style={s.brandTitle}>RuangTenang</h1>
             <p style={s.brandSubtitle}>
               Platform kesehatan mental berbasis AI untuk memantau dan memahami kondisi emosionalmu.
@@ -363,12 +375,11 @@ const s = {
   },
   brandInner: { display: 'flex', flexDirection: 'column', gap: 20 },
   logoCircle: {
-    width: 64, height: 64, borderRadius: 20,
-    background: 'linear-gradient(135deg, #8B5CF6, #A855F7)',
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 30,
-    boxShadow: '0 8px 32px rgba(139,92,246,0.5)',
-  },
+  width: 64, height: 64, borderRadius: 20,
+  background: 'linear-gradient(135deg, #8B5CF6, #A855F7)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  boxShadow: '0 8px 32px rgba(139,92,246,0.5)',
+},
   brandTitle: {
     fontSize: 28, fontWeight: 700, color: '#fff',
     letterSpacing: 0.3, margin: 0,
