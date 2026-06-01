@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'dart:io' show Platform;
 
 class AppConfig {
-  static const String _localIp = '192.168.0.203';
+  static const String _localIp = '192.168.1.53';
   static const int _port = 8000;
 
   static String get baseUrl {
