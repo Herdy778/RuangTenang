@@ -15,7 +15,6 @@ export default function AdminJournals() {
   const [selectedJournal, setSelectedJournal] = useState(null);
   const [articles, setArticles] = useState(null);
   
-  // State untuk modal statistik
   const [showStatsModal, setShowStatsModal] = useState(false);
   const [statsModalData, setStatsModalData] = useState({ title: '', content: null });
 
@@ -60,7 +59,6 @@ export default function AdminJournals() {
     }
   };
 
-  // ✅ FIX: URL dan nama field disesuaikan dengan route Laravel
   const sendRecommendation = async (journalId, articleId) => {
     try {
       await API.post(`/admin/journals/send-article`, {
@@ -76,36 +74,35 @@ export default function AdminJournals() {
   };
 
   async function fetchJournals() {
-  try {
-    const res = await API.get("/admin/journals");
-    const rawData = res.data.data || [];
-    
-    const mappedData = rawData.map((item) => {
-      let userName = item.user_nama;
+    try {
+      const res = await API.get("/admin/journals");
+      const rawData = res.data.data || [];
       
-      if (!userName || userName === "User Tidak Diketahui") {
-        if (item.nama_lengkap) userName = item.nama_lengkap;
-        else if (item.user?.nama_lengkap) userName = item.user.nama_lengkap;
-        else if (item.user_id?.nama_lengkap) userName = item.user_id.nama_lengkap;
-        else userName = "User";
-      }
+      const mappedData = rawData.map((item) => {
+        let userName = item.user_nama;
+        
+        if (!userName || userName === "User Tidak Diketahui") {
+          if (item.nama_lengkap) userName = item.nama_lengkap;
+          else if (item.user?.nama_lengkap) userName = item.user.nama_lengkap;
+          else if (item.user_id?.nama_lengkap) userName = item.user_id.nama_lengkap;
+          else userName = "User";
+        }
+        
+        return {
+          ...item,
+          user_nama: userName,
+          display_name: userName
+        };
+      });
       
-      return {
-        ...item,
-        user_nama: userName,
-        display_name: userName
-      };
-    });
-    
-    setJournals(mappedData);
-    
-  } catch (err) {
-    console.error(err);
-    toast.error("Gagal memuat data jurnal");
-  } finally {
-    setLoading(false);
+      setJournals(mappedData);
+    } catch (err) {
+      console.error(err);
+      toast.error("Gagal memuat data jurnal");
+    } finally {
+      setLoading(false);
+    }
   }
-}
 
   async function updateStatus(id, status) {
     try {
@@ -162,7 +159,7 @@ export default function AdminJournals() {
         content: (
           <div>
             <p style={{ marginBottom: 12 }}>Seluruh jurnal yang telah ditulis oleh user:</p>
-            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#4F46E5' }}>{moodStats.total}</p>
+            <p style={{ fontSize: 48, fontWeight: 700, textAlign: 'center', color: '#8B5CF6' }}>{moodStats.total}</p>
             <hr style={{ margin: '16px 0', border: '1px solid #E2E8F0' }} />
             <div style={{ marginTop: 16 }}>
               <p style={{ fontWeight: 600, marginBottom: 12 }}>📈 Distribusi Mood:</p>
@@ -242,7 +239,6 @@ export default function AdminJournals() {
     <div style={styles.bg}>
       <Toaster position="top-right" />
       
-      {/* MODAL STATISTIK */}
       {showStatsModal && (
         <div style={styles.modalOverlay} onClick={closeStatsModal}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -291,7 +287,6 @@ export default function AdminJournals() {
           <span style={styles.navLink} onClick={() => navigate("/admin/articles")}>Artikel</span>
           <span style={styles.navLink} onClick={() => navigate("/admin/data-admin")}>Data Admin</span>
           <span style={styles.navLink} onClick={() => navigate("/profile")}>Profil</span>
-          <span style={styles.navLink} onClick={() => navigate('/api-tester')}>🧪 API</span>
           <button style={styles.logoutBtn} onClick={doLogout}>Keluar</button>
         </div>
       </nav>
@@ -307,19 +302,19 @@ export default function AdminJournals() {
           </div>
         </div>
 
-        {/* STATS CARDS */}
+        {/* STATS CARDS - Warna Soft */}
         <div style={styles.statsGrid}>
           <div 
-            style={{ ...styles.statCard, cursor: 'pointer' }}
+            style={{ ...styles.statCard, cursor: 'pointer', background: 'linear-gradient(135deg, #A78BFA, #8B5CF6)', color: 'white' }}
             onClick={() => handleStatsCardClick('total')}
             onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
             onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
           >
             <div style={styles.statIcon}>📊</div>
-            <div style={styles.statNum}>{moodStats.total}</div>
-            <div style={styles.statLabel}>Total Jurnal</div>
-            <div style={styles.statTrend}>Semua mood</div>
-            <div style={styles.clickHint}>✨ Klik untuk detail</div>
+            <div style={{ ...styles.statNum, color: 'white' }}>{moodStats.total}</div>
+            <div style={{ ...styles.statLabel, color: 'rgba(255,255,255,0.8)' }}>Total Jurnal</div>
+            <div style={{ ...styles.statTrend, color: 'rgba(255,255,255,0.6)' }}>Semua mood</div>
+            <div style={{ ...styles.clickHint, color: 'rgba(255,255,255,0.5)' }}>✨ Klik untuk detail</div>
           </div>
           
           <div 
@@ -359,7 +354,6 @@ export default function AdminJournals() {
           </div>
         </div>
 
-        {/* SEARCH & FILTER */}
         <div style={styles.actionBar}>
           <div style={styles.searchWrapper}>
             <span style={styles.searchIcon}>🔍</span>
@@ -519,7 +513,6 @@ export default function AdminJournals() {
         )}
       </div>
 
-      {/* MODAL REKOMENDASI ARTIKEL */}
       {showRecommendModal && selectedJournal && (
         <div style={styles.modalOverlay} onClick={() => setShowRecommendModal(false)}>
           <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
@@ -570,7 +563,7 @@ export default function AdminJournals() {
 const modalButtonStyle = {
   marginTop: 20,
   padding: '10px 20px',
-  background: '#4F46E5',
+  background: '#8B5CF6',
   color: 'white',
   border: 'none',
   borderRadius: 40,
@@ -593,9 +586,9 @@ const styles = {
     width: "50vw",
     height: "50vw",
     borderRadius: "50%",
-    background: "#818CF8",
+    background: "#A78BFA",
     filter: "blur(120px)",
-    opacity: 0.12,
+    opacity: 0.1,
     top: "-20vh",
     right: "-10vw",
     zIndex: 0,
@@ -770,7 +763,7 @@ const styles = {
   },
   filterSelect: { padding: "12px 20px", border: "1px solid #E2E8F0", borderRadius: 48, fontSize: 14, background: "white", cursor: "pointer" },
   loading: { textAlign: "center", padding: "60px 24px", color: "#64748B", background: "white", borderRadius: 24, border: "1px solid #E2E8F0" },
-  spinner: { width: 40, height: 40, border: "3px solid #E2E8F0", borderTop: "3px solid #6366F1", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
+  spinner: { width: 40, height: 40, border: "3px solid #E2E8F0", borderTop: "3px solid #8B5CF6", borderRadius: "50%", animation: "spin 1s linear infinite", margin: "0 auto 16px" },
   emptyCard: { background: "white", padding: "60px 24px", borderRadius: 24, textAlign: 'center', border: '1px solid #E2E8F0' },
   emptyIllustration: { fontSize: 64, marginBottom: 16 },
   emptyText: { fontSize: 18, fontWeight: 500, color: "#1E293B", marginBottom: 8 },
@@ -785,7 +778,7 @@ const styles = {
   journalText: { fontSize: 14, color: "#334155", lineHeight: 1.55, marginBottom: 16 },
   journalFooter: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, flexWrap: "wrap", gap: 12 },
   userInfo: { display: "flex", alignItems: "center", gap: 10 },
-  userAvatar: { width: 32, height: 32, borderRadius: 32, background: "linear-gradient(135deg, #6366F1, #A855F7)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600 },
+  userAvatar: { width: 32, height: 32, borderRadius: 32, background: "linear-gradient(135deg, #A78BFA, #8B5CF6)", color: "white", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 14, fontWeight: 600 },
   userName: { fontSize: 13, fontWeight: 500, color: "#1E293B" },
   recommendBtn: { padding: "8px 20px", background: "#8B5CF6", color: "white", border: "none", borderRadius: 40, cursor: "pointer", fontSize: 12, fontWeight: 500, transition: "all 0.2s ease" },
   actionButtons: { display: "flex", gap: 10, flexWrap: "wrap", paddingTop: 12, borderTop: "1px solid #F1F5F9" },
